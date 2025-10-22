@@ -33,7 +33,10 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      const scrollContainer = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      }
     }
   }, [messages]);
 
@@ -42,10 +45,12 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
 
     const userMessage: Message = { role: 'user', content: input };
     setMessages((prev) => [...prev, userMessage]);
+    const currentInput = input;
     setInput('');
     setIsLoading(true);
 
     try {
+      // Build graph context from current props
       const graphContext = {
         nodes: nodes.map(n => ({ id: n.id, label: n.data.label, tags: n.data.tags })),
         edges: edges.map(e => ({ source: e.source, target: e.target })),
@@ -53,46 +58,43 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
 
       const { data, error } = await supabase.functions.invoke('ai-graph-assistant', {
         body: {
-          message: input,
+          message: currentInput,
           graphContext,
-          conversationHistory: messages.slice(-10), // Keep last 10 messages for context
+          conversationHistory: messages.slice(-10),
         },
       });
 
       if (error) throw error;
 
-      console.log('AI Response:', data);
+      // Apply graph changes FIRST and track the new state
+      let updatedNodes = nodes;
+      let updatedEdges = edges;
+      let changeApplied = false;
 
-      // Apply graph changes if any
       if (data.graphChanges) {
         const { action, nodeId, label, source, target, edgeId } = data.graphChanges;
-        console.log('Graph change:', action, { nodeId, label, source, target, edgeId });
         
         if (action === 'remove_node') {
-          // Find node by ID or label (case-insensitive)
           const searchTerm = (nodeId || label || '').toLowerCase();
-          const nodeToRemove = nodes.find(n => 
+          const nodeToRemove = updatedNodes.find(n => 
             n.id.toLowerCase() === searchTerm || 
             n.data.label.toLowerCase() === searchTerm
           );
           
-          console.log('Looking for node to remove:', searchTerm, 'Found:', nodeToRemove);
-          
           if (nodeToRemove) {
-            const newNodes = nodes.filter(n => n.id !== nodeToRemove.id);
-            const newEdges = edges.filter(e => e.source !== nodeToRemove.id && e.target !== nodeToRemove.id);
-            onNodesChange(newNodes);
-            onEdgesChange(newEdges);
-            toast.success(`Removed node: ${nodeToRemove.data.label}`);
-          } else {
-            toast.error(`Could not find node: ${searchTerm}`);
+            updatedNodes = updatedNodes.filter(n => n.id !== nodeToRemove.id);
+            updatedEdges = updatedEdges.filter(e => e.source !== nodeToRemove.id && e.target !== nodeToRemove.id);
+            onNodesChange(updatedNodes);
+            onEdgesChange(updatedEdges);
+            changeApplied = true;
+            toast.success(`Removed: ${nodeToRemove.data.label}`);
           }
         } else if (action === 'add_node') {
           const newNode: Node = {
-            id: `node-${Date.now()}`,
+            id: nodeId || `node-${Date.now()}`,
             type: 'default',
             position: { x: Math.random() * 500 + 100, y: Math.random() * 300 + 100 },
-            data: { label: label || `Node ${nodes.length + 1}`, shape: 'circle' },
+            data: { label: label || `Node ${updatedNodes.length + 1}`, shape: 'circle' },
             style: {
               background: 'hsl(195, 45%, 52%)',
               color: 'white',
@@ -110,21 +112,25 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
               boxShadow: '0 3px 12px hsl(195 45% 52% / 0.2)',
             },
           };
-          onNodesChange([...nodes, newNode]);
-          toast.success(`Added node: ${label}`);
+          updatedNodes = [...updatedNodes, newNode];
+          onNodesChange(updatedNodes);
+          changeApplied = true;
+          toast.success(`Added: ${label}`);
         } else if (action === 'update_node' && nodeId && label) {
-          const nodeToUpdate = nodes.find(n => n.id === nodeId || n.data.label.toLowerCase() === nodeId.toLowerCase());
+          const nodeToUpdate = updatedNodes.find(n => n.id === nodeId || n.data.label.toLowerCase() === nodeId.toLowerCase());
           if (nodeToUpdate) {
-            onNodesChange(nodes.map(n => 
+            updatedNodes = updatedNodes.map(n => 
               n.id === nodeToUpdate.id
                 ? { ...n, data: { ...n.data, label } } 
                 : n
-            ));
-            toast.success(`Updated node: ${label}`);
+            );
+            onNodesChange(updatedNodes);
+            changeApplied = true;
+            toast.success(`Updated: ${label}`);
           }
         } else if (action === 'add_edge' && source && target) {
-          const sourceNode = nodes.find(n => n.id === source || n.data.label.toLowerCase() === source.toLowerCase());
-          const targetNode = nodes.find(n => n.id === target || n.data.label.toLowerCase() === target.toLowerCase());
+          const sourceNode = updatedNodes.find(n => n.id === source || n.data.label.toLowerCase() === source.toLowerCase());
+          const targetNode = updatedNodes.find(n => n.id === target || n.data.label.toLowerCase() === target.toLowerCase());
           if (sourceNode && targetNode) {
             const newEdge: Edge = {
               id: `edge-${Date.now()}`,
@@ -135,18 +141,25 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
               style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 },
               markerEnd: { type: 'arrowClosed' as any },
             };
-            onEdgesChange([...edges, newEdge]);
+            updatedEdges = [...updatedEdges, newEdge];
+            onEdgesChange(updatedEdges);
+            changeApplied = true;
             toast.success('Added connection');
           }
         } else if (action === 'remove_edge' && edgeId) {
-          onEdgesChange(edges.filter(e => e.id !== edgeId));
+          updatedEdges = updatedEdges.filter(e => e.id !== edgeId);
+          onEdgesChange(updatedEdges);
+          changeApplied = true;
           toast.success('Removed connection');
         }
       }
 
+      // Add assistant message with confirmation
       const assistantMessage: Message = {
         role: 'assistant',
-        content: data.message || 'Done!',
+        content: changeApplied 
+          ? data.message || 'Done!' 
+          : data.message || "I couldn't complete that action. Please try rephrasing your request.",
       };
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
@@ -176,33 +189,35 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-        <div className="space-y-4">
-          {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea className="h-full">
+          <div className="p-4 space-y-4" ref={scrollRef}>
+            {messages.map((message, index) => (
               <div
-                className={`max-w-[80%] rounded-lg p-3 ${
-                  message.role === 'user'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted'
-                }`}
+                key={index}
+                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                <div
+                  className={`max-w-[80%] rounded-lg p-3 ${
+                    message.role === 'user'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted'
+                  }`}
+                >
+                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                </div>
               </div>
-            </div>
-          ))}
-          {isLoading && (
-            <div className="flex justify-start">
-              <div className="bg-muted rounded-lg p-3">
-                <Loader2 className="w-4 h-4 animate-spin" />
+            ))}
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="bg-muted rounded-lg p-3">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      </ScrollArea>
+            )}
+          </div>
+        </ScrollArea>
+      </div>
 
       {/* Input */}
       <div className="p-4 border-t border-border/50">

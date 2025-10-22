@@ -347,15 +347,17 @@ const Editor = () => {
         step: 'step',
       };
 
+      const mappedType = typeMap[edgeType] || 'straight';
+
       setEdges((eds) =>
         eds.map((edge) => ({
           ...edge,
-          type: typeMap[edgeType] || 'straight',
+          type: mappedType,
         }))
       );
 
       setDefaultEdgeType(edgeType);
-      toast.success(`Applied ${edgeType} edge type to all connections`);
+      toast.success(`Applied ${edgeType} edges`);
     },
     []
   );
