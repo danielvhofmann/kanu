@@ -213,6 +213,8 @@ export const D3Canvas = ({
           },
         };
         
+        console.log('Click handler: Creating new node', newNode.id);
+        
         // Immediately add node to simulation to prevent race condition
         if (simulationRef.current) {
           const d3Node = {
@@ -225,7 +227,9 @@ export const D3Canvas = ({
             fy: null,
           };
           const currentSimNodes = simulationRef.current.nodes();
+          console.log('Click handler: Adding to simulation. Current sim nodes:', currentSimNodes.map((n: any) => n.id));
           simulationRef.current.nodes([...currentSimNodes, d3Node]);
+          console.log('Click handler: Simulation nodes after add:', simulationRef.current.nodes().map((n: any) => n.id));
           simulationRef.current.alpha(0.3).restart();
         }
         
@@ -237,6 +241,10 @@ export const D3Canvas = ({
   // Effect 2: Update data - nodes and edges using enter-update-exit pattern
   useEffect(() => {
     if (!gRef.current || !simulationRef.current || dimensions.width === 0) return;
+
+    console.log('Effect #2 running with nodes:', nodes.map(n => n.id));
+    console.log('Effect #2 running with edges:', edges.map(e => e.id));
+    console.log('Current simulation nodes BEFORE update:', simulationRef.current.nodes().map((n: any) => n.id));
 
     const g = gRef.current;
     const simulation = simulationRef.current;
@@ -263,6 +271,7 @@ export const D3Canvas = ({
     
     // Explicitly set simulation nodes to only current valid nodes (prevents deleted nodes from persisting)
     simulation.nodes(d3Nodes);
+    console.log('Set simulation nodes to:', d3Nodes.map((n: any) => n.id));
 
     const d3Links = edges.map(edge => ({
       ...edge,
@@ -331,15 +340,22 @@ export const D3Canvas = ({
       .data(d3Nodes, (d: any) => d.id);
 
     // Remove old nodes and clear them from simulation
-    node.exit().remove();
+    const exitNodes = node.exit();
+    console.log('Removing nodes from DOM:', exitNodes.data().map((n: any) => n.id));
+    exitNodes.remove();
     
     // Explicitly remove deleted nodes from simulation to prevent reappearing
     const remainingNodeIds = new Set(d3Nodes.map((n: any) => n.id));
     const cleanedSimNodes = simulation.nodes().filter((n: any) => remainingNodeIds.has(n.id));
+    console.log('Cleaning simulation - keeping:', remainingNodeIds);
+    console.log('Simulation nodes before cleaning:', simulation.nodes().map((n: any) => n.id));
     simulation.nodes(cleanedSimNodes);
+    console.log('Simulation nodes after cleaning:', simulation.nodes().map((n: any) => n.id));
 
     // Add new nodes
-    const nodeEnter = node.enter()
+    const enterNodes = node.enter();
+    console.log('Adding nodes to DOM:', enterNodes.data().map((n: any) => n.id));
+    const nodeEnter = enterNodes
       .append('g')
       .attr('class', 'node')
       .attr('cursor', isSketchMode ? 'pointer' : 'grab')
