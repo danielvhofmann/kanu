@@ -5,8 +5,8 @@ import { Node, Edge } from 'reactflow';
 interface D3CanvasProps {
   nodes: Node[];
   edges: Edge[];
-  onNodesChange: (nodes: Node[]) => void;
-  onEdgesChange: (edges: Edge[]) => void;
+  onNodesChange: (nodes: Node[] | ((prev: Node[]) => Node[])) => void;
+  onEdgesChange: (edges: Edge[] | ((prev: Edge[]) => Edge[])) => void;
   selectedNodeId: string | null;
   selectedEdgeId: string | null;
   onNodeClick: (node: Node) => void;
@@ -88,29 +88,28 @@ export const D3Canvas = ({
       const [x, y] = d3.pointer(event, svg.node());
       const [transformedX, transformedY] = transform.invert([x, y]);
       
-      const newNode: Node = {
-        id: `node-${Date.now()}`,
-        type: 'default',
-        position: { x: transformedX, y: transformedY },
-        data: { label: `Node ${nodes.length + 1}` },
-        style: {
-          background: 'hsl(195, 45%, 52%)',
-          color: 'white',
-          border: '2px solid hsl(195, 50%, 68%)',
-          borderRadius: '50%',
-          width: '85px',
-          height: '85px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center',
-          boxShadow: '0 3px 12px hsl(195 45% 52% / 0.2)',
-        },
-      };
-      
-      setTimeout(() => {
-        onNodesChange([...nodes, newNode]);
-      }, 0);
+      onNodesChange((currentNodes) => {
+        const newNode: Node = {
+          id: `node-${Date.now()}`,
+          type: 'default',
+          position: { x: transformedX, y: transformedY },
+          data: { label: `Node ${currentNodes.length + 1}` },
+          style: {
+            background: 'hsl(195, 45%, 52%)',
+            color: 'white',
+            border: '2px solid hsl(195, 50%, 68%)',
+            borderRadius: '50%',
+            width: '85px',
+            height: '85px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            boxShadow: '0 3px 12px hsl(195 45% 52% / 0.2)',
+          },
+        };
+        return [...currentNodes, newNode];
+      });
     });
 
     // Add background grid
@@ -215,9 +214,10 @@ export const D3Canvas = ({
     const g = gRef.current;
     const simulation = simulationRef.current;
 
-    // Prepare data for D3
+    // Prepare data for D3 - only include nodes that exist in current state
+    const nodeIds = new Set(nodes.map(n => n.id));
     const d3Nodes = nodes.map(node => {
-      const existingNode = simulation.nodes().find((n: any) => n.id === node.id);
+      const existingNode = simulation.nodes().find((n: any) => n.id === node.id && nodeIds.has(n.id));
       return {
         ...node,
         x: existingNode?.x ?? node.position.x,
@@ -360,38 +360,40 @@ export const D3Canvas = ({
                 style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 },
                 markerEnd: { type: 'arrowClosed' as any },
               };
-              onEdgesChange([...edges, newEdge]);
+              onEdgesChange((currentEdges) => [...currentEdges, newEdge]);
             } else {
-              const newNode: Node = {
-                id: `${Date.now()}`,
-                type: 'default',
-                position: { x: event.x, y: event.y },
-                data: { label: `Node ${nodes.length + 1}` },
-                style: {
-                  background: 'hsl(195, 45%, 52%)',
-                  color: 'white',
-                  border: '2px solid hsl(195, 50%, 68%)',
-                  borderRadius: '50%',
-                  width: '85px',
-                  height: '85px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  textAlign: 'center',
-                  boxShadow: '0 3px 12px hsl(195 45% 52% / 0.2)',
-                },
-              };
-              const newEdge: Edge = {
-                id: `${d.id}-${newNode.id}`,
-                source: d.id,
-                target: newNode.id,
-                type: 'smoothstep',
-                animated: true,
-                style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 },
-                markerEnd: { type: 'arrowClosed' as any },
-              };
-              onNodesChange([...nodes, newNode]);
-              onEdgesChange([...edges, newEdge]);
+              onNodesChange((currentNodes) => {
+                const newNode: Node = {
+                  id: `${Date.now()}`,
+                  type: 'default',
+                  position: { x: event.x, y: event.y },
+                  data: { label: `Node ${currentNodes.length + 1}` },
+                  style: {
+                    background: 'hsl(195, 45%, 52%)',
+                    color: 'white',
+                    border: '2px solid hsl(195, 50%, 68%)',
+                    borderRadius: '50%',
+                    width: '85px',
+                    height: '85px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textAlign: 'center',
+                    boxShadow: '0 3px 12px hsl(195 45% 52% / 0.2)',
+                  },
+                };
+                const newEdge: Edge = {
+                  id: `${d.id}-${newNode.id}`,
+                  source: d.id,
+                  target: newNode.id,
+                  type: 'smoothstep',
+                  animated: true,
+                  style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 },
+                  markerEnd: { type: 'arrowClosed' as any },
+                };
+                onEdgesChange((currentEdges) => [...currentEdges, newEdge]);
+                return [...currentNodes, newNode];
+              });
             }
             dragLineRef.current = null;
           } else {
@@ -515,7 +517,7 @@ export const D3Canvas = ({
 
       nodeMerged.attr('transform', (d: any) => `translate(${d.x},${d.y})`);
     });
-  }, [nodes, edges, selectedNodeId, selectedEdgeId, isSketchMode, onNodeClick, onEdgeClick, onNodesChange, onEdgesChange]);
+  }, [nodes, edges, selectedNodeId, selectedEdgeId, isSketchMode]);
 
   return (
     <svg
