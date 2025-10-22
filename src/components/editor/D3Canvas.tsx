@@ -36,6 +36,7 @@ export const D3Canvas = ({
   const gRef = useRef<d3.Selection<SVGGElement, unknown, null, undefined> | null>(null);
   const zoomTransformRef = useRef<d3.ZoomTransform>(d3.zoomIdentity);
   const isInitialMount = useRef(true);
+  const isInitialized = useRef(false);
 
   // Update dimensions on mount and resize
   useEffect(() => {
@@ -52,10 +53,10 @@ export const D3Canvas = ({
 
   // Effect 1: One-time setup - SVG structure, zoom, grid
   useEffect(() => {
+    if (isInitialized.current) return; // Only initialize once
     if (!svgRef.current || dimensions.width === 0) return;
 
     const svg = d3.select(svgRef.current);
-    svg.selectAll('*').remove();
 
     // Create main group for zoom/pan
     const g = svg.append('g');
@@ -165,11 +166,13 @@ export const D3Canvas = ({
       .velocityDecay(0.3);
 
     simulationRef.current = simulation;
+    isInitialized.current = true; // Mark as initialized
 
     return () => {
       simulation.stop();
+      isInitialized.current = false;
     };
-  }, []); // Run only once on mount
+  }, [dimensions.width]); // Run when dimensions are available
 
   // Effect 1.5: Update click handler when sketch mode changes (without recreating SVG)
   useEffect(() => {
