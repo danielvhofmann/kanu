@@ -33,6 +33,8 @@ export const D3Canvas = ({
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const simulationRef = useRef<d3.Simulation<any, any> | null>(null);
   const dragLineRef = useRef<{ x1: number; y1: number; x2: number; y2: number; sourceId: string } | null>(null);
+  const gRef = useRef<d3.Selection<SVGGElement, unknown, null, undefined> | null>(null);
+  const zoomTransformRef = useRef<d3.ZoomTransform>(d3.zoomIdentity);
   const isInitialMount = useRef(true);
 
   // Update dimensions on mount and resize
@@ -48,43 +50,44 @@ export const D3Canvas = ({
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
+  // Effect 1: One-time setup - SVG structure, zoom, grid
   useEffect(() => {
     if (!svgRef.current || dimensions.width === 0) return;
-
-    isInitialMount.current = false;
 
     const svg = d3.select(svgRef.current);
     svg.selectAll('*').remove();
 
     // Create main group for zoom/pan
     const g = svg.append('g');
+    gRef.current = g;
 
     // Add zoom behavior
     const zoom = d3.zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.1, 4])
       .on('zoom', (event) => {
+        zoomTransformRef.current = event.transform;
         g.attr('transform', event.transform);
       });
 
     svg.call(zoom);
 
+    // Restore previous zoom state if exists
+    if (zoomTransformRef.current && !zoomTransformRef.current.k.toString().includes('1')) {
+      svg.call(zoom.transform as any, zoomTransformRef.current);
+    }
+
     // Add click-to-create node in sketch mode
     svg.on('click', (event) => {
       if (!isSketchMode) return;
       
-      // Don't create node if clicking on existing node/edge (check for D3 data binding)
       if (event.target.__data__) return;
-      
-      // Also check if we clicked on a child of a node group
       const parentData = d3.select(event.target).node()?.parentNode?.__data__;
       if (parentData) return;
       
-      // Get click coordinates relative to the zoomed/panned group
       const transform = d3.zoomTransform(svg.node() as Element);
       const [x, y] = d3.pointer(event, svg.node());
       const [transformedX, transformedY] = transform.invert([x, y]);
       
-      // Create new node at click position
       const newNode: Node = {
         id: `node-${Date.now()}`,
         type: 'default',
@@ -105,7 +108,6 @@ export const D3Canvas = ({
         },
       };
       
-      // Update parent state with new node - use setTimeout to batch the update
       setTimeout(() => {
         onNodesChange([...nodes, newNode]);
       }, 0);
@@ -132,43 +134,7 @@ export const D3Canvas = ({
       .attr('y', -dimensions.height * 5)
       .attr('fill', 'url(#grid)');
 
-    // Prepare data for D3
-    const d3Nodes = nodes.map(node => ({
-      ...node,
-      x: node.position.x,
-      y: node.position.y,
-      fx: null, // Allow physics simulation to work
-      fy: null,
-    }));
-
-    const d3Links = edges.map(edge => ({
-      ...edge,
-      source: edge.source,
-      target: edge.target,
-    }));
-
-    // Create force simulation with gentle, slow physics
-    const simulation = d3.forceSimulation(d3Nodes)
-      .force('link', d3.forceLink(d3Links)
-        .id((d: any) => d.id)
-        .distance(150)
-        .strength(0.2))
-      .force('charge', d3.forceManyBody()
-        .strength(-400)
-        .distanceMax(400))
-      .force('collision', d3.forceCollide()
-        .radius(60)
-        .strength(0.7))
-      .force('center', d3.forceCenter(dimensions.width / 2, dimensions.height / 2)
-        .strength(0.03))
-      .alpha(0.3)
-      .alphaDecay(0.008)
-      .velocityDecay(0.3);
-
-    simulationRef.current = simulation;
-
-    // Add arrow markers for directed edges - create multiple versions for different edge types
-    // For straight edges
+    // Add arrow markers
     defs.append('marker')
       .attr('id', 'arrowhead-straight')
       .attr('viewBox', '0 -5 10 10')
@@ -193,7 +159,6 @@ export const D3Canvas = ({
       .attr('d', 'M0,-5L10,0L0,5')
       .attr('fill', 'hsl(var(--primary))');
 
-    // For curved edges
     defs.append('marker')
       .attr('id', 'arrowhead-curved')
       .attr('viewBox', '0 -5 10 10')
@@ -218,23 +183,98 @@ export const D3Canvas = ({
       .attr('d', 'M0,-5L10,0L0,5')
       .attr('fill', 'hsl(var(--primary))');
 
-    // Draw edges with curved paths for strategic template
-    const link = g.append('g')
-      .selectAll('path')
-      .data(d3Links)
-      .join('path')
+    // Initialize simulation once
+    const simulation = d3.forceSimulation()
+      .force('link', d3.forceLink()
+        .id((d: any) => d.id)
+        .distance(150)
+        .strength(0.2))
+      .force('charge', d3.forceManyBody()
+        .strength(-400)
+        .distanceMax(400))
+      .force('collision', d3.forceCollide()
+        .radius(60)
+        .strength(0.7))
+      .force('center', d3.forceCenter(dimensions.width / 2, dimensions.height / 2)
+        .strength(0.03))
+      .alpha(0.3)
+      .alphaDecay(0.008)
+      .velocityDecay(0.3);
+
+    simulationRef.current = simulation;
+
+    return () => {
+      simulation.stop();
+    };
+  }, [dimensions, isSketchMode]);
+
+  // Effect 2: Update data - nodes and edges using enter-update-exit pattern
+  useEffect(() => {
+    if (!gRef.current || !simulationRef.current || dimensions.width === 0) return;
+
+    const g = gRef.current;
+    const simulation = simulationRef.current;
+
+    // Prepare data for D3
+    const d3Nodes = nodes.map(node => {
+      const existingNode = simulation.nodes().find((n: any) => n.id === node.id);
+      return {
+        ...node,
+        x: existingNode?.x ?? node.position.x,
+        y: existingNode?.y ?? node.position.y,
+        vx: existingNode?.vx ?? 0,
+        vy: existingNode?.vy ?? 0,
+        fx: existingNode?.fx ?? null,
+        fy: existingNode?.fy ?? null,
+      };
+    });
+
+    const d3Links = edges.map(edge => ({
+      ...edge,
+      source: edge.source,
+      target: edge.target,
+    }));
+
+    // Update simulation with new data
+    simulation.nodes(d3Nodes);
+    const linkForce = simulation.force('link') as d3.ForceLink<any, any>;
+    if (linkForce) {
+      linkForce.links(d3Links);
+    }
+    simulation.alpha(0.1).restart();
+
+    // Update edges using enter-update-exit pattern
+    const linkGroup = g.select<SVGGElement>('g.edges-group').empty() 
+      ? g.insert('g', ':first-child').attr('class', 'edges-group')
+      : g.select<SVGGElement>('g.edges-group');
+
+    const link = linkGroup
+      .selectAll<SVGPathElement, any>('path')
+      .data(d3Links, (d: any) => d.id);
+
+    // Remove old edges
+    link.exit().remove();
+
+    // Add new edges
+    const linkEnter = link.enter()
+      .append('path')
       .attr('class', (d: any) => d.animated ? 'animated-edge' : '')
+      .attr('fill', 'none')
+      .attr('cursor', 'pointer')
+      .on('click', (event, d) => {
+        event.stopPropagation();
+        onEdgeClick(d as Edge);
+      });
+
+    // Merge and update all edges
+    const linkMerged = linkEnter.merge(link)
       .attr('stroke', (d: any) => 
         d.id === selectedEdgeId ? 'hsl(var(--primary))' : (d.style?.stroke || 'hsl(var(--border))')
       )
       .attr('stroke-width', (d: any) => 
         d.id === selectedEdgeId ? (d.style?.strokeWidth || 1.5) + 1 : (d.style?.strokeWidth || 1.5)
       )
-      .attr('fill', 'none')
       .attr('opacity', (d: any) => d.id === selectedEdgeId ? 0.9 : 0.6)
-      .attr('marker-end', (d: any) => 
-        d.animated || d.markerEnd ? (d.id === selectedEdgeId ? 'url(#arrowhead-selected)' : 'url(#arrowhead)') : null
-      )
       .attr('stroke-dasharray', (d: any) => d.style?.strokeDasharray || null)
       .attr('marker-end', (d: any) => {
         if (!d.animated && !d.markerEnd) return null;
@@ -245,18 +285,24 @@ export const D3Canvas = ({
         } else {
           return isSelected ? 'url(#arrowhead-straight-selected)' : 'url(#arrowhead-straight)';
         }
-      })
-      .attr('cursor', 'pointer')
-      .on('click', (event, d) => {
-        event.stopPropagation();
-        onEdgeClick(d as Edge);
       });
 
-    // Draw nodes
-    const node = g.append('g')
-      .selectAll('g')
-      .data(d3Nodes)
-      .join('g')
+    // Update nodes using enter-update-exit pattern
+    const nodeGroup = g.select<SVGGElement>('g.nodes-group').empty()
+      ? g.append('g').attr('class', 'nodes-group')
+      : g.select<SVGGElement>('g.nodes-group');
+
+    const node = nodeGroup
+      .selectAll<SVGGElement, any>('g.node')
+      .data(d3Nodes, (d: any) => d.id);
+
+    // Remove old nodes
+    node.exit().remove();
+
+    // Add new nodes
+    const nodeEnter = node.enter()
+      .append('g')
+      .attr('class', 'node')
       .attr('cursor', isSketchMode ? 'pointer' : 'grab')
       .call(d3.drag<SVGGElement, any>()
         .on('start', (event, d) => {
@@ -269,7 +315,6 @@ export const D3Canvas = ({
               sourceId: d.id,
             };
           } else {
-            // Only activate simulation if actually dragging, not just clicking
             d.fx = d.x;
             d.fy = d.y;
           }
@@ -279,7 +324,6 @@ export const D3Canvas = ({
             if (dragLineRef.current) {
               dragLineRef.current.x2 = event.x;
               dragLineRef.current.y2 = event.y;
-              // Draw temporary line
               g.selectAll('.drag-line').remove();
               g.append('line')
                 .attr('class', 'drag-line')
@@ -292,7 +336,6 @@ export const D3Canvas = ({
                 .attr('stroke-dasharray', '5,5');
             }
           } else {
-            // Gently wake simulation for smooth dragging
             if (!event.active) simulation.alphaTarget(0.1).restart();
             d.fx = event.x;
             d.fy = event.y;
@@ -301,7 +344,6 @@ export const D3Canvas = ({
         .on('end', (event, d) => {
           if (isSketchMode && dragLineRef.current) {
             g.selectAll('.drag-line').remove();
-            // Check if dropped on another node
             const targetNode = d3Nodes.find(n => {
               const dx = n.x - event.x;
               const dy = n.y - event.y;
@@ -309,7 +351,6 @@ export const D3Canvas = ({
             });
 
             if (targetNode) {
-              // Create edge to existing node
               const newEdge: Edge = {
                 id: `${d.id}-${targetNode.id}`,
                 source: d.id,
@@ -321,7 +362,6 @@ export const D3Canvas = ({
               };
               onEdgesChange([...edges, newEdge]);
             } else {
-              // Create new node and edge
               const newNode: Node = {
                 id: `${Date.now()}`,
                 type: 'default',
@@ -360,21 +400,25 @@ export const D3Canvas = ({
             d.fy = null;
           }
         })
-      );
+      )
+      .on('click', (event, d) => {
+        event.stopPropagation();
+        onNodeClick(d as Node);
+      });
 
-    // Draw nodes based on their shape
-    node.each(function(d: any) {
+    // Draw node shapes for new nodes
+    nodeEnter.each(function(d: any) {
       const g = d3.select(this);
       const shape = d.data?.shape || 'circle';
       const width = parseInt(d.style?.width || '85');
       const size = width / 2;
       const fill = d.style?.background || 'hsl(195, 45%, 52%)';
-      const stroke = d.id === selectedNodeId ? 'hsl(var(--primary))' : (d.style?.border?.split(' ')[2] || 'hsl(195, 50%, 68%)');
-      const strokeWidth = d.id === selectedNodeId ? 3 : 2;
+      const stroke = d.style?.border?.split(' ')[2] || 'hsl(195, 50%, 68%)';
       const filter = d.style?.boxShadow ? 'drop-shadow(0 3px 8px rgba(0,0,0,0.15))' : 'none';
 
       if (shape === 'square') {
         g.append('rect')
+          .attr('class', 'node-shape')
           .attr('x', -size)
           .attr('y', -size)
           .attr('width', width)
@@ -382,110 +426,96 @@ export const D3Canvas = ({
           .attr('rx', 8)
           .attr('fill', fill)
           .attr('stroke', stroke)
-          .attr('stroke-width', strokeWidth)
+          .attr('stroke-width', 2)
           .style('filter', filter);
       } else if (shape === 'triangle') {
         const points = `0,${-size} ${-size},${size} ${size},${size}`;
         g.append('polygon')
+          .attr('class', 'node-shape')
           .attr('points', points)
           .attr('fill', fill)
           .attr('stroke', stroke)
-          .attr('stroke-width', strokeWidth)
+          .attr('stroke-width', 2)
           .style('filter', filter);
       } else {
-        // Default to circle
         g.append('circle')
+          .attr('class', 'node-shape')
           .attr('r', size)
           .attr('fill', fill)
           .attr('stroke', stroke)
-          .attr('stroke-width', strokeWidth)
+          .attr('stroke-width', 2)
           .style('filter', filter);
       }
-    });
 
-    // Draw node labels
-    node.append('text')
-      .text((d: any) => d.data.label)
-      .attr('text-anchor', 'middle')
-      .attr('dy', '0.35em')
-      .attr('fill', (d: any) => d.style?.color || 'white')
-      .attr('font-size', (d: any) => d.style?.fontSize || '12px')
-      .attr('font-weight', (d: any) => d.style?.fontWeight || '400')
-      .attr('pointer-events', 'none')
-      .each(function(d: any) {
-        const text = d3.select(this);
-        const words = d.data.label.split(/\s+/);
-        const lineHeight = 1.1;
-        const width = parseInt(d.style?.width || '85');
-        const maxWidth = width * 0.8;
-        
-        text.text(null);
-        
-        let line: string[] = [];
-        let lineNumber = 0;
-        const tspan = text.append('tspan').attr('x', 0).attr('dy', 0);
-        
-        words.forEach((word: string) => {
-          line.push(word);
+      // Add label
+      const text = g.append('text')
+        .attr('class', 'node-label')
+        .attr('text-anchor', 'middle')
+        .attr('dy', '0.35em')
+        .attr('fill', d.style?.color || 'white')
+        .attr('font-size', d.style?.fontSize || '12px')
+        .attr('font-weight', d.style?.fontWeight || '400')
+        .attr('pointer-events', 'none');
+
+      const words = d.data.label.split(/\s+/);
+      const lineHeight = 1.1;
+      const maxWidth = width * 0.8;
+      
+      let line: string[] = [];
+      let lineNumber = 0;
+      const tspan = text.append('tspan').attr('x', 0).attr('dy', 0);
+      
+      words.forEach((word: string) => {
+        line.push(word);
+        tspan.text(line.join(' '));
+        if (tspan.node()!.getComputedTextLength() > maxWidth) {
+          line.pop();
           tspan.text(line.join(' '));
-          if (tspan.node()!.getComputedTextLength() > maxWidth) {
-            line.pop();
-            tspan.text(line.join(' '));
-            line = [word];
-            lineNumber++;
-            text.append('tspan')
-              .attr('x', 0)
-              .attr('dy', `${lineHeight}em`)
-              .text(word);
-          }
-        });
-        
-        // Center vertically
-        const totalLines = text.selectAll('tspan').size();
-        text.attr('dy', `${-(totalLines - 1) * lineHeight * 0.5}em`);
+          line = [word];
+          lineNumber++;
+          text.append('tspan')
+            .attr('x', 0)
+            .attr('dy', `${lineHeight}em`)
+            .text(word);
+        }
       });
-
-    // Handle node clicks
-    node.on('click', (event, d) => {
-      event.stopPropagation();
-      onNodeClick(d as Node);
+      
+      const totalLines = text.selectAll('tspan').size();
+      text.attr('dy', `${-(totalLines - 1) * lineHeight * 0.5}em`);
     });
 
-    // Update positions on simulation tick with proper edge rendering
+    // Merge and update all nodes (update selection styling)
+    const nodeMerged = nodeEnter.merge(node);
+    
+    nodeMerged.selectAll('.node-shape')
+      .attr('stroke', (d: any) => 
+        d.id === selectedNodeId ? 'hsl(var(--primary))' : (d.style?.border?.split(' ')[2] || 'hsl(195, 50%, 68%)')
+      )
+      .attr('stroke-width', (d: any) => d.id === selectedNodeId ? 3 : 2);
+
+    // Update simulation tick
     simulation.on('tick', () => {
-      link.attr('d', (d: any) => {
+      linkMerged.attr('d', (d: any) => {
         const sourceX = d.source.x;
         const sourceY = d.source.y;
         const targetX = d.target.x;
         const targetY = d.target.y;
         
-        // Render different edge types
         if (d.type === 'smoothstep') {
-          // Curved/smooth edges
           const dx = targetX - sourceX;
           const dy = targetY - sourceY;
           const dr = Math.sqrt(dx * dx + dy * dy) * 0.7;
           return `M${sourceX},${sourceY}A${dr},${dr} 0 0,1 ${targetX},${targetY}`;
         } else if (d.type === 'step') {
-          // Step edges (orthogonal/right-angle)
           const midX = (sourceX + targetX) / 2;
           return `M${sourceX},${sourceY}L${midX},${sourceY}L${midX},${targetY}L${targetX},${targetY}`;
         }
-        
-        // Straight lines for 'straight' or default
         return `M${sourceX},${sourceY}L${targetX},${targetY}`;
       });
 
-      node.attr('transform', (d: any) => `translate(${d.x},${d.y})`);
+      nodeMerged.attr('transform', (d: any) => `translate(${d.x},${d.y})`);
     });
-
-    // Don't save positions automatically - causes reset issue
-    // Positions are managed by the simulation itself
-
-    return () => {
-      simulation.stop();
-    };
-  }, [nodes, edges, dimensions, selectedNodeId, selectedEdgeId, isSketchMode, backgroundColor, templateType]);
+  }, [nodes, edges, selectedNodeId, selectedEdgeId, isSketchMode, onNodeClick, onEdgeClick, onNodesChange, onEdgesChange]);
 
   return (
     <svg
