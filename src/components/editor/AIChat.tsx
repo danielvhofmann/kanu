@@ -69,12 +69,61 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
 
       // Apply graph changes if any
       if (data.graphChanges) {
-        if (data.graphChanges.nodes) {
-          onNodesChange(data.graphChanges.nodes);
+        const { action, nodeId, label, source, target, edgeId } = data.graphChanges;
+        
+        if (action === 'add_node') {
+          const newNode: Node = {
+            id: `${Date.now()}`,
+            type: 'default',
+            position: { x: Math.random() * 500 + 100, y: Math.random() * 300 + 100 },
+            data: { label: label || `Node ${nodes.length + 1}`, shape: 'circle' },
+            style: {
+              background: 'hsl(195, 45%, 52%)',
+              color: 'white',
+              border: '2px solid hsl(195, 50%, 68%)',
+              borderRadius: '50%',
+              padding: '0',
+              fontSize: '12px',
+              fontWeight: '400',
+              width: '85px',
+              height: '85px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
+              boxShadow: '0 3px 12px hsl(195 45% 52% / 0.2)',
+            },
+          };
+          onNodesChange([...nodes, newNode]);
+        } else if (action === 'remove_node' && nodeId) {
+          onNodesChange(nodes.filter(n => n.id !== nodeId && n.data.label !== nodeId));
+          onEdgesChange(edges.filter(e => e.source !== nodeId && e.target !== nodeId && 
+                                         !nodes.find(n => n.data.label === nodeId && (e.source === n.id || e.target === n.id))));
+        } else if (action === 'update_node' && nodeId && label) {
+          onNodesChange(nodes.map(n => 
+            n.id === nodeId || n.data.label === nodeId 
+              ? { ...n, data: { ...n.data, label } } 
+              : n
+          ));
+        } else if (action === 'add_edge' && source && target) {
+          const sourceNode = nodes.find(n => n.id === source || n.data.label === source);
+          const targetNode = nodes.find(n => n.id === target || n.data.label === target);
+          if (sourceNode && targetNode) {
+            const newEdge: Edge = {
+              id: `${Date.now()}`,
+              source: sourceNode.id,
+              target: targetNode.id,
+              type: 'smoothstep',
+              animated: true,
+              style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 },
+              markerEnd: { type: 'arrowClosed' as any },
+            };
+            onEdgesChange([...edges, newEdge]);
+          }
+        } else if (action === 'remove_edge' && edgeId) {
+          onEdgesChange(edges.filter(e => e.id !== edgeId));
         }
-        if (data.graphChanges.edges) {
-          onEdgesChange(data.graphChanges.edges);
-        }
+        
         toast.success('Graph updated');
       }
     } catch (error) {

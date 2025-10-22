@@ -20,6 +20,7 @@ interface EditorSidebarProps {
   onUpdateLabel?: (nodeId: string, label: string) => void;
   onUpdateColor?: (nodeId: string, color: string) => void;
   onUpdateTags?: (nodeId: string, tags: string[]) => void;
+  onUpdateNodeShape?: (nodeId: string, shape: string) => void;
   onUpdateEdge?: (edgeId: string, updates: Partial<Edge>) => void;
   onDelete: (elementId: string) => void;
 }
@@ -68,6 +69,7 @@ export const EditorSidebar = ({
   onUpdateLabel,
   onUpdateColor,
   onUpdateTags,
+  onUpdateNodeShape,
   onUpdateEdge,
   onDelete,
 }: EditorSidebarProps) => {
@@ -180,16 +182,8 @@ export const EditorSidebar = ({
             <div className="grid grid-cols-3 gap-2">
               <button
                 onClick={() => {
-                  if (onUpdateColor && isNode) {
-                    const currentStyle = (element as Node).style;
-                    const bgColor = typeof currentStyle?.background === 'string' ? currentStyle.background : 'hsl(195, 45%, 52%)';
-                    onUpdateColor(element.id, bgColor);
-                    // Update style with circle shape
-                    (element as Node).style = {
-                      ...currentStyle,
-                      borderRadius: '50%',
-                      clipPath: 'none',
-                    };
+                  if (onUpdateNodeShape && isNode) {
+                    onUpdateNodeShape(element.id, 'circle');
                   }
                 }}
                 className="h-12 rounded-lg border-2 border-border/50 hover:border-primary/50 transition-all duration-300 flex items-center justify-center"
@@ -198,15 +192,8 @@ export const EditorSidebar = ({
               </button>
               <button
                 onClick={() => {
-                  if (onUpdateColor && isNode) {
-                    const currentStyle = (element as Node).style;
-                    const bgColor = typeof currentStyle?.background === 'string' ? currentStyle.background : 'hsl(195, 45%, 52%)';
-                    onUpdateColor(element.id, bgColor);
-                    (element as Node).style = {
-                      ...currentStyle,
-                      borderRadius: '8px',
-                      clipPath: 'none',
-                    };
+                  if (onUpdateNodeShape && isNode) {
+                    onUpdateNodeShape(element.id, 'square');
                   }
                 }}
                 className="h-12 rounded-lg border-2 border-border/50 hover:border-primary/50 transition-all duration-300 flex items-center justify-center"
@@ -215,15 +202,8 @@ export const EditorSidebar = ({
               </button>
               <button
                 onClick={() => {
-                  if (onUpdateColor && isNode) {
-                    const currentStyle = (element as Node).style;
-                    const bgColor = typeof currentStyle?.background === 'string' ? currentStyle.background : 'hsl(195, 45%, 52%)';
-                    onUpdateColor(element.id, bgColor);
-                    (element as Node).style = {
-                      ...currentStyle,
-                      borderRadius: '0%',
-                      clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)',
-                    };
+                  if (onUpdateNodeShape && isNode) {
+                    onUpdateNodeShape(element.id, 'triangle');
                   }
                 }}
                 className="h-12 rounded-lg border-2 border-border/50 hover:border-primary/50 transition-all duration-300 flex items-center justify-center"

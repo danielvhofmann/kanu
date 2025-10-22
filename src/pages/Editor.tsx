@@ -33,6 +33,7 @@ const Editor = () => {
   const [backgroundColor, setBackgroundColor] = useState('hsl(0, 0%, 99%)');
   const [selectedPalette, setSelectedPalette] = useState('default');
   const [defaultNodeShape, setDefaultNodeShape] = useState('circle');
+  const [defaultEdgeType, setDefaultEdgeType] = useState('straight');
   const [mapTitle, setMapTitle] = useState('Untitled Map');
   const [showAIChat, setShowAIChat] = useState(false);
   const templateType = searchParams.get('template') as TemplateType;
@@ -204,6 +205,32 @@ const Editor = () => {
     []
   );
 
+  const updateNodeShape = useCallback(
+    (nodeId: string, shape: string) => {
+      setNodes((nds) =>
+        nds.map((node) => {
+          if (node.id !== nodeId) return node;
+          
+          const shapeStyles = {
+            circle: { borderRadius: '50%', clipPath: 'none' },
+            square: { borderRadius: '8px', clipPath: 'none' },
+            triangle: { borderRadius: '0%', clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' },
+          };
+          
+          return {
+            ...node,
+            data: { ...node.data, shape },
+            style: {
+              ...node.style,
+              ...shapeStyles[shape as keyof typeof shapeStyles],
+            },
+          };
+        })
+      );
+    },
+    []
+  );
+
   const updateNodeTags = useCallback(
     (nodeId: string, tags: string[]) => {
       setNodes((nds) =>
@@ -338,49 +365,59 @@ const Editor = () => {
   }, [historyIndex, history]);
 
   const handleExport = useCallback((format: 'png' | 'svg' | 'pdf') => {
-    const canvas = canvasRef.current?.querySelector('svg');
-    if (!canvas) {
+    const svgElement = canvasRef.current?.querySelector('svg');
+    if (!svgElement) {
       toast.error('Canvas not found');
       return;
     }
 
     if (format === 'svg') {
-      const svgData = new XMLSerializer().serializeToString(canvas);
+      const svgData = new XMLSerializer().serializeToString(svgElement);
       const blob = new Blob([svgData], { type: 'image/svg+xml' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.download = `${mapTitle}.svg`;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
       URL.revokeObjectURL(url);
       toast.success('SVG exported');
     } else if (format === 'png') {
-      const svgData = new XMLSerializer().serializeToString(canvas);
-      const img = new Image();
-      const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
+      const svgData = new XMLSerializer().serializeToString(svgElement);
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
       
+      const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
+        const rect = svgElement.getBoundingClientRect();
+        canvas.width = rect.width * 2;
+        canvas.height = rect.height * 2;
         const ctx = canvas.getContext('2d');
         if (ctx) {
+          ctx.scale(2, 2);
           ctx.fillStyle = backgroundColor;
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(img, 0, 0);
+          ctx.fillRect(0, 0, rect.width, rect.height);
+          ctx.drawImage(img, 0, 0, rect.width, rect.height);
           canvas.toBlob((blob) => {
             if (blob) {
-              const url = URL.createObjectURL(blob);
+              const pngUrl = URL.createObjectURL(blob);
               const link = document.createElement('a');
-              link.href = url;
+              link.href = pngUrl;
               link.download = `${mapTitle}.png`;
+              document.body.appendChild(link);
               link.click();
-              URL.revokeObjectURL(url);
+              document.body.removeChild(link);
+              URL.revokeObjectURL(pngUrl);
               toast.success('PNG exported');
             }
-          });
+          }, 'image/png');
         }
+        URL.revokeObjectURL(url);
+      };
+      img.onerror = () => {
+        toast.error('Failed to export PNG');
         URL.revokeObjectURL(url);
       };
       img.src = url;
@@ -451,6 +488,8 @@ const Editor = () => {
             onExport={handleExport}
             nodeShape={defaultNodeShape}
             onNodeShapeChange={setDefaultNodeShape}
+            edgeType={defaultEdgeType}
+            onEdgeTypeChange={setDefaultEdgeType}
             onUndo={handleUndo}
             onRedo={handleRedo}
             canUndo={historyIndex > 0}
@@ -479,6 +518,7 @@ const Editor = () => {
             onUpdateLabel={updateNodeLabel}
             onUpdateColor={updateNodeColor}
             onUpdateTags={updateNodeTags}
+            onUpdateNodeShape={updateNodeShape}
             onUpdateEdge={updateEdge}
             onDelete={deleteNode}
           />

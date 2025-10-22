@@ -95,9 +95,9 @@ Always be helpful and provide accurate information.`;
                 type: "string",
                 description: "Source node ID (for add_edge)"
               },
-              target: {
+              edgeId: {
                 type: "string",
-                description: "Target node ID (for add_edge)"
+                description: "Edge ID (for remove_edge)"
               }
             },
             required: ["action"]

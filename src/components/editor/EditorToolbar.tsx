@@ -23,6 +23,8 @@ interface EditorToolbarProps {
   onExport: (format: 'png' | 'svg' | 'pdf') => void;
   nodeShape: string;
   onNodeShapeChange: (shape: string) => void;
+  edgeType: string;
+  onEdgeTypeChange: (type: string) => void;
   onUndo: () => void;
   onRedo: () => void;
   canUndo: boolean;
@@ -35,6 +37,8 @@ export const EditorToolbar = ({
   onExport,
   nodeShape,
   onNodeShapeChange,
+  edgeType,
+  onEdgeTypeChange,
   onUndo,
   onRedo,
   canUndo,
@@ -67,15 +71,29 @@ export const EditorToolbar = ({
       <div className="h-6 w-px bg-border mx-2" />
 
       <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">Node Shape:</span>
+        <span className="text-sm text-muted-foreground">Node:</span>
         <Select value={nodeShape} onValueChange={onNodeShapeChange}>
-          <SelectTrigger className="h-8 w-[120px]">
+          <SelectTrigger className="h-8 w-[100px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="circle">Round</SelectItem>
             <SelectItem value="square">Square</SelectItem>
             <SelectItem value="triangle">Triangle</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">Edge:</span>
+        <Select value={edgeType} onValueChange={onEdgeTypeChange}>
+          <SelectTrigger className="h-8 w-[100px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="straight">Straight</SelectItem>
+            <SelectItem value="smoothstep">Curved</SelectItem>
+            <SelectItem value="step">Step</SelectItem>
           </SelectContent>
         </Select>
       </div>
