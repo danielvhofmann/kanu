@@ -285,17 +285,37 @@ const Editor = () => {
 
   const deleteElement = useCallback(
     (elementId: string) => {
-      // Check if it's a node or edge
-      const isNode = nodes.some(node => node.id === elementId);
-      const isEdge = edges.some(edge => edge.id === elementId);
+      // Use functional updates to access the latest state
+      setNodes((currentNodes) => {
+        const isNode = currentNodes.some(node => node.id === elementId);
+        
+        if (isNode) {
+          // Delete node and its connected edges
+          setEdges((currentEdges) =>
+            currentEdges.filter(
+              (edge) => edge.source !== elementId && edge.target !== elementId
+            )
+          );
+          setSelectedElement(null);
+          return currentNodes.filter((node) => node.id !== elementId);
+        }
+        
+        return currentNodes; // No change if not a node
+      });
       
-      if (isNode) {
-        deleteNode(elementId);
-      } else if (isEdge) {
-        deleteEdge(elementId);
-      }
+      // Check for edge deletion
+      setEdges((currentEdges) => {
+        const isEdge = currentEdges.some(edge => edge.id === elementId);
+        
+        if (isEdge) {
+          setSelectedElement(null);
+          return currentEdges.filter((edge) => edge.id !== elementId);
+        }
+        
+        return currentEdges; // No change if not an edge
+      });
     },
-    [nodes, edges, deleteNode, deleteEdge]
+    []
   );
 
   const toggleSketchMode = useCallback(() => {

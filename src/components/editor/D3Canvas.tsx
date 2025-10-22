@@ -72,8 +72,12 @@ export const D3Canvas = ({
     svg.on('click', (event) => {
       if (!isSketchMode) return;
       
-      // Don't create node if clicking on existing node/edge
-      if (event.target.tagName !== 'svg') return;
+      // Don't create node if clicking on existing node/edge (check for D3 data binding)
+      if (event.target.__data__) return;
+      
+      // Also check if we clicked on a child of a node group
+      const parentData = d3.select(event.target).node()?.parentNode?.__data__;
+      if (parentData) return;
       
       // Get click coordinates relative to the zoomed/panned group
       const transform = d3.zoomTransform(svg.node() as Element);
