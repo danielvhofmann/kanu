@@ -173,7 +173,7 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
   };
 
   return (
-    <div className="w-96 border-l border-border/50 bg-card/50 backdrop-blur-lg flex flex-col h-screen">
+    <div className="w-96 border-l border-border/50 bg-card/50 backdrop-blur-lg flex flex-col h-full">
       {/* Header */}
       <div className="p-4 border-b border-border/50 flex items-center justify-between">
         <div className="flex items-center gap-2">
