@@ -1,7 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Network } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export const Navigation = () => {
+  const navigate = useNavigate();
+  
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
       <div className="container mx-auto px-6">
@@ -32,11 +35,11 @@ export const Navigation = () => {
           
           {/* CTA buttons */}
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/auth')}>
               Sign In
             </Button>
-            <Button variant="default" size="sm">
-              Get Started
+            <Button variant="default" size="sm" onClick={() => navigate('/auth')}>
+              Register
             </Button>
           </div>
         </div>

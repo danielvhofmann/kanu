@@ -126,13 +126,13 @@ const Editor = () => {
     const color = colors[nodes.length % colors.length];
     
     const shapeStyles = {
-      circle: { borderRadius: '50%' },
-      square: { borderRadius: '8px' },
+      circle: { borderRadius: '50%', clipPath: 'none' },
+      square: { borderRadius: '8px', clipPath: 'none' },
       triangle: { borderRadius: '0%', clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' },
     };
     
     const newNode: Node = {
-      id: `${Date.now()}`,
+      id: `node-${Date.now()}`,
       type: 'default',
       position: { x: Math.random() * 500 + 100, y: Math.random() * 300 + 100 },
       data: { 
@@ -156,9 +156,10 @@ const Editor = () => {
         boxShadow: `0 3px 12px ${color.bg}33`,
       },
     };
-    setNodes((nds) => [...nds, newNode]);
+    const updatedNodes = [...nodes, newNode];
+    setNodes(updatedNodes);
     toast.success('Node added');
-  }, [nodes.length, defaultNodeShape]);
+  }, [nodes, defaultNodeShape]);
 
   const handleImport = useCallback((importedNodes: Node[], importedEdges: Edge[]) => {
     setNodes(importedNodes);
@@ -311,6 +312,52 @@ const Editor = () => {
       toast.success(`Applied ${palette} palette`);
     },
     [paletteColors]
+  );
+
+  const applyNodeShapeToAll = useCallback(
+    (shape: string) => {
+      const shapeStyles = {
+        circle: { borderRadius: '50%', clipPath: 'none' },
+        square: { borderRadius: '8px', clipPath: 'none' },
+        triangle: { borderRadius: '0%', clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' },
+      };
+
+      setNodes((nds) =>
+        nds.map((node) => ({
+          ...node,
+          data: { ...node.data, shape },
+          style: {
+            ...node.style,
+            ...shapeStyles[shape as keyof typeof shapeStyles],
+          },
+        }))
+      );
+
+      setDefaultNodeShape(shape);
+      toast.success(`Applied ${shape} shape to all nodes`);
+    },
+    []
+  );
+
+  const applyEdgeTypeToAll = useCallback(
+    (edgeType: string) => {
+      const typeMap: Record<string, any> = {
+        straight: 'straight',
+        curved: 'smoothstep',
+        step: 'step',
+      };
+
+      setEdges((eds) =>
+        eds.map((edge) => ({
+          ...edge,
+          type: typeMap[edgeType] || 'straight',
+        }))
+      );
+
+      setDefaultEdgeType(edgeType);
+      toast.success(`Applied ${edgeType} edge type to all connections`);
+    },
+    []
   );
 
   // Save to history when nodes or edges change (but not during undo/redo)
@@ -487,9 +534,9 @@ const Editor = () => {
             onImport={() => setShowImportDialog(true)}
             onExport={handleExport}
             nodeShape={defaultNodeShape}
-            onNodeShapeChange={setDefaultNodeShape}
+            onNodeShapeChange={applyNodeShapeToAll}
             edgeType={defaultEdgeType}
-            onEdgeTypeChange={setDefaultEdgeType}
+            onEdgeTypeChange={applyEdgeTypeToAll}
             onUndo={handleUndo}
             onRedo={handleRedo}
             canUndo={historyIndex > 0}

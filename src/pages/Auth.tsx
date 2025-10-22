@@ -30,7 +30,7 @@ export const Auth = () => {
 
         if (error) throw error;
         toast.success('Logged in successfully');
-        navigate('/');
+        navigate('/editor');
       } else {
         if (password !== confirmPassword) {
           toast.error('Passwords do not match');

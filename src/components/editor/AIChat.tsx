@@ -61,19 +61,21 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
 
       if (error) throw error;
 
-      const assistantMessage: Message = {
-        role: 'assistant',
-        content: data.message,
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-
       // Apply graph changes if any
       if (data.graphChanges) {
         const { action, nodeId, label, source, target, edgeId } = data.graphChanges;
         
-        if (action === 'add_node') {
+        if (action === 'remove_node' && nodeId) {
+          // Find node by ID or label
+          const nodeToRemove = nodes.find(n => n.id === nodeId || n.data.label.toLowerCase() === nodeId.toLowerCase());
+          if (nodeToRemove) {
+            onNodesChange(nodes.filter(n => n.id !== nodeToRemove.id));
+            onEdgesChange(edges.filter(e => e.source !== nodeToRemove.id && e.target !== nodeToRemove.id));
+            toast.success(`Removed node: ${nodeToRemove.data.label}`);
+          }
+        } else if (action === 'add_node') {
           const newNode: Node = {
-            id: `${Date.now()}`,
+            id: `node-${Date.now()}`,
             type: 'default',
             position: { x: Math.random() * 500 + 100, y: Math.random() * 300 + 100 },
             data: { label: label || `Node ${nodes.length + 1}`, shape: 'circle' },
@@ -95,22 +97,23 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
             },
           };
           onNodesChange([...nodes, newNode]);
-        } else if (action === 'remove_node' && nodeId) {
-          onNodesChange(nodes.filter(n => n.id !== nodeId && n.data.label !== nodeId));
-          onEdgesChange(edges.filter(e => e.source !== nodeId && e.target !== nodeId && 
-                                         !nodes.find(n => n.data.label === nodeId && (e.source === n.id || e.target === n.id))));
+          toast.success(`Added node: ${label}`);
         } else if (action === 'update_node' && nodeId && label) {
-          onNodesChange(nodes.map(n => 
-            n.id === nodeId || n.data.label === nodeId 
-              ? { ...n, data: { ...n.data, label } } 
-              : n
-          ));
+          const nodeToUpdate = nodes.find(n => n.id === nodeId || n.data.label.toLowerCase() === nodeId.toLowerCase());
+          if (nodeToUpdate) {
+            onNodesChange(nodes.map(n => 
+              n.id === nodeToUpdate.id
+                ? { ...n, data: { ...n.data, label } } 
+                : n
+            ));
+            toast.success(`Updated node: ${label}`);
+          }
         } else if (action === 'add_edge' && source && target) {
-          const sourceNode = nodes.find(n => n.id === source || n.data.label === source);
-          const targetNode = nodes.find(n => n.id === target || n.data.label === target);
+          const sourceNode = nodes.find(n => n.id === source || n.data.label.toLowerCase() === source.toLowerCase());
+          const targetNode = nodes.find(n => n.id === target || n.data.label.toLowerCase() === target.toLowerCase());
           if (sourceNode && targetNode) {
             const newEdge: Edge = {
-              id: `${Date.now()}`,
+              id: `edge-${Date.now()}`,
               source: sourceNode.id,
               target: targetNode.id,
               type: 'smoothstep',
@@ -119,13 +122,19 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
               markerEnd: { type: 'arrowClosed' as any },
             };
             onEdgesChange([...edges, newEdge]);
+            toast.success('Added connection');
           }
         } else if (action === 'remove_edge' && edgeId) {
           onEdgesChange(edges.filter(e => e.id !== edgeId));
+          toast.success('Removed connection');
         }
-        
-        toast.success('Graph updated');
       }
+
+      const assistantMessage: Message = {
+        role: 'assistant',
+        content: data.message || 'Done!',
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Error:', error);
       const errorMessage: Message = {

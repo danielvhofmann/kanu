@@ -44,17 +44,10 @@ export const Hero = () => {
                 size="lg" 
                 variant="hero" 
                 className="group"
-                onClick={() => navigate('/auth')}
+                onClick={() => navigate('/editor?template=stakeholder')}
               >
-                Sign In
+                See Demo
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline"
-                onClick={() => navigate('/editor')}
-              >
-                Start Mapping Free
               </Button>
             </div>
             
