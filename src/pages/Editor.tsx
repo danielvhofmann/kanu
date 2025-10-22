@@ -321,24 +321,24 @@ const Editor = () => {
     }
     
     if (nodes.length > 0 || edges.length > 0) {
+      const newState = { nodes: [...nodes], edges: [...edges] };
+      const current = history[historyIndex];
+      
+      // Don't add if it's the same as current state
+      if (current && JSON.stringify(current) === JSON.stringify(newState)) {
+        return;
+      }
+      
       setHistory(prev => {
-        const newState = { nodes, edges };
         const newHistory = prev.slice(0, historyIndex + 1);
-        
-        // Don't add if it's the same as current state
-        const current = newHistory[newHistory.length - 1];
-        if (current && JSON.stringify(current) === JSON.stringify(newState)) {
-          return prev;
-        }
-        
         newHistory.push(newState);
         // Keep history limited to 50 states
         if (newHistory.length > 50) newHistory.shift();
         return newHistory;
       });
-      setHistoryIndex(prev => prev + 1);
+      setHistoryIndex(prev => Math.min(prev + 1, 49));
     }
-  }, [nodes, edges, historyIndex]);
+  }, [nodes, edges]);
 
   const handleUndo = useCallback(() => {
     if (historyIndex > 0) {

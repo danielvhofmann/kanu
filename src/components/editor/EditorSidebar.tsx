@@ -180,36 +180,39 @@ export const EditorSidebar = ({
           <div className="space-y-3">
             <Label className="text-sm font-light">Node Shape</Label>
             <div className="grid grid-cols-3 gap-2">
-              <button
+              <Button
+                variant="outline"
                 onClick={() => {
                   if (onUpdateNodeShape && isNode) {
                     onUpdateNodeShape(element.id, 'circle');
                   }
                 }}
-                className="h-12 rounded-lg border-2 border-border/50 hover:border-primary/50 transition-all duration-300 flex items-center justify-center"
+                className="h-12"
               >
-                <div className="w-8 h-8 rounded-full bg-primary"></div>
-              </button>
-              <button
+                Round
+              </Button>
+              <Button
+                variant="outline"
                 onClick={() => {
                   if (onUpdateNodeShape && isNode) {
                     onUpdateNodeShape(element.id, 'square');
                   }
                 }}
-                className="h-12 rounded-lg border-2 border-border/50 hover:border-primary/50 transition-all duration-300 flex items-center justify-center"
+                className="h-12"
               >
-                <div className="w-8 h-8 rounded-lg bg-primary"></div>
-              </button>
-              <button
+                Square
+              </Button>
+              <Button
+                variant="outline"
                 onClick={() => {
                   if (onUpdateNodeShape && isNode) {
                     onUpdateNodeShape(element.id, 'triangle');
                   }
                 }}
-                className="h-12 rounded-lg border-2 border-border/50 hover:border-primary/50 transition-all duration-300 flex items-center justify-center"
+                className="h-12"
               >
-                <div className="w-8 h-8 bg-primary" style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }}></div>
-              </button>
+                Triangle
+              </Button>
             </div>
           </div>
 
