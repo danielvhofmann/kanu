@@ -10,6 +10,8 @@ interface D3CanvasProps {
   selectedNodeId: string | null;
   onNodeClick: (node: Node) => void;
   isSketchMode: boolean;
+  backgroundColor?: string;
+  templateType?: string;
 }
 
 export const D3Canvas = ({
@@ -20,6 +22,8 @@ export const D3Canvas = ({
   selectedNodeId,
   onNodeClick,
   isSketchMode,
+  backgroundColor = 'hsl(var(--background))',
+  templateType,
 }: D3CanvasProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -93,22 +97,23 @@ export const D3Canvas = ({
       target: edge.target,
     }));
 
-    // Create force simulation
+    // Create force simulation with gentle, slow physics
     const simulation = d3.forceSimulation(d3Nodes)
       .force('link', d3.forceLink(d3Links)
         .id((d: any) => d.id)
         .distance(150)
-        .strength(0.3))
+        .strength(0.2))
       .force('charge', d3.forceManyBody()
-        .strength(-800)
+        .strength(-400)
         .distanceMax(400))
       .force('collision', d3.forceCollide()
         .radius(60)
-        .strength(0.9))
+        .strength(0.7))
       .force('center', d3.forceCenter(dimensions.width / 2, dimensions.height / 2)
-        .strength(0.05))
-      .alphaDecay(0.01)
-      .velocityDecay(0.3);
+        .strength(0.03))
+      .alpha(0.3)
+      .alphaDecay(0.008)
+      .velocityDecay(0.6);
 
     simulationRef.current = simulation;
 
@@ -137,7 +142,7 @@ export const D3Canvas = ({
       .attr('d', 'M0,-5L10,0L0,5')
       .attr('fill', 'hsl(var(--primary))');
 
-    // Draw edges
+    // Draw edges with curved paths for strategic template
     const link = g.append('g')
       .selectAll('path')
       .data(d3Links)
@@ -167,7 +172,7 @@ export const D3Canvas = ({
               sourceId: d.id,
             };
           } else {
-            if (!event.active) simulation.alphaTarget(0.3).restart();
+            // Only activate simulation if actually dragging, not just clicking
             d.fx = d.x;
             d.fy = d.y;
           }
@@ -190,6 +195,8 @@ export const D3Canvas = ({
                 .attr('stroke-dasharray', '5,5');
             }
           } else {
+            // Gently wake simulation for smooth dragging
+            if (!event.active) simulation.alphaTarget(0.1).restart();
             d.fx = event.x;
             d.fy = event.y;
           }
@@ -319,13 +326,23 @@ export const D3Canvas = ({
       onNodeClick(d as Node);
     });
 
-    // Update positions on simulation tick
+    // Update positions on simulation tick with curved edges for strategic template
     simulation.on('tick', () => {
       link.attr('d', (d: any) => {
         const sourceX = d.source.x;
         const sourceY = d.source.y;
         const targetX = d.target.x;
         const targetY = d.target.y;
+        
+        // Use curved paths for strategic template or smoothstep edges
+        if (templateType === 'strategic' || d.type === 'smoothstep') {
+          const dx = targetX - sourceX;
+          const dy = targetY - sourceY;
+          const dr = Math.sqrt(dx * dx + dy * dy) * 0.7;
+          return `M${sourceX},${sourceY}A${dr},${dr} 0 0,1 ${targetX},${targetY}`;
+        }
+        
+        // Straight lines for network template
         return `M${sourceX},${sourceY}L${targetX},${targetY}`;
       });
 
@@ -349,8 +366,11 @@ export const D3Canvas = ({
   return (
     <svg
       ref={svgRef}
-      className="w-full h-full bg-gradient-subtle"
-      style={{ cursor: isSketchMode ? 'crosshair' : 'default' }}
+      className="w-full h-full"
+      style={{ 
+        cursor: isSketchMode ? 'crosshair' : 'default',
+        backgroundColor: backgroundColor
+      }}
     />
   );
 };

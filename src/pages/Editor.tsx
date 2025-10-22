@@ -4,6 +4,7 @@ import { EditorToolbar } from '@/components/editor/EditorToolbar';
 import { EditorSidebar } from '@/components/editor/EditorSidebar';
 import { ImportDialog } from '@/components/editor/ImportDialog';
 import { D3Canvas } from '@/components/editor/D3Canvas';
+import { ColorControls } from '@/components/editor/ColorControls';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Pencil } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -21,10 +22,12 @@ const Editor = () => {
   const [selectedElement, setSelectedElement] = useState<Node | null>(null);
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [isSketchMode, setIsSketchMode] = useState(false);
+  const [backgroundColor, setBackgroundColor] = useState('hsl(0, 0%, 99%)');
+  const [selectedPalette, setSelectedPalette] = useState('default');
+  const templateType = searchParams.get('template') as TemplateType;
 
   // Load template if specified in URL, otherwise show import dialog
   useEffect(() => {
-    const templateType = searchParams.get('template') as TemplateType;
     if (templateType) {
       const template = getTemplate(templateType);
       if (template) {
@@ -34,7 +37,7 @@ const Editor = () => {
     } else if (nodes.length === 0) {
       setShowImportDialog(true);
     }
-  }, [searchParams, nodes.length]);
+  }, [searchParams, nodes.length, templateType]);
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -177,7 +180,15 @@ const Editor = () => {
             Sketch Mode
           </Button>
         </div>
-        <EditorToolbar onAddNode={addNode} onImport={() => setShowImportDialog(true)} />
+        <div className="flex items-center gap-2">
+          <ColorControls
+            backgroundColor={backgroundColor}
+            onBackgroundColorChange={setBackgroundColor}
+            selectedPalette={selectedPalette}
+            onPaletteChange={setSelectedPalette}
+          />
+          <EditorToolbar onAddNode={addNode} onImport={() => setShowImportDialog(true)} />
+        </div>
       </div>
 
       {/* Main editor area */}
@@ -192,6 +203,8 @@ const Editor = () => {
             selectedNodeId={selectedElement?.id || null}
             onNodeClick={onNodeClick}
             isSketchMode={isSketchMode}
+            backgroundColor={backgroundColor}
+            templateType={templateType || undefined}
           />
         </div>
 
