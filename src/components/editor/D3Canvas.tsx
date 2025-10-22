@@ -215,24 +215,7 @@ export const D3Canvas = ({
         
         console.log('Click handler: Creating new node', newNode.id);
         
-        // Immediately add node to simulation to prevent race condition
-        if (simulationRef.current) {
-          const d3Node = {
-            ...newNode,
-            x: transformedX,
-            y: transformedY,
-            vx: 0,
-            vy: 0,
-            fx: null,
-            fy: null,
-          };
-          const currentSimNodes = simulationRef.current.nodes();
-          console.log('Click handler: Adding to simulation. Current sim nodes:', currentSimNodes.map((n: any) => n.id));
-          simulationRef.current.nodes([...currentSimNodes, d3Node]);
-          console.log('Click handler: Simulation nodes after add:', simulationRef.current.nodes().map((n: any) => n.id));
-          simulationRef.current.alpha(0.3).restart();
-        }
-        
+        // Let Effect #2 handle simulation updates
         return [...currentNodes, newNode];
       });
     });
@@ -425,36 +408,21 @@ export const D3Canvas = ({
                     alignItems: 'center',
                     justifyContent: 'center',
                     textAlign: 'center',
-                    boxShadow: '0 3px 12px hsl(195 45% 52% / 0.2)',
-                  },
-                };
-                const newEdge: Edge = {
-                  id: `${d.id}-${newNode.id}`,
-                  source: d.id,
-                  target: newNode.id,
-                  type: 'smoothstep',
-                  animated: true,
-                  style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 },
-                  markerEnd: { type: 'arrowClosed' as any },
-                };
-                
-                // Immediately add node to simulation to prevent race condition
-                if (simulationRef.current) {
-                  const d3Node = {
-                    ...newNode,
-                    x: event.x,
-                    y: event.y,
-                    vx: 0,
-                    vy: 0,
-                    fx: null,
-                    fy: null,
-                  };
-                  const currentSimNodes = simulationRef.current.nodes();
-                  simulationRef.current.nodes([...currentSimNodes, d3Node]);
-                  simulationRef.current.alpha(0.3).restart();
-                }
-                
-                onEdgesChange((currentEdges) => [...currentEdges, newEdge]);
+                  boxShadow: '0 3px 12px hsl(195 45% 52% / 0.2)',
+                },
+              };
+              const newEdge: Edge = {
+                id: `${d.id}-${newNode.id}`,
+                source: d.id,
+                target: newNode.id,
+                type: 'smoothstep',
+                animated: true,
+                style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 },
+                markerEnd: { type: 'arrowClosed' as any },
+              };
+              
+              // Let Effect #2 handle simulation updates
+              onEdgesChange((currentEdges) => [...currentEdges, newEdge]);
                 return [...currentNodes, newNode];
               });
             }
