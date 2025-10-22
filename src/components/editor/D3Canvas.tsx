@@ -169,7 +169,7 @@ export const D3Canvas = ({
     return () => {
       simulation.stop();
     };
-  }, [dimensions.width, dimensions.height]);
+  }, []); // Run only once on mount
 
   // Effect 1.5: Update click handler when sketch mode changes (without recreating SVG)
   useEffect(() => {
@@ -209,10 +209,27 @@ export const D3Canvas = ({
             boxShadow: '0 3px 12px hsl(195 45% 52% / 0.2)',
           },
         };
+        
+        // Immediately add node to simulation to prevent race condition
+        if (simulationRef.current) {
+          const d3Node = {
+            ...newNode,
+            x: transformedX,
+            y: transformedY,
+            vx: 0,
+            vy: 0,
+            fx: null,
+            fy: null,
+          };
+          const currentSimNodes = simulationRef.current.nodes();
+          simulationRef.current.nodes([...currentSimNodes, d3Node]);
+          simulationRef.current.alpha(0.3).restart();
+        }
+        
         return [...currentNodes, newNode];
       });
     });
-  }, [isSketchMode, onNodesChange]);
+  }, [isSketchMode]); // onNodesChange from props, no need in deps
 
   // Effect 2: Update data - nodes and edges using enter-update-exit pattern
   useEffect(() => {
@@ -221,11 +238,11 @@ export const D3Canvas = ({
     const g = gRef.current;
     const simulation = simulationRef.current;
 
-    // Prepare data for D3 - clear old simulation data and only use current nodes
+    // Prepare data for D3 - explicitly sync simulation with current state
     const nodeIds = new Set(nodes.map(n => n.id));
     const currentSimNodes = simulation.nodes();
     
-    // Filter simulation nodes to only keep those that exist in current state
+    // Clear simulation and filter to only keep nodes that exist in current state
     const validSimNodes = currentSimNodes.filter((n: any) => nodeIds.has(n.id));
     
     const d3Nodes = nodes.map(node => {
@@ -240,6 +257,9 @@ export const D3Canvas = ({
         fy: existingNode?.fy ?? null,
       };
     });
+    
+    // Explicitly set simulation nodes to only current valid nodes (prevents deleted nodes from persisting)
+    simulation.nodes(d3Nodes);
 
     const d3Links = edges.map(edge => ({
       ...edge,
@@ -247,8 +267,7 @@ export const D3Canvas = ({
       target: edge.target,
     }));
 
-    // Update simulation with new data
-    simulation.nodes(d3Nodes);
+    // Update simulation links
     const linkForce = simulation.force('link') as d3.ForceLink<any, any>;
     if (linkForce) {
       linkForce.links(d3Links);
@@ -308,8 +327,13 @@ export const D3Canvas = ({
       .selectAll<SVGGElement, any>('g.node')
       .data(d3Nodes, (d: any) => d.id);
 
-    // Remove old nodes
+    // Remove old nodes and clear them from simulation
     node.exit().remove();
+    
+    // Explicitly remove deleted nodes from simulation to prevent reappearing
+    const remainingNodeIds = new Set(d3Nodes.map((n: any) => n.id));
+    const cleanedSimNodes = simulation.nodes().filter((n: any) => remainingNodeIds.has(n.id));
+    simulation.nodes(cleanedSimNodes);
 
     // Add new nodes
     const nodeEnter = node.enter()
@@ -403,6 +427,23 @@ export const D3Canvas = ({
                   style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 },
                   markerEnd: { type: 'arrowClosed' as any },
                 };
+                
+                // Immediately add node to simulation to prevent race condition
+                if (simulationRef.current) {
+                  const d3Node = {
+                    ...newNode,
+                    x: event.x,
+                    y: event.y,
+                    vx: 0,
+                    vy: 0,
+                    fx: null,
+                    fy: null,
+                  };
+                  const currentSimNodes = simulationRef.current.nodes();
+                  simulationRef.current.nodes([...currentSimNodes, d3Node]);
+                  simulationRef.current.alpha(0.3).restart();
+                }
+                
                 onEdgesChange((currentEdges) => [...currentEdges, newEdge]);
                 return [...currentNodes, newNode];
               });
