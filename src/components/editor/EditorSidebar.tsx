@@ -113,7 +113,7 @@ export const EditorSidebar = ({
   };
 
   return (
-    <div className="w-96 border-l border-border/50 bg-card/50 backdrop-blur-lg p-6 space-y-6 overflow-y-auto">
+    <div className="w-96 border-r border-border/50 bg-card/50 backdrop-blur-lg p-6 space-y-6 overflow-y-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-light">

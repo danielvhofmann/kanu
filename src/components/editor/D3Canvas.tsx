@@ -124,11 +124,12 @@ export const D3Canvas = ({
 
     simulationRef.current = simulation;
 
-    // Add arrow markers for directed edges
+    // Add arrow markers for directed edges - create multiple versions for different edge types
+    // For straight edges
     defs.append('marker')
-      .attr('id', 'arrowhead')
+      .attr('id', 'arrowhead-straight')
       .attr('viewBox', '0 -5 10 10')
-      .attr('refX', 35)
+      .attr('refX', 50)
       .attr('refY', 0)
       .attr('markerWidth', 6)
       .attr('markerHeight', 6)
@@ -138,9 +139,34 @@ export const D3Canvas = ({
       .attr('fill', 'hsl(var(--border))');
 
     defs.append('marker')
-      .attr('id', 'arrowhead-selected')
+      .attr('id', 'arrowhead-straight-selected')
       .attr('viewBox', '0 -5 10 10')
-      .attr('refX', 35)
+      .attr('refX', 50)
+      .attr('refY', 0)
+      .attr('markerWidth', 6)
+      .attr('markerHeight', 6)
+      .attr('orient', 'auto')
+      .append('path')
+      .attr('d', 'M0,-5L10,0L0,5')
+      .attr('fill', 'hsl(var(--primary))');
+
+    // For curved edges
+    defs.append('marker')
+      .attr('id', 'arrowhead-curved')
+      .attr('viewBox', '0 -5 10 10')
+      .attr('refX', 45)
+      .attr('refY', 0)
+      .attr('markerWidth', 6)
+      .attr('markerHeight', 6)
+      .attr('orient', 'auto')
+      .append('path')
+      .attr('d', 'M0,-5L10,0L0,5')
+      .attr('fill', 'hsl(var(--border))');
+
+    defs.append('marker')
+      .attr('id', 'arrowhead-curved-selected')
+      .attr('viewBox', '0 -5 10 10')
+      .attr('refX', 45)
       .attr('refY', 0)
       .attr('markerWidth', 6)
       .attr('markerHeight', 6)
@@ -167,6 +193,16 @@ export const D3Canvas = ({
         d.animated || d.markerEnd ? (d.id === selectedEdgeId ? 'url(#arrowhead-selected)' : 'url(#arrowhead)') : null
       )
       .attr('stroke-dasharray', (d: any) => d.style?.strokeDasharray || null)
+      .attr('marker-end', (d: any) => {
+        if (!d.animated && !d.markerEnd) return null;
+        const isCurved = d.type === 'smoothstep';
+        const isSelected = d.id === selectedEdgeId;
+        if (isCurved) {
+          return isSelected ? 'url(#arrowhead-curved-selected)' : 'url(#arrowhead-curved)';
+        } else {
+          return isSelected ? 'url(#arrowhead-straight-selected)' : 'url(#arrowhead-straight)';
+        }
+      })
       .attr('cursor', 'pointer')
       .on('click', (event, d) => {
         event.stopPropagation();

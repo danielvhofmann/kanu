@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Node, Edge, Connection, MarkerType } from 'reactflow';
 import { EditorToolbar } from '@/components/editor/EditorToolbar';
 import { EditorSidebar } from '@/components/editor/EditorSidebar';
@@ -6,13 +6,20 @@ import { ImportDialog } from '@/components/editor/ImportDialog';
 import { D3Canvas } from '@/components/editor/D3Canvas';
 import { ColorControls } from '@/components/editor/ColorControls';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Pencil } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ArrowLeft, Pencil, Undo, Redo } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getTemplate, type TemplateType } from '@/lib/templates';
 import { toast } from 'sonner';
+import * as d3 from 'd3';
 
 const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
+
+interface HistoryState {
+  nodes: Node[];
+  edges: Edge[];
+}
 
 const Editor = () => {
   const navigate = useNavigate();
@@ -24,7 +31,15 @@ const Editor = () => {
   const [isSketchMode, setIsSketchMode] = useState(false);
   const [backgroundColor, setBackgroundColor] = useState('hsl(0, 0%, 99%)');
   const [selectedPalette, setSelectedPalette] = useState('default');
+  const [defaultEdgeType, setDefaultEdgeType] = useState('straight');
+  const [mapTitle, setMapTitle] = useState('Untitled Map');
   const templateType = searchParams.get('template') as TemplateType;
+  
+  // History management for undo/redo
+  const [history, setHistory] = useState<HistoryState[]>([{ nodes: [], edges: [] }]);
+  const [historyIndex, setHistoryIndex] = useState(0);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const isUndoRedoAction = useRef(false);
 
   // Color palettes
   const paletteColors: Record<string, string[]> = {
@@ -259,6 +274,109 @@ const Editor = () => {
     [paletteColors]
   );
 
+  // Save to history when nodes or edges change (but not during undo/redo)
+  useEffect(() => {
+    if (isUndoRedoAction.current) {
+      isUndoRedoAction.current = false;
+      return;
+    }
+    
+    if (nodes.length > 0 || edges.length > 0) {
+      setHistory(prev => {
+        const newState = { nodes, edges };
+        const newHistory = prev.slice(0, historyIndex + 1);
+        
+        // Don't add if it's the same as current state
+        const current = newHistory[newHistory.length - 1];
+        if (current && JSON.stringify(current) === JSON.stringify(newState)) {
+          return prev;
+        }
+        
+        newHistory.push(newState);
+        // Keep history limited to 50 states
+        if (newHistory.length > 50) newHistory.shift();
+        return newHistory;
+      });
+      setHistoryIndex(prev => prev + 1);
+    }
+  }, [nodes, edges, historyIndex]);
+
+  const handleUndo = useCallback(() => {
+    if (historyIndex > 0) {
+      isUndoRedoAction.current = true;
+      const newIndex = historyIndex - 1;
+      const state = history[newIndex];
+      setNodes(state.nodes);
+      setEdges(state.edges);
+      setHistoryIndex(newIndex);
+      toast.success('Undo');
+    }
+  }, [historyIndex, history]);
+
+  const handleRedo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      isUndoRedoAction.current = true;
+      const newIndex = historyIndex + 1;
+      const state = history[newIndex];
+      setNodes(state.nodes);
+      setEdges(state.edges);
+      setHistoryIndex(newIndex);
+      toast.success('Redo');
+    }
+  }, [historyIndex, history]);
+
+  const handleExport = useCallback((format: 'png' | 'svg' | 'pdf') => {
+    const canvas = canvasRef.current?.querySelector('svg');
+    if (!canvas) {
+      toast.error('Canvas not found');
+      return;
+    }
+
+    if (format === 'svg') {
+      const svgData = new XMLSerializer().serializeToString(canvas);
+      const blob = new Blob([svgData], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${mapTitle}.svg`;
+      link.click();
+      URL.revokeObjectURL(url);
+      toast.success('SVG exported');
+    } else if (format === 'png') {
+      const svgData = new XMLSerializer().serializeToString(canvas);
+      const img = new Image();
+      const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.fillStyle = backgroundColor;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = `${mapTitle}.png`;
+              link.click();
+              URL.revokeObjectURL(url);
+              toast.success('PNG exported');
+            }
+          });
+        }
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
+    } else if (format === 'pdf') {
+      toast.info('PDF export coming soon');
+    }
+  }, [mapTitle, backgroundColor]);
+
   return (
     <div className="h-screen flex flex-col bg-background">
       {/* Top navigation */}
@@ -274,7 +392,31 @@ const Editor = () => {
             Back
           </Button>
           <div className="h-6 w-px bg-border" />
-          <h1 className="text-lg font-light">Untitled Map</h1>
+          <Input
+            value={mapTitle}
+            onChange={(e) => setMapTitle(e.target.value)}
+            className="h-8 w-64 bg-background/50 text-muted-foreground focus:text-foreground border-none"
+            placeholder="Untitled Map"
+          />
+          <div className="h-6 w-px bg-border" />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleUndo}
+            disabled={historyIndex <= 0}
+            className="gap-2"
+          >
+            <Undo className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleRedo}
+            disabled={historyIndex >= history.length - 1}
+            className="gap-2"
+          >
+            <Redo className="w-4 h-4" />
+          </Button>
           <div className="h-6 w-px bg-border" />
           <Button
             variant={isSketchMode ? "default" : "ghost"}
@@ -285,22 +427,43 @@ const Editor = () => {
             <Pencil className="w-4 h-4" />
             Sketch Mode
           </Button>
-        </div>
-        <div className="flex items-center gap-2">
           <ColorControls
             backgroundColor={backgroundColor}
             onBackgroundColorChange={setBackgroundColor}
             selectedPalette={selectedPalette}
             onPaletteChange={applyPalette}
           />
-          <EditorToolbar onAddNode={addNode} onImport={() => setShowImportDialog(true)} />
+          <EditorToolbar 
+            onAddNode={addNode} 
+            onImport={() => setShowImportDialog(true)}
+            onExport={handleExport}
+            edgeType={defaultEdgeType}
+            onEdgeTypeChange={setDefaultEdgeType}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            canUndo={historyIndex > 0}
+            canRedo={historyIndex < history.length - 1}
+          />
         </div>
       </div>
 
       {/* Main editor area */}
       <div className="flex-1 flex relative">
+        {/* Sidebar */}
+        {selectedElement && (
+          <EditorSidebar
+            element={selectedElement}
+            onClose={() => setSelectedElement(null)}
+            onUpdateLabel={updateNodeLabel}
+            onUpdateColor={updateNodeColor}
+            onUpdateTags={updateNodeTags}
+            onUpdateEdge={updateEdge}
+            onDelete={deleteNode}
+          />
+        )}
+        
         {/* Canvas */}
-        <div className="flex-1 relative">
+        <div ref={canvasRef} className="flex-1 relative">
           <D3Canvas
             nodes={nodes}
             edges={edges}
@@ -315,19 +478,6 @@ const Editor = () => {
             templateType={templateType || undefined}
           />
         </div>
-
-        {/* Sidebar */}
-        {selectedElement && (
-          <EditorSidebar
-            element={selectedElement}
-            onClose={() => setSelectedElement(null)}
-            onUpdateLabel={updateNodeLabel}
-            onUpdateColor={updateNodeColor}
-            onUpdateTags={updateNodeTags}
-            onUpdateEdge={updateEdge}
-            onDelete={deleteNode}
-          />
-        )}
       </div>
 
       {/* Import Dialog */}
