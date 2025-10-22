@@ -120,7 +120,7 @@ export const D3Canvas = ({
         .strength(0.03))
       .alpha(0.3)
       .alphaDecay(0.008)
-      .velocityDecay(0.6);
+      .velocityDecay(0.3);
 
     simulationRef.current = simulation;
 
@@ -319,18 +319,46 @@ export const D3Canvas = ({
         })
       );
 
-    // Draw node circles
-    node.append('circle')
-      .attr('r', (d: any) => {
-        const width = parseInt(d.style?.width || '85');
-        return width / 2;
-      })
-      .attr('fill', (d: any) => d.style?.background || 'hsl(195, 45%, 52%)')
-      .attr('stroke', (d: any) => 
-        d.id === selectedNodeId ? 'hsl(var(--primary))' : (d.style?.border?.split(' ')[2] || 'hsl(195, 50%, 68%)')
-      )
-      .attr('stroke-width', (d: any) => d.id === selectedNodeId ? 3 : 2)
-      .style('filter', (d: any) => d.style?.boxShadow ? 'drop-shadow(0 3px 8px rgba(0,0,0,0.15))' : 'none');
+    // Draw nodes based on their shape
+    node.each(function(d: any) {
+      const g = d3.select(this);
+      const shape = d.data?.shape || 'circle';
+      const width = parseInt(d.style?.width || '85');
+      const size = width / 2;
+      const fill = d.style?.background || 'hsl(195, 45%, 52%)';
+      const stroke = d.id === selectedNodeId ? 'hsl(var(--primary))' : (d.style?.border?.split(' ')[2] || 'hsl(195, 50%, 68%)');
+      const strokeWidth = d.id === selectedNodeId ? 3 : 2;
+      const filter = d.style?.boxShadow ? 'drop-shadow(0 3px 8px rgba(0,0,0,0.15))' : 'none';
+
+      if (shape === 'square') {
+        g.append('rect')
+          .attr('x', -size)
+          .attr('y', -size)
+          .attr('width', width)
+          .attr('height', width)
+          .attr('rx', 8)
+          .attr('fill', fill)
+          .attr('stroke', stroke)
+          .attr('stroke-width', strokeWidth)
+          .style('filter', filter);
+      } else if (shape === 'triangle') {
+        const points = `0,${-size} ${-size},${size} ${size},${size}`;
+        g.append('polygon')
+          .attr('points', points)
+          .attr('fill', fill)
+          .attr('stroke', stroke)
+          .attr('stroke-width', strokeWidth)
+          .style('filter', filter);
+      } else {
+        // Default to circle
+        g.append('circle')
+          .attr('r', size)
+          .attr('fill', fill)
+          .attr('stroke', stroke)
+          .attr('stroke-width', strokeWidth)
+          .style('filter', filter);
+      }
+    });
 
     // Draw node labels
     node.append('text')

@@ -5,9 +5,10 @@ import { EditorSidebar } from '@/components/editor/EditorSidebar';
 import { ImportDialog } from '@/components/editor/ImportDialog';
 import { D3Canvas } from '@/components/editor/D3Canvas';
 import { ColorControls } from '@/components/editor/ColorControls';
+import { AIChat } from '@/components/editor/AIChat';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Pencil, Undo, Redo } from 'lucide-react';
+import { ArrowLeft, Pencil, Undo, Redo, MessageSquare } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getTemplate, type TemplateType } from '@/lib/templates';
 import { toast } from 'sonner';
@@ -31,8 +32,9 @@ const Editor = () => {
   const [isSketchMode, setIsSketchMode] = useState(false);
   const [backgroundColor, setBackgroundColor] = useState('hsl(0, 0%, 99%)');
   const [selectedPalette, setSelectedPalette] = useState('default');
-  const [defaultEdgeType, setDefaultEdgeType] = useState('straight');
+  const [defaultNodeShape, setDefaultNodeShape] = useState('circle');
   const [mapTitle, setMapTitle] = useState('Untitled Map');
+  const [showAIChat, setShowAIChat] = useState(false);
   const templateType = searchParams.get('template') as TemplateType;
   
   // History management for undo/redo
@@ -122,16 +124,25 @@ const Editor = () => {
     ];
     const color = colors[nodes.length % colors.length];
     
+    const shapeStyles = {
+      circle: { borderRadius: '50%' },
+      square: { borderRadius: '8px' },
+      triangle: { borderRadius: '0%', clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' },
+    };
+    
     const newNode: Node = {
       id: `${Date.now()}`,
       type: 'default',
       position: { x: Math.random() * 500 + 100, y: Math.random() * 300 + 100 },
-      data: { label: `Node ${nodes.length + 1}` },
+      data: { 
+        label: `Node ${nodes.length + 1}`,
+        shape: defaultNodeShape,
+      },
       style: {
         background: color.bg,
         color: 'white',
         border: `2px solid ${color.border}`,
-        borderRadius: '50%',
+        ...shapeStyles[defaultNodeShape as keyof typeof shapeStyles],
         padding: '0',
         fontSize: '12px',
         fontWeight: '400',
@@ -145,7 +156,8 @@ const Editor = () => {
       },
     };
     setNodes((nds) => [...nds, newNode]);
-  }, [nodes.length]);
+    toast.success('Node added');
+  }, [nodes.length, defaultNodeShape]);
 
   const handleImport = useCallback((importedNodes: Node[], importedEdges: Edge[]) => {
     setNodes(importedNodes);
@@ -437,13 +449,23 @@ const Editor = () => {
             onAddNode={addNode} 
             onImport={() => setShowImportDialog(true)}
             onExport={handleExport}
-            edgeType={defaultEdgeType}
-            onEdgeTypeChange={setDefaultEdgeType}
+            nodeShape={defaultNodeShape}
+            onNodeShapeChange={setDefaultNodeShape}
             onUndo={handleUndo}
             onRedo={handleRedo}
             canUndo={historyIndex > 0}
             canRedo={historyIndex < history.length - 1}
           />
+          <div className="h-6 w-px bg-border mx-2" />
+          <Button
+            variant={showAIChat ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setShowAIChat(!showAIChat)}
+            className="gap-2"
+          >
+            <MessageSquare className="w-4 h-4" />
+            AI Assistant
+          </Button>
         </div>
       </div>
 
@@ -478,6 +500,17 @@ const Editor = () => {
             templateType={templateType || undefined}
           />
         </div>
+
+        {/* AI Chat */}
+        {showAIChat && (
+          <AIChat
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={setNodes}
+            onEdgesChange={setEdges}
+            onClose={() => setShowAIChat(false)}
+          />
+        )}
       </div>
 
       {/* Import Dialog */}

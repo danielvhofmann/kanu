@@ -21,8 +21,8 @@ interface EditorToolbarProps {
   onAddNode: () => void;
   onImport: () => void;
   onExport: (format: 'png' | 'svg' | 'pdf') => void;
-  edgeType: string;
-  onEdgeTypeChange: (type: string) => void;
+  nodeShape: string;
+  onNodeShapeChange: (shape: string) => void;
   onUndo: () => void;
   onRedo: () => void;
   canUndo: boolean;
@@ -33,8 +33,8 @@ export const EditorToolbar = ({
   onAddNode, 
   onImport, 
   onExport,
-  edgeType,
-  onEdgeTypeChange,
+  nodeShape,
+  onNodeShapeChange,
   onUndo,
   onRedo,
   canUndo,
@@ -67,15 +67,15 @@ export const EditorToolbar = ({
       <div className="h-6 w-px bg-border mx-2" />
 
       <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">Edge Type:</span>
-        <Select value={edgeType} onValueChange={onEdgeTypeChange}>
+        <span className="text-sm text-muted-foreground">Node Shape:</span>
+        <Select value={nodeShape} onValueChange={onNodeShapeChange}>
           <SelectTrigger className="h-8 w-[120px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="straight">Straight</SelectItem>
-            <SelectItem value="smoothstep">Curved</SelectItem>
-            <SelectItem value="step">Step</SelectItem>
+            <SelectItem value="circle">Round</SelectItem>
+            <SelectItem value="square">Square</SelectItem>
+            <SelectItem value="triangle">Triangle</SelectItem>
           </SelectContent>
         </Select>
       </div>

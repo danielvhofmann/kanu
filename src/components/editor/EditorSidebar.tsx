@@ -174,6 +174,65 @@ export const EditorSidebar = ({
             )}
           </div>
 
+          {/* Node Shape */}
+          <div className="space-y-3">
+            <Label className="text-sm font-light">Node Shape</Label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                onClick={() => {
+                  if (onUpdateColor && isNode) {
+                    const currentStyle = (element as Node).style;
+                    const bgColor = typeof currentStyle?.background === 'string' ? currentStyle.background : 'hsl(195, 45%, 52%)';
+                    onUpdateColor(element.id, bgColor);
+                    // Update style with circle shape
+                    (element as Node).style = {
+                      ...currentStyle,
+                      borderRadius: '50%',
+                      clipPath: 'none',
+                    };
+                  }
+                }}
+                className="h-12 rounded-lg border-2 border-border/50 hover:border-primary/50 transition-all duration-300 flex items-center justify-center"
+              >
+                <div className="w-8 h-8 rounded-full bg-primary"></div>
+              </button>
+              <button
+                onClick={() => {
+                  if (onUpdateColor && isNode) {
+                    const currentStyle = (element as Node).style;
+                    const bgColor = typeof currentStyle?.background === 'string' ? currentStyle.background : 'hsl(195, 45%, 52%)';
+                    onUpdateColor(element.id, bgColor);
+                    (element as Node).style = {
+                      ...currentStyle,
+                      borderRadius: '8px',
+                      clipPath: 'none',
+                    };
+                  }
+                }}
+                className="h-12 rounded-lg border-2 border-border/50 hover:border-primary/50 transition-all duration-300 flex items-center justify-center"
+              >
+                <div className="w-8 h-8 rounded-lg bg-primary"></div>
+              </button>
+              <button
+                onClick={() => {
+                  if (onUpdateColor && isNode) {
+                    const currentStyle = (element as Node).style;
+                    const bgColor = typeof currentStyle?.background === 'string' ? currentStyle.background : 'hsl(195, 45%, 52%)';
+                    onUpdateColor(element.id, bgColor);
+                    (element as Node).style = {
+                      ...currentStyle,
+                      borderRadius: '0%',
+                      clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)',
+                    };
+                  }
+                }}
+                className="h-12 rounded-lg border-2 border-border/50 hover:border-primary/50 transition-all duration-300 flex items-center justify-center"
+              >
+                <div className="w-8 h-8 bg-primary" style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }}></div>
+              </button>
+            </div>
+          </div>
+
           {/* Color Palettes */}
           <div className="space-y-3">
             <Label className="text-sm font-light">Color Palette</Label>
