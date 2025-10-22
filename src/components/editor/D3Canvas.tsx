@@ -34,7 +34,6 @@ export const D3Canvas = ({
   const simulationRef = useRef<d3.Simulation<any, any> | null>(null);
   const dragLineRef = useRef<{ x1: number; y1: number; x2: number; y2: number; sourceId: string } | null>(null);
   const isInitialMount = useRef(true);
-  const previousNodesLength = useRef(0);
 
   // Update dimensions on mount and resize
   useEffect(() => {
@@ -51,19 +50,6 @@ export const D3Canvas = ({
 
   useEffect(() => {
     if (!svgRef.current || dimensions.width === 0) return;
-
-    // Check if we need to fully reinitialize or just update
-    const shouldReinitialize = isInitialMount.current || 
-      nodes.length !== previousNodesLength.current ||
-      !simulationRef.current;
-
-    previousNodesLength.current = nodes.length;
-    
-    if (!shouldReinitialize && simulationRef.current) {
-      // Just update existing simulation data
-      isInitialMount.current = false;
-      return;
-    }
 
     isInitialMount.current = false;
 

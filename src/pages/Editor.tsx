@@ -26,6 +26,45 @@ const Editor = () => {
   const [selectedPalette, setSelectedPalette] = useState('default');
   const templateType = searchParams.get('template') as TemplateType;
 
+  // Color palettes
+  const paletteColors: Record<string, string[]> = {
+    default: [
+      'hsl(195, 45%, 52%)',
+      'hsl(355, 45%, 50%)',
+      'hsl(30, 35%, 55%)',
+      'hsl(85, 35%, 58%)',
+      'hsl(210, 25%, 62%)',
+    ],
+    ocean: [
+      'hsl(200, 70%, 45%)',
+      'hsl(190, 65%, 50%)',
+      'hsl(210, 60%, 55%)',
+      'hsl(220, 55%, 60%)',
+      'hsl(230, 50%, 65%)',
+    ],
+    sunset: [
+      'hsl(25, 75%, 55%)',
+      'hsl(10, 70%, 50%)',
+      'hsl(340, 65%, 55%)',
+      'hsl(280, 60%, 60%)',
+      'hsl(260, 55%, 65%)',
+    ],
+    forest: [
+      'hsl(120, 35%, 45%)',
+      'hsl(140, 40%, 50%)',
+      'hsl(160, 35%, 55%)',
+      'hsl(80, 40%, 50%)',
+      'hsl(100, 35%, 55%)',
+    ],
+    monochrome: [
+      'hsl(220, 10%, 30%)',
+      'hsl(220, 10%, 45%)',
+      'hsl(220, 10%, 60%)',
+      'hsl(220, 10%, 75%)',
+      'hsl(220, 10%, 85%)',
+    ],
+  };
+
   // Load template if specified in URL, otherwise show import dialog
   useEffect(() => {
     if (templateType) {
@@ -189,6 +228,37 @@ const Editor = () => {
     });
   }, []);
 
+  const applyPalette = useCallback(
+    (palette: string) => {
+      const colors = paletteColors[palette];
+      if (!colors) return;
+
+      setNodes((nds) =>
+        nds.map((node, index) => ({
+          ...node,
+          style: {
+            ...node.style,
+            background: colors[index % colors.length],
+          },
+        }))
+      );
+
+      setEdges((eds) =>
+        eds.map((edge, index) => ({
+          ...edge,
+          style: {
+            ...edge.style,
+            stroke: colors[index % colors.length],
+          },
+        }))
+      );
+
+      setSelectedPalette(palette);
+      toast.success(`Applied ${palette} palette`);
+    },
+    [paletteColors]
+  );
+
   return (
     <div className="h-screen flex flex-col bg-background">
       {/* Top navigation */}
@@ -221,7 +291,7 @@ const Editor = () => {
             backgroundColor={backgroundColor}
             onBackgroundColorChange={setBackgroundColor}
             selectedPalette={selectedPalette}
-            onPaletteChange={setSelectedPalette}
+            onPaletteChange={applyPalette}
           />
           <EditorToolbar onAddNode={addNode} onImport={() => setShowImportDialog(true)} />
         </div>
