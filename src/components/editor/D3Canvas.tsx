@@ -105,7 +105,10 @@ export const D3Canvas = ({
         },
       };
       
-      onNodesChange([...nodes, newNode]);
+      // Update parent state with new node - use setTimeout to batch the update
+      setTimeout(() => {
+        onNodesChange([...nodes, newNode]);
+      }, 0);
     });
 
     // Add background grid
@@ -134,8 +137,8 @@ export const D3Canvas = ({
       ...node,
       x: node.position.x,
       y: node.position.y,
-      fx: null,
-      fy: null,
+      fx: node.position.x, // Fix position to prevent simulation from moving it
+      fy: node.position.y, // Fix position to prevent simulation from moving it
     }));
 
     const d3Links = edges.map(edge => ({
@@ -353,8 +356,17 @@ export const D3Canvas = ({
             dragLineRef.current = null;
           } else {
             if (!event.active) simulation.alphaTarget(0);
-            d.fx = null;
-            d.fy = null;
+            // Keep position fixed and update parent state
+            d.fx = event.x;
+            d.fy = event.y;
+            
+            // Update the node position in parent state
+            const updatedNodes = nodes.map(n => 
+              n.id === d.id 
+                ? { ...n, position: { x: event.x, y: event.y } }
+                : n
+            );
+            onNodesChange(updatedNodes);
           }
         })
       );
