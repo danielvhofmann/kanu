@@ -558,7 +558,7 @@ const Editor = () => {
       </div>
 
       {/* Main editor area */}
-      <div className="flex-1 flex relative">
+      <div className="flex-1 flex relative overflow-hidden">
         {/* Sidebar */}
         {selectedElement && (
           <EditorSidebar
