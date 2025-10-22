@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Network } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import heroImage from "@/assets/hero-network.jpg";
 
 export const Hero = () => {
+  const navigate = useNavigate();
+  
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
       {/* Subtle gradient background */}
@@ -34,7 +37,12 @@ export const Hero = () => {
             </p>
             
             <div className="flex flex-wrap gap-4 pt-4">
-              <Button size="lg" variant="hero" className="group">
+              <Button 
+                size="lg" 
+                variant="hero" 
+                className="group"
+                onClick={() => navigate('/editor')}
+              >
                 Start Mapping Free
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </Button>
