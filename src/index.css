@@ -18,21 +18,27 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 215 20% 25%;
 
-    /* Primary: Soft cyan for intelligent clarity */
-    --primary: 190 75% 50%;
+    /* Primary: Muted teal/cyan (like Kumu's blues) */
+    --primary: 195 45% 52%;
     --primary-foreground: 0 0% 100%;
-    --primary-light: 190 75% 65%;
-    --primary-glow: 190 80% 75%;
+    --primary-light: 195 50% 68%;
+    --primary-glow: 195 55% 75%;
 
-    /* Secondary: Mint green for organic connections */
-    --secondary: 160 60% 55%;
+    /* Secondary: Deep burgundy/red (like Kumu's reds) */
+    --secondary: 355 45% 50%;
     --secondary-foreground: 0 0% 100%;
-    --secondary-light: 160 55% 70%;
+    --secondary-light: 355 50% 65%;
 
-    /* Accent: Soft violet for depth and wisdom */
-    --accent: 260 55% 60%;
+    /* Accent: Earthy brown/tan (like Kumu's browns) */
+    --accent: 30 35% 55%;
     --accent-foreground: 0 0% 100%;
-    --accent-light: 260 50% 75%;
+    --accent-light: 30 40% 68%;
+    
+    /* Additional colors for variety */
+    --tertiary: 85 35% 58%;
+    --tertiary-foreground: 0 0% 100%;
+    --quaternary: 210 25% 62%;
+    --quaternary-foreground: 0 0% 100%;
 
     /* Muted: Subtle grays for secondary content */
     --muted: 210 15% 96%;
@@ -48,9 +54,9 @@ All colors MUST be HSL.
     --radius: 0.75rem;
 
     /* Gradients: Subtle, calming transitions */
-    --gradient-hero: linear-gradient(135deg, hsl(190 75% 65%) 0%, hsl(260 55% 70%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(195 50% 68%) 0%, hsl(355 50% 65%) 100%);
     --gradient-subtle: linear-gradient(180deg, hsl(0 0% 99%) 0%, hsl(210 20% 97%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(160 60% 65%) 0%, hsl(190 75% 65%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(85 40% 68%) 0%, hsl(195 50% 68%) 100%);
 
     /* Shadows: Soft, elegant depth */
     --shadow-sm: 0 2px 8px -2px hsl(215 20% 25% / 0.06);

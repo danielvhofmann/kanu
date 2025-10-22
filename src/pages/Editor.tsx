@@ -64,7 +64,13 @@ const Editor = () => {
   );
 
   const addNode = useCallback(() => {
-    const colors = ['primary', 'secondary', 'accent', 'primary-light'];
+    const colors = [
+      { bg: 'hsl(195, 45%, 52%)', border: 'hsl(195, 50%, 68%)' },
+      { bg: 'hsl(355, 45%, 50%)', border: 'hsl(355, 50%, 65%)' },
+      { bg: 'hsl(30, 35%, 55%)', border: 'hsl(30, 40%, 68%)' },
+      { bg: 'hsl(85, 35%, 58%)', border: 'hsl(85, 40%, 70%)' },
+      { bg: 'hsl(210, 25%, 62%)', border: 'hsl(210, 30%, 75%)' },
+    ];
     const color = colors[nodes.length % colors.length];
     
     const newNode: Node = {
@@ -73,20 +79,20 @@ const Editor = () => {
       position: { x: Math.random() * 500 + 100, y: Math.random() * 300 + 100 },
       data: { label: `Node ${nodes.length + 1}` },
       style: {
-        background: `hsl(var(--${color}))`,
+        background: color.bg,
         color: 'white',
-        border: `2px solid hsl(var(--${color}-light))`,
+        border: `2px solid ${color.border}`,
         borderRadius: '50%',
-        padding: '20px',
-        fontSize: '13px',
-        fontWeight: '300',
-        width: '100px',
-        height: '100px',
+        padding: '0',
+        fontSize: '12px',
+        fontWeight: '400',
+        width: '85px',
+        height: '85px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         textAlign: 'center',
-        boxShadow: `0 4px 12px hsl(var(--${color}) / 0.2)`,
+        boxShadow: `0 3px 12px ${color.bg}33`,
       },
     };
     setNodes((nds) => [...nds, newNode]);

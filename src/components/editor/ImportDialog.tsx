@@ -46,8 +46,17 @@ export const ImportDialog = ({ open, onOpenChange, onImport }: ImportDialogProps
             
             if (!source || !target) continue;
             
+            const colors = [
+              { bg: 'hsl(195, 45%, 52%)', border: 'hsl(195, 50%, 68%)' },
+              { bg: 'hsl(355, 45%, 50%)', border: 'hsl(355, 50%, 65%)' },
+              { bg: 'hsl(30, 35%, 55%)', border: 'hsl(30, 40%, 68%)' },
+              { bg: 'hsl(85, 35%, 58%)', border: 'hsl(85, 40%, 70%)' },
+              { bg: 'hsl(210, 25%, 62%)', border: 'hsl(210, 30%, 75%)' },
+            ];
+            
             // Create nodes if they don't exist
             if (!newNodes.has(source)) {
+              const color = colors[newNodes.size % colors.length];
               newNodes.set(source, {
                 id: source,
                 type: 'default',
@@ -57,25 +66,26 @@ export const ImportDialog = ({ open, onOpenChange, onImport }: ImportDialogProps
                 },
                 data: { label: source },
                 style: {
-                  background: 'hsl(var(--primary))',
+                  background: color.bg,
                   color: 'white',
-                  border: '2px solid hsl(var(--primary-light))',
+                  border: `2px solid ${color.border}`,
                   borderRadius: '50%',
-                  padding: '20px',
-                  fontSize: '13px',
-                  fontWeight: '300',
-                  width: '100px',
-                  height: '100px',
+                  padding: '0',
+                  fontSize: '12px',
+                  fontWeight: '400',
+                  width: '90px',
+                  height: '90px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   textAlign: 'center',
-                  boxShadow: '0 4px 12px hsl(var(--primary) / 0.2)',
+                  boxShadow: `0 3px 12px ${color.bg}33`,
                 },
               });
             }
             
             if (!newNodes.has(target)) {
+              const color = colors[newNodes.size % colors.length];
               newNodes.set(target, {
                 id: target,
                 type: 'default',
@@ -85,20 +95,20 @@ export const ImportDialog = ({ open, onOpenChange, onImport }: ImportDialogProps
                 },
                 data: { label: target },
                 style: {
-                  background: 'hsl(var(--secondary))',
+                  background: color.bg,
                   color: 'white',
-                  border: '2px solid hsl(var(--secondary-light))',
+                  border: `2px solid ${color.border}`,
                   borderRadius: '50%',
-                  padding: '20px',
-                  fontSize: '13px',
-                  fontWeight: '300',
-                  width: '100px',
-                  height: '100px',
+                  padding: '0',
+                  fontSize: '12px',
+                  fontWeight: '400',
+                  width: '90px',
+                  height: '90px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   textAlign: 'center',
-                  boxShadow: '0 4px 12px hsl(var(--secondary) / 0.2)',
+                  boxShadow: `0 3px 12px ${color.bg}33`,
                 },
               });
             }
@@ -126,12 +136,19 @@ export const ImportDialog = ({ open, onOpenChange, onImport }: ImportDialogProps
           // Node list format
           const newNodes: Node[] = [];
           
+          const colors = [
+            { bg: 'hsl(195, 45%, 52%)', border: 'hsl(195, 50%, 68%)' },
+            { bg: 'hsl(355, 45%, 50%)', border: 'hsl(355, 50%, 65%)' },
+            { bg: 'hsl(30, 35%, 55%)', border: 'hsl(30, 40%, 68%)' },
+            { bg: 'hsl(85, 35%, 58%)', border: 'hsl(85, 40%, 70%)' },
+            { bg: 'hsl(210, 25%, 62%)', border: 'hsl(210, 30%, 75%)' },
+          ];
+          
           for (let i = 1; i < lines.length; i++) {
             const [id, label, type] = lines[i].split(',').map(s => s.trim());
             
             if (!id) continue;
             
-            const colors = ['primary', 'secondary', 'accent', 'primary-light'];
             const color = colors[i % colors.length];
             
             newNodes.push({
@@ -143,20 +160,20 @@ export const ImportDialog = ({ open, onOpenChange, onImport }: ImportDialogProps
               },
               data: { label: label || id, type: type || '' },
               style: {
-                background: `hsl(var(--${color}))`,
+                background: color.bg,
                 color: 'white',
-                border: `2px solid hsl(var(--${color}-light))`,
+                border: `2px solid ${color.border}`,
                 borderRadius: '50%',
-                padding: '20px',
-                fontSize: '13px',
-                fontWeight: '300',
-                width: '100px',
-                height: '100px',
+                padding: '0',
+                fontSize: '12px',
+                fontWeight: '400',
+                width: '90px',
+                height: '90px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 textAlign: 'center',
-                boxShadow: `0 4px 12px hsl(var(--${color}) / 0.2)`,
+                boxShadow: `0 3px 12px ${color.bg}33`,
               },
             });
           }
