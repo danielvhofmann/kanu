@@ -313,18 +313,10 @@ export const D3Canvas = ({
       .selectAll<SVGGElement, any>('g.node')
       .data(d3Nodes, (d: any) => d.id);
 
-    // Remove old nodes and clear them from simulation
+    // Remove old nodes from DOM (simulation already has correct nodes from line 256)
     const exitNodes = node.exit();
     console.log('Removing nodes from DOM:', exitNodes.data().map((n: any) => n.id));
     exitNodes.remove();
-    
-    // Explicitly remove deleted nodes from simulation to prevent reappearing
-    const remainingNodeIds = new Set(d3Nodes.map((n: any) => n.id));
-    const cleanedSimNodes = simulation.nodes().filter((n: any) => remainingNodeIds.has(n.id));
-    console.log('Cleaning simulation - keeping:', remainingNodeIds);
-    console.log('Simulation nodes before cleaning:', simulation.nodes().map((n: any) => n.id));
-    simulation.nodes(cleanedSimNodes);
-    console.log('Simulation nodes after cleaning:', simulation.nodes().map((n: any) => n.id));
 
     // Add new nodes
     const enterNodes = node.enter();
