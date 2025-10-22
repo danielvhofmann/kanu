@@ -8,7 +8,9 @@ interface D3CanvasProps {
   onNodesChange: (nodes: Node[]) => void;
   onEdgesChange: (edges: Edge[]) => void;
   selectedNodeId: string | null;
+  selectedEdgeId: string | null;
   onNodeClick: (node: Node) => void;
+  onEdgeClick: (edge: Edge) => void;
   isSketchMode: boolean;
   backgroundColor?: string;
   templateType?: string;
@@ -20,7 +22,9 @@ export const D3Canvas = ({
   onNodesChange,
   onEdgesChange,
   selectedNodeId,
+  selectedEdgeId,
   onNodeClick,
+  onEdgeClick,
   isSketchMode,
   backgroundColor = 'hsl(var(--background))',
   templateType,
@@ -29,6 +33,8 @@ export const D3Canvas = ({
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const simulationRef = useRef<d3.Simulation<any, any> | null>(null);
   const dragLineRef = useRef<{ x1: number; y1: number; x2: number; y2: number; sourceId: string } | null>(null);
+  const isInitialMount = useRef(true);
+  const previousNodesLength = useRef(0);
 
   // Update dimensions on mount and resize
   useEffect(() => {
@@ -45,6 +51,21 @@ export const D3Canvas = ({
 
   useEffect(() => {
     if (!svgRef.current || dimensions.width === 0) return;
+
+    // Check if we need to fully reinitialize or just update
+    const shouldReinitialize = isInitialMount.current || 
+      nodes.length !== previousNodesLength.current ||
+      !simulationRef.current;
+
+    previousNodesLength.current = nodes.length;
+    
+    if (!shouldReinitialize && simulationRef.current) {
+      // Just update existing simulation data
+      isInitialMount.current = false;
+      return;
+    }
+
+    isInitialMount.current = false;
 
     const svg = d3.select(svgRef.current);
     svg.selectAll('*').remove();
@@ -147,13 +168,24 @@ export const D3Canvas = ({
       .selectAll('path')
       .data(d3Links)
       .join('path')
-      .attr('stroke', (d: any) => d.style?.stroke || 'hsl(var(--border))')
-      .attr('stroke-width', (d: any) => d.style?.strokeWidth || 1.5)
+      .attr('class', (d: any) => d.animated ? 'animated-edge' : '')
+      .attr('stroke', (d: any) => 
+        d.id === selectedEdgeId ? 'hsl(var(--primary))' : (d.style?.stroke || 'hsl(var(--border))')
+      )
+      .attr('stroke-width', (d: any) => 
+        d.id === selectedEdgeId ? (d.style?.strokeWidth || 1.5) + 1 : (d.style?.strokeWidth || 1.5)
+      )
       .attr('fill', 'none')
-      .attr('opacity', 0.6)
+      .attr('opacity', (d: any) => d.id === selectedEdgeId ? 0.9 : 0.6)
       .attr('marker-end', (d: any) => 
-        d.animated || d.markerEnd ? 'url(#arrowhead)' : null
-      );
+        d.animated || d.markerEnd ? (d.id === selectedEdgeId ? 'url(#arrowhead-selected)' : 'url(#arrowhead)') : null
+      )
+      .attr('stroke-dasharray', (d: any) => d.style?.strokeDasharray || null)
+      .attr('cursor', 'pointer')
+      .on('click', (event, d) => {
+        event.stopPropagation();
+        onEdgeClick(d as Edge);
+      });
 
     // Draw nodes
     const node = g.append('g')
@@ -326,7 +358,7 @@ export const D3Canvas = ({
       onNodeClick(d as Node);
     });
 
-    // Update positions on simulation tick with curved edges for strategic template
+    // Update positions on simulation tick with proper edge rendering
     simulation.on('tick', () => {
       link.attr('d', (d: any) => {
         const sourceX = d.source.x;
@@ -334,34 +366,28 @@ export const D3Canvas = ({
         const targetX = d.target.x;
         const targetY = d.target.y;
         
-        // Use curved paths for strategic template or smoothstep edges
-        if (templateType === 'strategic' || d.type === 'smoothstep') {
+        // Use curved paths only for smoothstep edges
+        if (d.type === 'smoothstep') {
           const dx = targetX - sourceX;
           const dy = targetY - sourceY;
           const dr = Math.sqrt(dx * dx + dy * dy) * 0.7;
           return `M${sourceX},${sourceY}A${dr},${dr} 0 0,1 ${targetX},${targetY}`;
         }
         
-        // Straight lines for network template
+        // Straight lines for everything else
         return `M${sourceX},${sourceY}L${targetX},${targetY}`;
       });
 
       node.attr('transform', (d: any) => `translate(${d.x},${d.y})`);
     });
 
-    // Save positions back to nodes after simulation settles
-    simulation.on('end', () => {
-      const updatedNodes = d3Nodes.map(d => ({
-        ...nodes.find(n => n.id === d.id)!,
-        position: { x: d.x, y: d.y },
-      }));
-      onNodesChange(updatedNodes);
-    });
+    // Don't save positions automatically - causes reset issue
+    // Positions are managed by the simulation itself
 
     return () => {
       simulation.stop();
     };
-  }, [nodes, edges, dimensions, selectedNodeId, isSketchMode, onNodesChange, onEdgesChange, onNodeClick]);
+  }, [nodes, edges, dimensions, selectedNodeId, selectedEdgeId, isSketchMode, onNodesChange, onEdgesChange, onNodeClick, onEdgeClick, backgroundColor, templateType]);
 
   return (
     <svg

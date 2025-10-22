@@ -176,3 +176,15 @@ All colors MUST be HSL.
     opacity: 1;
   }
 }
+
+/* D3 animated edges */
+.animated-edge {
+  stroke-dasharray: 5;
+  animation: dash 20s linear infinite;
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -100;
+  }
+}

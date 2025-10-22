@@ -251,15 +251,15 @@ const strategicTemplate: Template = {
   ],
   edges: [
     // Vision to goals
-    { id: 'e1', source: 'vision', target: 'goal1', type: 'smoothstep', animated: true, style: { stroke: nodeColors.teal.bg, strokeWidth: 2.5 }, markerEnd: { type: MarkerType.ArrowClosed, color: nodeColors.teal.bg } },
-    { id: 'e2', source: 'vision', target: 'goal2', type: 'smoothstep', animated: true, style: { stroke: nodeColors.brown.bg, strokeWidth: 2.5 }, markerEnd: { type: MarkerType.ArrowClosed, color: nodeColors.brown.bg } },
+    { id: 'e1', source: 'vision', target: 'goal1', type: 'straight', animated: true, style: { stroke: nodeColors.teal.bg, strokeWidth: 2.5 }, markerEnd: { type: MarkerType.ArrowClosed, color: nodeColors.teal.bg } },
+    { id: 'e2', source: 'vision', target: 'goal2', type: 'straight', animated: true, style: { stroke: nodeColors.brown.bg, strokeWidth: 2.5 }, markerEnd: { type: MarkerType.ArrowClosed, color: nodeColors.brown.bg } },
     
     // Goals to initiatives
-    { id: 'e3', source: 'goal1', target: 'init1', type: 'smoothstep', style: { stroke: nodeColors.sage.bg, strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: nodeColors.sage.bg } },
-    { id: 'e4', source: 'goal1', target: 'init2', type: 'smoothstep', style: { stroke: nodeColors.lightTeal.bg, strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: nodeColors.lightTeal.bg } },
-    { id: 'e5', source: 'goal2', target: 'init3', type: 'smoothstep', style: { stroke: nodeColors.brown.bg, strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: nodeColors.brown.bg } },
-    { id: 'e6', source: 'goal2', target: 'init4', type: 'smoothstep', style: { stroke: nodeColors.slate.bg, strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: nodeColors.slate.bg } },
-    { id: 'e7', source: 'goal2', target: 'init5', type: 'smoothstep', style: { stroke: nodeColors.gray.bg, strokeWidth: 1.5 }, markerEnd: { type: MarkerType.ArrowClosed, color: nodeColors.gray.bg } },
+    { id: 'e3', source: 'goal1', target: 'init1', type: 'straight', style: { stroke: nodeColors.sage.bg, strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: nodeColors.sage.bg } },
+    { id: 'e4', source: 'goal1', target: 'init2', type: 'straight', style: { stroke: nodeColors.lightTeal.bg, strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: nodeColors.lightTeal.bg } },
+    { id: 'e5', source: 'goal2', target: 'init3', type: 'straight', style: { stroke: nodeColors.brown.bg, strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: nodeColors.brown.bg } },
+    { id: 'e6', source: 'goal2', target: 'init4', type: 'straight', style: { stroke: nodeColors.slate.bg, strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: nodeColors.slate.bg } },
+    { id: 'e7', source: 'goal2', target: 'init5', type: 'straight', style: { stroke: nodeColors.gray.bg, strokeWidth: 1.5 }, markerEnd: { type: MarkerType.ArrowClosed, color: nodeColors.gray.bg } },
   ],
 };
 

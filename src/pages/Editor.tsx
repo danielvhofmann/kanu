@@ -19,7 +19,7 @@ const Editor = () => {
   const [searchParams] = useSearchParams();
   const [nodes, setNodes] = useState<Node[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
-  const [selectedElement, setSelectedElement] = useState<Node | null>(null);
+  const [selectedElement, setSelectedElement] = useState<Node | Edge | null>(null);
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [isSketchMode, setIsSketchMode] = useState(false);
   const [backgroundColor, setBackgroundColor] = useState('hsl(0, 0%, 99%)');
@@ -102,6 +102,10 @@ const Editor = () => {
     setSelectedElement(node);
   }, []);
 
+  const onEdgeClick = useCallback((edge: Edge) => {
+    setSelectedElement(edge);
+  }, []);
+
   const updateNodeLabel = useCallback(
     (nodeId: string, newLabel: string) => {
       setNodes((nds) =>
@@ -128,6 +132,38 @@ const Editor = () => {
                 },
               }
             : node
+        )
+      );
+    },
+    []
+  );
+
+  const updateNodeTags = useCallback(
+    (nodeId: string, tags: string[]) => {
+      setNodes((nds) =>
+        nds.map((node) =>
+          node.id === nodeId
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  tags,
+                },
+              }
+            : node
+        )
+      );
+    },
+    []
+  );
+
+  const updateEdge = useCallback(
+    (edgeId: string, updates: Partial<Edge>) => {
+      setEdges((eds) =>
+        eds.map((edge) =>
+          edge.id === edgeId
+            ? { ...edge, ...updates }
+            : edge
         )
       );
     },
@@ -200,8 +236,10 @@ const Editor = () => {
             edges={edges}
             onNodesChange={setNodes}
             onEdgesChange={setEdges}
-            selectedNodeId={selectedElement?.id || null}
+            selectedNodeId={selectedElement && 'data' in selectedElement ? selectedElement.id : null}
+            selectedEdgeId={selectedElement && 'source' in selectedElement ? selectedElement.id : null}
             onNodeClick={onNodeClick}
+            onEdgeClick={onEdgeClick}
             isSketchMode={isSketchMode}
             backgroundColor={backgroundColor}
             templateType={templateType || undefined}
@@ -215,6 +253,8 @@ const Editor = () => {
             onClose={() => setSelectedElement(null)}
             onUpdateLabel={updateNodeLabel}
             onUpdateColor={updateNodeColor}
+            onUpdateTags={updateNodeTags}
+            onUpdateEdge={updateEdge}
             onDelete={deleteNode}
           />
         )}
