@@ -11,19 +11,16 @@ import { toast } from 'sonner';
 
 interface EditorToolbarProps {
   onAddNode: () => void;
+  onImport: () => void;
 }
 
-export const EditorToolbar = ({ onAddNode }: EditorToolbarProps) => {
+export const EditorToolbar = ({ onAddNode, onImport }: EditorToolbarProps) => {
   const handleSave = () => {
     toast.success('Map saved successfully');
   };
 
   const handleExport = () => {
     toast.info('Export feature coming soon');
-  };
-
-  const handleImport = () => {
-    toast.info('Import feature coming soon');
   };
 
   const handleShare = () => {
@@ -49,7 +46,7 @@ export const EditorToolbar = ({ onAddNode }: EditorToolbarProps) => {
         Save
       </Button>
 
-      <Button variant="ghost" size="sm" onClick={handleImport}>
+      <Button variant="ghost" size="sm" onClick={onImport}>
         <Upload className="w-4 h-4" />
       </Button>
 

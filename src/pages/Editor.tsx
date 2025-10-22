@@ -14,30 +14,13 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { EditorToolbar } from '@/components/editor/EditorToolbar';
 import { EditorSidebar } from '@/components/editor/EditorSidebar';
+import { ImportDialog } from '@/components/editor/ImportDialog';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getTemplate, type TemplateType } from '@/lib/templates';
 
-const initialNodes: Node[] = [
-  {
-    id: '1',
-    type: 'default',
-    position: { x: 250, y: 150 },
-    data: { label: 'Example Element' },
-    style: {
-      background: 'hsl(var(--primary))',
-      color: 'white',
-      border: '2px solid hsl(var(--primary-light))',
-      borderRadius: '12px',
-      padding: '16px',
-      fontSize: '14px',
-      fontWeight: '300',
-      boxShadow: 'var(--shadow-md)',
-    },
-  },
-];
-
+const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
 
 const Editor = () => {
@@ -46,8 +29,9 @@ const Editor = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedElement, setSelectedElement] = useState<Node | null>(null);
+  const [showImportDialog, setShowImportDialog] = useState(false);
 
-  // Load template if specified in URL
+  // Load template if specified in URL, otherwise show import dialog
   useEffect(() => {
     const templateType = searchParams.get('template') as TemplateType;
     if (templateType) {
@@ -56,8 +40,11 @@ const Editor = () => {
         setNodes(template.nodes);
         setEdges(template.edges);
       }
+    } else if (nodes.length === 0) {
+      // Show import dialog if no nodes and no template
+      setShowImportDialog(true);
     }
-  }, [searchParams, setNodes, setEdges]);
+  }, [searchParams, setNodes, setEdges, nodes.length]);
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -77,24 +64,38 @@ const Editor = () => {
   );
 
   const addNode = useCallback(() => {
+    const colors = ['primary', 'secondary', 'accent', 'primary-light'];
+    const color = colors[nodes.length % colors.length];
+    
     const newNode: Node = {
-      id: `${nodes.length + 1}`,
+      id: `${Date.now()}`,
       type: 'default',
       position: { x: Math.random() * 500 + 100, y: Math.random() * 300 + 100 },
-      data: { label: `Element ${nodes.length + 1}` },
+      data: { label: `Node ${nodes.length + 1}` },
       style: {
-        background: 'hsl(var(--secondary))',
+        background: `hsl(var(--${color}))`,
         color: 'white',
-        border: '2px solid hsl(var(--secondary-light))',
-        borderRadius: '12px',
-        padding: '16px',
-        fontSize: '14px',
+        border: `2px solid hsl(var(--${color}-light))`,
+        borderRadius: '50%',
+        padding: '20px',
+        fontSize: '13px',
         fontWeight: '300',
-        boxShadow: 'var(--shadow-md)',
+        width: '100px',
+        height: '100px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center',
+        boxShadow: `0 4px 12px hsl(var(--${color}) / 0.2)`,
       },
     };
     setNodes((nds) => [...nds, newNode]);
   }, [nodes.length, setNodes]);
+
+  const handleImport = useCallback((importedNodes: Node[], importedEdges: Edge[]) => {
+    setNodes(importedNodes);
+    setEdges(importedEdges);
+  }, [setNodes, setEdges]);
 
   const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
     setSelectedElement(node);
@@ -160,7 +161,7 @@ const Editor = () => {
           <div className="h-6 w-px bg-border" />
           <h1 className="text-lg font-light">Untitled Map</h1>
         </div>
-        <EditorToolbar onAddNode={addNode} />
+        <EditorToolbar onAddNode={addNode} onImport={() => setShowImportDialog(true)} />
       </div>
 
       {/* Main editor area */}
@@ -200,6 +201,13 @@ const Editor = () => {
           />
         )}
       </div>
+
+      {/* Import Dialog */}
+      <ImportDialog
+        open={showImportDialog}
+        onOpenChange={setShowImportDialog}
+        onImport={handleImport}
+      />
     </div>
   );
 };
