@@ -68,6 +68,42 @@ export const D3Canvas = ({
 
     svg.call(zoom);
 
+    // Add click-to-create node in sketch mode
+    svg.on('click', (event) => {
+      if (!isSketchMode) return;
+      
+      // Don't create node if clicking on existing node/edge
+      if (event.target.tagName !== 'svg') return;
+      
+      // Get click coordinates relative to the zoomed/panned group
+      const transform = d3.zoomTransform(svg.node() as Element);
+      const [x, y] = d3.pointer(event, svg.node());
+      const [transformedX, transformedY] = transform.invert([x, y]);
+      
+      // Create new node at click position
+      const newNode: Node = {
+        id: `node-${Date.now()}`,
+        type: 'default',
+        position: { x: transformedX, y: transformedY },
+        data: { label: `Node ${nodes.length + 1}` },
+        style: {
+          background: 'hsl(195, 45%, 52%)',
+          color: 'white',
+          border: '2px solid hsl(195, 50%, 68%)',
+          borderRadius: '50%',
+          width: '85px',
+          height: '85px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          boxShadow: '0 3px 12px hsl(195 45% 52% / 0.2)',
+        },
+      };
+      
+      onNodesChange([...nodes, newNode]);
+    });
+
     // Add background grid
     const defs = svg.append('defs');
     const pattern = defs.append('pattern')

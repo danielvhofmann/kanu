@@ -275,6 +275,29 @@ const Editor = () => {
     []
   );
 
+  const deleteEdge = useCallback(
+    (edgeId: string) => {
+      setEdges((eds) => eds.filter((edge) => edge.id !== edgeId));
+      setSelectedElement(null);
+    },
+    []
+  );
+
+  const deleteElement = useCallback(
+    (elementId: string) => {
+      // Check if it's a node or edge
+      const isNode = nodes.some(node => node.id === elementId);
+      const isEdge = edges.some(edge => edge.id === elementId);
+      
+      if (isNode) {
+        deleteNode(elementId);
+      } else if (isEdge) {
+        deleteEdge(elementId);
+      }
+    },
+    [nodes, edges, deleteNode, deleteEdge]
+  );
+
   const toggleSketchMode = useCallback(() => {
     setIsSketchMode((prev) => {
       const newMode = !prev;
@@ -569,7 +592,7 @@ const Editor = () => {
             onUpdateTags={updateNodeTags}
             onUpdateNodeShape={updateNodeShape}
             onUpdateEdge={updateEdge}
-            onDelete={deleteNode}
+            onDelete={deleteElement}
           />
         )}
         
