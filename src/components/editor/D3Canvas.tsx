@@ -309,25 +309,16 @@ export const D3Canvas = ({
         onEdgeClick(d as Edge);
       });
 
-    // Merge and update all edges
+    // Merge and update all edges (NO selection styling here - moved to separate effect)
     const linkMerged = linkEnter.merge(link)
-      .attr('stroke', (d: any) => 
-        d.id === selectedEdgeId ? 'hsl(var(--primary))' : (d.style?.stroke || 'hsl(var(--border))')
-      )
-      .attr('stroke-width', (d: any) => 
-        d.id === selectedEdgeId ? (d.style?.strokeWidth || 1.5) + 1 : (d.style?.strokeWidth || 1.5)
-      )
-      .attr('opacity', (d: any) => d.id === selectedEdgeId ? 0.9 : 0.6)
+      .attr('stroke', (d: any) => d.style?.stroke || 'hsl(var(--border))')
+      .attr('stroke-width', (d: any) => d.style?.strokeWidth || 1.5)
+      .attr('opacity', 0.6)
       .attr('stroke-dasharray', (d: any) => d.style?.strokeDasharray || null)
       .attr('marker-end', (d: any) => {
         if (!d.animated && !d.markerEnd) return null;
         const isCurved = d.type === 'smoothstep';
-        const isSelected = d.id === selectedEdgeId;
-        if (isCurved) {
-          return isSelected ? 'url(#arrowhead-curved-selected)' : 'url(#arrowhead-curved)';
-        } else {
-          return isSelected ? 'url(#arrowhead-straight-selected)' : 'url(#arrowhead-straight)';
-        }
+        return isCurved ? 'url(#arrowhead-curved)' : 'url(#arrowhead-straight)';
       });
 
     // Update nodes using enter-update-exit pattern
@@ -558,14 +549,12 @@ export const D3Canvas = ({
       text.attr('dy', `${-(totalLines - 1) * lineHeight * 0.5}em`);
     });
 
-    // Merge and update all nodes (update selection styling)
+    // Merge and update all nodes (NO selection styling here - moved to separate effect)
     const nodeMerged = nodeEnter.merge(node);
     
     nodeMerged.selectAll('.node-shape')
-      .attr('stroke', (d: any) => 
-        d.id === selectedNodeId ? 'hsl(var(--primary))' : (d.style?.border?.split(' ')[2] || 'hsl(195, 50%, 68%)')
-      )
-      .attr('stroke-width', (d: any) => d.id === selectedNodeId ? 3 : 2);
+      .attr('stroke', (d: any) => d.style?.border?.split(' ')[2] || 'hsl(195, 50%, 68%)')
+      .attr('stroke-width', 2);
 
     // Update simulation tick
     simulation.on('tick', () => {
@@ -589,7 +578,44 @@ export const D3Canvas = ({
 
       nodeMerged.attr('transform', (d: any) => `translate(${d.x},${d.y})`);
     });
-  }, [nodes, edges, selectedNodeId, selectedEdgeId]);
+  }, [nodes, edges]); // ONLY data changes, no selection
+
+  // Effect 2B: Update selection styling ONLY (no DOM recreation)
+  useEffect(() => {
+    if (!gRef.current || dimensions.width === 0) return;
+
+    const g = gRef.current;
+
+    console.log('Effect #2B (selection) running with selectedNodeId:', selectedNodeId, 'selectedEdgeId:', selectedEdgeId);
+
+    // Update edge selection styling
+    g.selectAll<SVGPathElement, any>('g.edges-group path')
+      .attr('stroke', (d: any) => 
+        d.id === selectedEdgeId ? 'hsl(var(--primary))' : (d.style?.stroke || 'hsl(var(--border))')
+      )
+      .attr('stroke-width', (d: any) => 
+        d.id === selectedEdgeId ? (d.style?.strokeWidth || 1.5) + 1 : (d.style?.strokeWidth || 1.5)
+      )
+      .attr('opacity', (d: any) => d.id === selectedEdgeId ? 0.9 : 0.6)
+      .attr('marker-end', (d: any) => {
+        if (!d.animated && !d.markerEnd) return null;
+        const isCurved = d.type === 'smoothstep';
+        const isSelected = d.id === selectedEdgeId;
+        if (isCurved) {
+          return isSelected ? 'url(#arrowhead-curved-selected)' : 'url(#arrowhead-curved)';
+        } else {
+          return isSelected ? 'url(#arrowhead-straight-selected)' : 'url(#arrowhead-straight)';
+        }
+      });
+
+    // Update node selection styling
+    g.selectAll<SVGGElement, any>('g.nodes-group g.node')
+      .selectAll('.node-shape')
+      .attr('stroke', (d: any) => 
+        d.id === selectedNodeId ? 'hsl(var(--primary))' : (d.style?.border?.split(' ')[2] || 'hsl(195, 50%, 68%)')
+      )
+      .attr('stroke-width', (d: any) => d.id === selectedNodeId ? 3 : 2);
+  }, [selectedNodeId, selectedEdgeId, dimensions.width]); // ONLY selection changes
 
   return (
     <svg
