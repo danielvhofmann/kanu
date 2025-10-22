@@ -1,10 +1,13 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Network } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import heroImage from "@/assets/hero-network.jpg";
+import { DemoPresentation } from "./DemoPresentation";
 
 export const Hero = () => {
   const navigate = useNavigate();
+  const [showDemo, setShowDemo] = useState(false);
   
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
@@ -46,7 +49,7 @@ export const Hero = () => {
                 Start Mapping Free
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </Button>
-              <Button size="lg" variant="outline">
+              <Button size="lg" variant="outline" onClick={() => setShowDemo(true)}>
                 Watch Demo
               </Button>
             </div>
@@ -87,6 +90,8 @@ export const Hero = () => {
           </div>
         </div>
       </div>
+
+      <DemoPresentation open={showDemo} onOpenChange={setShowDemo} />
     </section>
   );
 };

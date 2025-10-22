@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import ReactFlow, {
   Node,
   Edge,
@@ -16,7 +16,8 @@ import { EditorToolbar } from '@/components/editor/EditorToolbar';
 import { EditorSidebar } from '@/components/editor/EditorSidebar';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { getTemplate, type TemplateType } from '@/lib/templates';
 
 const initialNodes: Node[] = [
   {
@@ -41,9 +42,22 @@ const initialEdges: Edge[] = [];
 
 const Editor = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedElement, setSelectedElement] = useState<Node | null>(null);
+
+  // Load template if specified in URL
+  useEffect(() => {
+    const templateType = searchParams.get('template') as TemplateType;
+    if (templateType) {
+      const template = getTemplate(templateType);
+      if (template) {
+        setNodes(template.nodes);
+        setEdges(template.edges);
+      }
+    }
+  }, [searchParams, setNodes, setEdges]);
 
   const onConnect = useCallback(
     (connection: Connection) => {

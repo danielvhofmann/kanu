@@ -1,13 +1,23 @@
 import { GitBranch, Users2, Boxes, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import type { TemplateType } from "@/lib/templates";
 
-const useCases = [
+const useCases: Array<{
+  icon: typeof Users2;
+  title: string;
+  description: string;
+  color: string;
+  bg: string;
+  template: TemplateType;
+}> = [
   {
     icon: Users2,
     title: "Stakeholder Mapping",
     description: "Visualize influence networks, identify key players, and understand power dynamics in complex organizational ecosystems.",
     color: "text-primary",
     bg: "bg-primary/10",
+    template: "stakeholder",
   },
   {
     icon: GitBranch,
@@ -15,6 +25,7 @@ const useCases = [
     description: "Map causal loops, feedback cycles, and system dynamics to reveal leverage points and unintended consequences.",
     color: "text-secondary",
     bg: "bg-secondary/10",
+    template: "systems",
   },
   {
     icon: Boxes,
@@ -22,6 +33,7 @@ const useCases = [
     description: "Apply social network analysis to understand centrality, clustering, and community structure in any relational dataset.",
     color: "text-accent",
     bg: "bg-accent/10",
+    template: "network",
   },
   {
     icon: TrendingUp,
@@ -29,10 +41,13 @@ const useCases = [
     description: "Connect goals, initiatives, and resources into coherent strategy maps that guide decision-making and alignment.",
     color: "text-primary-light",
     bg: "bg-primary-light/10",
+    template: "strategic",
   },
 ];
 
 export const UseCases = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="py-32 relative overflow-hidden bg-muted/30">
       <div className="container mx-auto px-6">
@@ -52,20 +67,25 @@ export const UseCases = () => {
             {useCases.map((useCase, index) => (
               <div
                 key={useCase.title}
-                className="bg-card border border-border/50 rounded-2xl p-8 hover:border-primary/30 transition-all duration-500 hover:shadow-md animate-fade-in"
+                onClick={() => navigate(`/editor?template=${useCase.template}`)}
+                className="bg-card border border-border/50 rounded-2xl p-8 hover:border-primary/30 transition-all duration-500 hover:shadow-md animate-fade-in cursor-pointer group"
                 style={{ animationDelay: `${index * 0.15}s` }}
               >
                 <div className={`inline-flex items-center justify-center w-14 h-14 rounded-xl ${useCase.bg} mb-6`}>
                   <useCase.icon className={`w-7 h-7 ${useCase.color}`} strokeWidth={1.5} />
                 </div>
                 
-                <h3 className="text-2xl font-light mb-3 tracking-wide">
+                <h3 className="text-2xl font-light mb-3 tracking-wide group-hover:text-primary transition-colors">
                   {useCase.title}
                 </h3>
                 
                 <p className="text-muted-foreground leading-relaxed">
                   {useCase.description}
                 </p>
+                
+                <div className="mt-4 text-sm text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                  Click to start with this template →
+                </div>
               </div>
             ))}
           </div>

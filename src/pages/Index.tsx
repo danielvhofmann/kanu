@@ -10,8 +10,8 @@ const Index = () => {
       <Navigation />
       <main className="pt-20">
         <Hero />
-        <Features />
         <UseCases />
+        <Features />
       </main>
       <Footer />
     </div>
