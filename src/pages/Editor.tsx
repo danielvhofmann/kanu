@@ -1,24 +1,14 @@
 import { useState, useCallback, useEffect } from 'react';
-import ReactFlow, {
-  Node,
-  Edge,
-  Controls,
-  Background,
-  Connection,
-  addEdge,
-  useNodesState,
-  useEdgesState,
-  BackgroundVariant,
-  MarkerType,
-} from 'reactflow';
-import 'reactflow/dist/style.css';
+import { Node, Edge, Connection, MarkerType } from 'reactflow';
 import { EditorToolbar } from '@/components/editor/EditorToolbar';
 import { EditorSidebar } from '@/components/editor/EditorSidebar';
 import { ImportDialog } from '@/components/editor/ImportDialog';
+import { D3Canvas } from '@/components/editor/D3Canvas';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Pencil } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getTemplate, type TemplateType } from '@/lib/templates';
+import { toast } from 'sonner';
 
 const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
@@ -26,10 +16,11 @@ const initialEdges: Edge[] = [];
 const Editor = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes] = useState<Node[]>(initialNodes);
+  const [edges, setEdges] = useState<Edge[]>(initialEdges);
   const [selectedElement, setSelectedElement] = useState<Node | null>(null);
   const [showImportDialog, setShowImportDialog] = useState(false);
+  const [isSketchMode, setIsSketchMode] = useState(false);
 
   // Load template if specified in URL, otherwise show import dialog
   useEffect(() => {
@@ -41,15 +32,16 @@ const Editor = () => {
         setEdges(template.edges);
       }
     } else if (nodes.length === 0) {
-      // Show import dialog if no nodes and no template
       setShowImportDialog(true);
     }
-  }, [searchParams, setNodes, setEdges, nodes.length]);
+  }, [searchParams, nodes.length]);
 
   const onConnect = useCallback(
     (connection: Connection) => {
-      const newEdge = {
-        ...connection,
+      const newEdge: Edge = {
+        id: `${connection.source}-${connection.target}`,
+        source: connection.source!,
+        target: connection.target!,
         type: 'smoothstep',
         animated: true,
         style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 },
@@ -58,9 +50,9 @@ const Editor = () => {
           color: 'hsl(var(--primary))',
         },
       };
-      setEdges((eds) => addEdge(newEdge, eds));
+      setEdges((eds) => [...eds, newEdge]);
     },
-    [setEdges]
+    []
   );
 
   const addNode = useCallback(() => {
@@ -96,14 +88,14 @@ const Editor = () => {
       },
     };
     setNodes((nds) => [...nds, newNode]);
-  }, [nodes.length, setNodes]);
+  }, [nodes.length]);
 
   const handleImport = useCallback((importedNodes: Node[], importedEdges: Edge[]) => {
     setNodes(importedNodes);
     setEdges(importedEdges);
-  }, [setNodes, setEdges]);
+  }, []);
 
-  const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
+  const onNodeClick = useCallback((node: Node) => {
     setSelectedElement(node);
   }, []);
 
@@ -117,7 +109,7 @@ const Editor = () => {
         )
       );
     },
-    [setNodes]
+    []
   );
 
   const updateNodeColor = useCallback(
@@ -136,7 +128,7 @@ const Editor = () => {
         )
       );
     },
-    [setNodes]
+    []
   );
 
   const deleteNode = useCallback(
@@ -147,8 +139,16 @@ const Editor = () => {
       );
       setSelectedElement(null);
     },
-    [setNodes, setEdges]
+    []
   );
+
+  const toggleSketchMode = useCallback(() => {
+    setIsSketchMode((prev) => {
+      const newMode = !prev;
+      toast.success(newMode ? 'Sketch mode enabled' : 'Sketch mode disabled');
+      return newMode;
+    });
+  }, []);
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -166,6 +166,16 @@ const Editor = () => {
           </Button>
           <div className="h-6 w-px bg-border" />
           <h1 className="text-lg font-light">Untitled Map</h1>
+          <div className="h-6 w-px bg-border" />
+          <Button
+            variant={isSketchMode ? "default" : "ghost"}
+            size="sm"
+            onClick={toggleSketchMode}
+            className="gap-2"
+          >
+            <Pencil className="w-4 h-4" />
+            Sketch Mode
+          </Button>
         </div>
         <EditorToolbar onAddNode={addNode} onImport={() => setShowImportDialog(true)} />
       </div>
@@ -174,26 +184,15 @@ const Editor = () => {
       <div className="flex-1 flex relative">
         {/* Canvas */}
         <div className="flex-1 relative">
-          <ReactFlow
+          <D3Canvas
             nodes={nodes}
             edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
+            onNodesChange={setNodes}
+            onEdgesChange={setEdges}
+            selectedNodeId={selectedElement?.id || null}
             onNodeClick={onNodeClick}
-            fitView
-            className="bg-gradient-subtle"
-          >
-            <Background
-              variant={BackgroundVariant.Dots}
-              gap={24}
-              size={1}
-              color="hsl(var(--border))"
-            />
-            <Controls
-              className="bg-card border border-border/50 rounded-lg shadow-md"
-            />
-          </ReactFlow>
+            isSketchMode={isSketchMode}
+          />
         </div>
 
         {/* Sidebar */}
