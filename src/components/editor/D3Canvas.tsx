@@ -76,42 +76,6 @@ export const D3Canvas = ({
       svg.call(zoom.transform as any, zoomTransformRef.current);
     }
 
-    // Add click-to-create node in sketch mode
-    svg.on('click', (event) => {
-      if (!isSketchMode) return;
-      
-      if (event.target.__data__) return;
-      const parentData = d3.select(event.target).node()?.parentNode?.__data__;
-      if (parentData) return;
-      
-      const transform = d3.zoomTransform(svg.node() as Element);
-      const [x, y] = d3.pointer(event, svg.node());
-      const [transformedX, transformedY] = transform.invert([x, y]);
-      
-      onNodesChange((currentNodes) => {
-        const newNode: Node = {
-          id: `node-${Date.now()}`,
-          type: 'default',
-          position: { x: transformedX, y: transformedY },
-          data: { label: `Node ${currentNodes.length + 1}` },
-          style: {
-            background: 'hsl(195, 45%, 52%)',
-            color: 'white',
-            border: '2px solid hsl(195, 50%, 68%)',
-            borderRadius: '50%',
-            width: '85px',
-            height: '85px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            textAlign: 'center',
-            boxShadow: '0 3px 12px hsl(195 45% 52% / 0.2)',
-          },
-        };
-        return [...currentNodes, newNode];
-      });
-    });
-
     // Add background grid
     const defs = svg.append('defs');
     const pattern = defs.append('pattern')
@@ -205,7 +169,50 @@ export const D3Canvas = ({
     return () => {
       simulation.stop();
     };
-  }, [dimensions, isSketchMode]);
+  }, [dimensions.width, dimensions.height]);
+
+  // Effect 1.5: Update click handler when sketch mode changes (without recreating SVG)
+  useEffect(() => {
+    if (!svgRef.current) return;
+    
+    const svg = d3.select(svgRef.current);
+    
+    // Update click handler
+    svg.on('click', (event) => {
+      if (!isSketchMode) return;
+      
+      if (event.target.__data__) return;
+      const parentData = d3.select(event.target).node()?.parentNode?.__data__;
+      if (parentData) return;
+      
+      const transform = d3.zoomTransform(svg.node() as Element);
+      const [x, y] = d3.pointer(event, svg.node());
+      const [transformedX, transformedY] = transform.invert([x, y]);
+      
+      onNodesChange((currentNodes) => {
+        const newNode: Node = {
+          id: `node-${Date.now()}`,
+          type: 'default',
+          position: { x: transformedX, y: transformedY },
+          data: { label: `Node ${currentNodes.length + 1}` },
+          style: {
+            background: 'hsl(195, 45%, 52%)',
+            color: 'white',
+            border: '2px solid hsl(195, 50%, 68%)',
+            borderRadius: '50%',
+            width: '85px',
+            height: '85px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            boxShadow: '0 3px 12px hsl(195 45% 52% / 0.2)',
+          },
+        };
+        return [...currentNodes, newNode];
+      });
+    });
+  }, [isSketchMode, onNodesChange]);
 
   // Effect 2: Update data - nodes and edges using enter-update-exit pattern
   useEffect(() => {
@@ -214,10 +221,15 @@ export const D3Canvas = ({
     const g = gRef.current;
     const simulation = simulationRef.current;
 
-    // Prepare data for D3 - only include nodes that exist in current state
+    // Prepare data for D3 - clear old simulation data and only use current nodes
     const nodeIds = new Set(nodes.map(n => n.id));
+    const currentSimNodes = simulation.nodes();
+    
+    // Filter simulation nodes to only keep those that exist in current state
+    const validSimNodes = currentSimNodes.filter((n: any) => nodeIds.has(n.id));
+    
     const d3Nodes = nodes.map(node => {
-      const existingNode = simulation.nodes().find((n: any) => n.id === node.id && nodeIds.has(n.id));
+      const existingNode = validSimNodes.find((n: any) => n.id === node.id);
       return {
         ...node,
         x: existingNode?.x ?? node.position.x,
@@ -517,7 +529,7 @@ export const D3Canvas = ({
 
       nodeMerged.attr('transform', (d: any) => `translate(${d.x},${d.y})`);
     });
-  }, [nodes, edges, selectedNodeId, selectedEdgeId, isSketchMode]);
+  }, [nodes, edges, selectedNodeId, selectedEdgeId]);
 
   return (
     <svg
