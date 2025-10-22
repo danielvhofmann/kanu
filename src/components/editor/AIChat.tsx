@@ -30,6 +30,16 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  
+  // Use refs to track the absolute latest state
+  const nodesRef = useRef<Node[]>(nodes);
+  const edgesRef = useRef<Edge[]>(edges);
+  
+  // Update refs whenever props change
+  useEffect(() => {
+    nodesRef.current = nodes;
+    edgesRef.current = edges;
+  }, [nodes, edges]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -47,10 +57,13 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
     setIsLoading(true);
 
     try {
-      // Build graph context from current props
+      // Use refs to get the absolute latest state for graph context
+      const currentNodes = nodesRef.current;
+      const currentEdges = edgesRef.current;
+      
       const graphContext = {
-        nodes: nodes.map(n => ({ id: n.id, label: n.data.label, tags: n.data.tags })),
-        edges: edges.map(e => ({ source: e.source, target: e.target })),
+        nodes: currentNodes.map(n => ({ id: n.id, label: n.data.label, tags: n.data.tags })),
+        edges: currentEdges.map(e => ({ source: e.source, target: e.target })),
       };
 
       const { data, error } = await supabase.functions.invoke('ai-graph-assistant', {
@@ -63,9 +76,9 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
 
       if (error) throw error;
 
-      // Apply graph changes FIRST and track the new state
-      let updatedNodes = nodes;
-      let updatedEdges = edges;
+      // Apply graph changes using the latest state from refs
+      let updatedNodes = [...nodesRef.current];
+      let updatedEdges = [...edgesRef.current];
       let changeApplied = false;
 
       if (data.graphChanges) {
@@ -81,6 +94,11 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
           if (nodeToRemove) {
             updatedNodes = updatedNodes.filter(n => n.id !== nodeToRemove.id);
             updatedEdges = updatedEdges.filter(e => e.source !== nodeToRemove.id && e.target !== nodeToRemove.id);
+            
+            // Update refs before calling callbacks
+            nodesRef.current = updatedNodes;
+            edgesRef.current = updatedEdges;
+            
             onNodesChange(updatedNodes);
             onEdgesChange(updatedEdges);
             changeApplied = true;
@@ -110,6 +128,10 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
             },
           };
           updatedNodes = [...updatedNodes, newNode];
+          
+          // Update refs before calling callbacks
+          nodesRef.current = updatedNodes;
+          
           onNodesChange(updatedNodes);
           changeApplied = true;
           toast.success(`Added: ${label}`);
@@ -121,6 +143,10 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
                 ? { ...n, data: { ...n.data, label } } 
                 : n
             );
+            
+            // Update refs before calling callbacks
+            nodesRef.current = updatedNodes;
+            
             onNodesChange(updatedNodes);
             changeApplied = true;
             toast.success(`Updated: ${label}`);
@@ -139,12 +165,20 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
               markerEnd: { type: 'arrowClosed' as any },
             };
             updatedEdges = [...updatedEdges, newEdge];
+            
+            // Update refs before calling callbacks
+            edgesRef.current = updatedEdges;
+            
             onEdgesChange(updatedEdges);
             changeApplied = true;
             toast.success('Added connection');
           }
         } else if (action === 'remove_edge' && edgeId) {
           updatedEdges = updatedEdges.filter(e => e.id !== edgeId);
+          
+          // Update refs before calling callbacks
+          edgesRef.current = updatedEdges;
+          
           onEdgesChange(updatedEdges);
           changeApplied = true;
           toast.success('Removed connection');

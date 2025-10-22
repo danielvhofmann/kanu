@@ -170,8 +170,28 @@ Be conversational and helpful. Always prioritize using labels over IDs when user
         } else if (toolCall.function.name === 'modify_graph') {
           // Handle graph modifications
           graphChanges = args;
+          
+          // Generate friendly confirmation message based on the action
+          if (args.action === 'add_node') {
+            finalMessage = `I've added "${args.label}" to the graph.`;
+          } else if (args.action === 'remove_node') {
+            finalMessage = `I've removed "${args.label || 'the node'}" from the graph.`;
+          } else if (args.action === 'update_node') {
+            finalMessage = `I've updated the node to "${args.label}".`;
+          } else if (args.action === 'add_edge') {
+            finalMessage = `I've added a connection in the graph.`;
+          } else if (args.action === 'remove_edge') {
+            finalMessage = `I've removed the connection from the graph.`;
+          } else {
+            finalMessage = 'I\'ve updated the graph as requested.';
+          }
         }
       }
+    }
+    
+    // If no message was generated, provide a default
+    if (!finalMessage || finalMessage.trim() === '') {
+      finalMessage = 'I understand. How else can I help you with your graph?';
     }
 
     return new Response(
