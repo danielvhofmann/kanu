@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { Node, Edge, Connection, MarkerType } from 'reactflow';
 import { EditorToolbar } from '@/components/editor/EditorToolbar';
 import { EditorSidebar } from '@/components/editor/EditorSidebar';
-import { ImportDialog } from '@/components/editor/ImportDialog';
+import { TemplateSelector } from '@/components/editor/TemplateSelector';
 import { D3Canvas } from '@/components/editor/D3Canvas';
 import { ColorControls } from '@/components/editor/ColorControls';
 import { AIChat } from '@/components/editor/AIChat';
@@ -600,11 +600,11 @@ const Editor = () => {
         )}
       </div>
 
-      {/* Import Dialog */}
-      <ImportDialog
+      {/* Template Selector Dialog */}
+      <TemplateSelector
         open={showImportDialog}
         onOpenChange={setShowImportDialog}
-        onImport={handleImport}
+        onSelect={handleImport}
       />
     </div>
   );

@@ -21,18 +21,23 @@ serve(async (req) => {
     const systemPrompt = `You are an AI assistant that helps users build and modify network maps/graphs.
 
 Current graph state:
-- Nodes: ${JSON.stringify(graphContext.nodes)}
-- Edges: ${JSON.stringify(graphContext.edges)}
+Nodes: ${JSON.stringify(graphContext.nodes)}
+Edges: ${JSON.stringify(graphContext.edges)}
 
-You can:
-1. Answer questions about the current graph
-2. Suggest modifications to nodes and edges
-3. Search the web for information using the web_search tool
-4. Find images using the image_search tool
-5. Help users build graphs from scratch
+CRITICAL INSTRUCTIONS:
+- When users ask to remove/delete/update a node by NAME, find the node ID from the list above
+- Match nodes by their label (case-insensitive), NOT by requiring users to provide IDs
+- For example: "remove CEO" → find the node with label "CEO" and use its ID
+- NEVER ask users for node IDs - always figure it out from the label yourself
 
-When modifying the graph, return your suggestions in a structured format that can be parsed.
-Always be helpful and provide accurate information.`;
+Your capabilities:
+1. Answer questions about the graph
+2. Modify nodes and edges using the modify_graph tool
+3. Search the web for information using web_search tool
+4. Find images using image_search tool
+5. Help build graphs from descriptions
+
+Be conversational and helpful. Always prioritize using labels over IDs when users reference nodes.`;
 
     // Prepare tools for the AI
     const tools = [
@@ -74,7 +79,7 @@ Always be helpful and provide accurate information.`;
         type: "function",
         function: {
           name: "modify_graph",
-          description: "Modify the graph by adding/removing/updating nodes and edges",
+          description: "Modify the graph by adding/removing/updating nodes and edges. IMPORTANT: When user says 'remove CEO' or 'delete the Marketing node', find the nodeId by matching the label from the graph nodes list.",
           parameters: {
             type: "object",
             properties: {
@@ -85,7 +90,7 @@ Always be helpful and provide accurate information.`;
               },
               nodeId: {
                 type: "string",
-                description: "The node ID (for remove/update actions)"
+                description: "The node ID - look this up from the nodes list by matching the label that the user mentioned"
               },
               label: {
                 type: "string",
@@ -94,6 +99,10 @@ Always be helpful and provide accurate information.`;
               source: {
                 type: "string",
                 description: "Source node ID (for add_edge)"
+              },
+              target: {
+                type: "string",
+                description: "Target node ID (for add_edge)"
               },
               edgeId: {
                 type: "string",

@@ -61,17 +61,31 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
 
       if (error) throw error;
 
+      console.log('AI Response:', data);
+
       // Apply graph changes if any
       if (data.graphChanges) {
         const { action, nodeId, label, source, target, edgeId } = data.graphChanges;
+        console.log('Graph change:', action, { nodeId, label, source, target, edgeId });
         
-        if (action === 'remove_node' && nodeId) {
-          // Find node by ID or label
-          const nodeToRemove = nodes.find(n => n.id === nodeId || n.data.label.toLowerCase() === nodeId.toLowerCase());
+        if (action === 'remove_node') {
+          // Find node by ID or label (case-insensitive)
+          const searchTerm = (nodeId || label || '').toLowerCase();
+          const nodeToRemove = nodes.find(n => 
+            n.id.toLowerCase() === searchTerm || 
+            n.data.label.toLowerCase() === searchTerm
+          );
+          
+          console.log('Looking for node to remove:', searchTerm, 'Found:', nodeToRemove);
+          
           if (nodeToRemove) {
-            onNodesChange(nodes.filter(n => n.id !== nodeToRemove.id));
-            onEdgesChange(edges.filter(e => e.source !== nodeToRemove.id && e.target !== nodeToRemove.id));
+            const newNodes = nodes.filter(n => n.id !== nodeToRemove.id);
+            const newEdges = edges.filter(e => e.source !== nodeToRemove.id && e.target !== nodeToRemove.id);
+            onNodesChange(newNodes);
+            onEdgesChange(newEdges);
             toast.success(`Removed node: ${nodeToRemove.data.label}`);
+          } else {
+            toast.error(`Could not find node: ${searchTerm}`);
           }
         } else if (action === 'add_node') {
           const newNode: Node = {

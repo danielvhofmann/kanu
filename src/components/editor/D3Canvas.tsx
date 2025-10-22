@@ -416,15 +416,20 @@ export const D3Canvas = ({
         const targetX = d.target.x;
         const targetY = d.target.y;
         
-        // Use curved paths only for smoothstep edges
+        // Render different edge types
         if (d.type === 'smoothstep') {
+          // Curved/smooth edges
           const dx = targetX - sourceX;
           const dy = targetY - sourceY;
           const dr = Math.sqrt(dx * dx + dy * dy) * 0.7;
           return `M${sourceX},${sourceY}A${dr},${dr} 0 0,1 ${targetX},${targetY}`;
+        } else if (d.type === 'step') {
+          // Step edges (orthogonal/right-angle)
+          const midX = (sourceX + targetX) / 2;
+          return `M${sourceX},${sourceY}L${midX},${sourceY}L${midX},${targetY}L${targetX},${targetY}`;
         }
         
-        // Straight lines for everything else
+        // Straight lines for 'straight' or default
         return `M${sourceX},${sourceY}L${targetX},${targetY}`;
       });
 
