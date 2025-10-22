@@ -37,6 +37,7 @@ export const D3Canvas = ({
   const zoomTransformRef = useRef<d3.ZoomTransform>(d3.zoomIdentity);
   const isInitialMount = useRef(true);
   const isInitialized = useRef(false);
+  const lastProcessedStateRef = useRef<{ nodeIds: string[]; edgeIds: string[] }>({ nodeIds: [], edgeIds: [] });
 
   // Update dimensions on mount and resize
   useEffect(() => {
@@ -224,6 +225,25 @@ export const D3Canvas = ({
   // Effect 2: Update data - nodes and edges using enter-update-exit pattern
   useEffect(() => {
     if (!gRef.current || !simulationRef.current || dimensions.width === 0) return;
+
+    // Defensive check: Skip if data hasn't actually changed
+    const currentNodeIds = nodes.map(n => n.id).sort();
+    const currentEdgeIds = edges.map(e => e.id).sort();
+    const lastNodeIds = lastProcessedStateRef.current.nodeIds;
+    const lastEdgeIds = lastProcessedStateRef.current.edgeIds;
+    
+    const nodesUnchanged = currentNodeIds.length === lastNodeIds.length && 
+      currentNodeIds.every((id, idx) => id === lastNodeIds[idx]);
+    const edgesUnchanged = currentEdgeIds.length === lastEdgeIds.length && 
+      currentEdgeIds.every((id, idx) => id === lastEdgeIds[idx]);
+    
+    if (nodesUnchanged && edgesUnchanged) {
+      console.log('Effect #2 SKIPPED - data unchanged');
+      return;
+    }
+    
+    // Update last processed state
+    lastProcessedStateRef.current = { nodeIds: currentNodeIds, edgeIds: currentEdgeIds };
 
     console.log('Effect #2 running with nodes:', nodes.map(n => n.id));
     console.log('Effect #2 running with edges:', edges.map(e => e.id));
