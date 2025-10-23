@@ -27,8 +27,12 @@ Edges: ${JSON.stringify(graphContext.edges)}
 CRITICAL INSTRUCTIONS:
 - When users ask to remove/delete/update a node by NAME, find the node ID from the list above
 - Match nodes by their label (case-insensitive), NOT by requiring users to provide IDs
+- For edges, when user mentions "edge between X and Y", find the edge by matching source and target node labels
 - For example: "remove CEO" → find the node with label "CEO" and use its ID
-- NEVER ask users for node IDs - always figure it out from the label yourself
+- For example: "edge between CFO and Suppliers" → find edge where source is "CFO" and target is "Suppliers"
+- NEVER ask users for node IDs or edge IDs - always figure it out from labels yourself
+- "Non-directed" or "undirected" means NO ARROW (hasArrow: false)
+- "Directed" means WITH ARROW (hasArrow: true)
 - For colors, use HSL format: hsl(hue, saturation%, lightness%)
 - For edge types: "straight", "smoothstep" (curved), or "step"
 
@@ -36,11 +40,12 @@ Your capabilities:
 1. Answer questions about the graph
 2. Modify nodes and edges (add, remove, update, change colors)
 3. Update edge properties (type, animated, arrows, dashed lines)
-4. Search the web for information using web_search tool
-5. Find images using image_search tool
-6. Help build graphs from descriptions
+4. Make edges directed (with arrow) or non-directed (without arrow)
+5. Search the web for information using web_search tool
+6. Find images using image_search tool
+7. Help build graphs from descriptions
 
-Be conversational and helpful. Always prioritize using labels over IDs when users reference nodes.`;
+Be conversational and helpful. Always prioritize using labels over IDs when users reference nodes or edges.`;
 
     // Prepare tools for the AI
     const tools = [
@@ -117,7 +122,15 @@ Be conversational and helpful. Always prioritize using labels over IDs when user
               },
               edgeId: {
                 type: "string",
-                description: "Edge ID (for update_edge actions)"
+                description: "Edge ID - if not known, leave empty and provide source/target labels instead"
+              },
+              sourceLabel: {
+                type: "string",
+                description: "Source node label (for finding edges when edgeId is unknown)"
+              },
+              targetLabel: {
+                type: "string",
+                description: "Target node label (for finding edges when edgeId is unknown)"
               },
               edgeType: {
                 type: "string",

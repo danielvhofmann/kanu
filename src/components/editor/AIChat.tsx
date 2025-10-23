@@ -63,7 +63,21 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
       
       const graphContext = {
         nodes: currentNodes.map(n => ({ id: n.id, label: n.data.label, tags: n.data.tags })),
-        edges: currentEdges.map(e => ({ source: e.source, target: e.target })),
+        edges: currentEdges.map(e => {
+          const sourceNode = currentNodes.find(n => n.id === e.source);
+          const targetNode = currentNodes.find(n => n.id === e.target);
+          return {
+            id: e.id,
+            source: e.source,
+            target: e.target,
+            sourceLabel: sourceNode?.data.label,
+            targetLabel: targetNode?.data.label,
+            type: e.type,
+            animated: e.animated,
+            hasArrow: !!e.markerEnd,
+            isDashed: e.style?.strokeDasharray === '5,5',
+          };
+        }),
       };
 
       const { data, error } = await supabase.functions.invoke('ai-graph-assistant', {
@@ -82,7 +96,17 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
       let changeApplied = false;
 
       if (data.graphChanges) {
-        const { action, nodeId, label, source, target, edgeId, color, borderColor, edgeType, animated, hasArrow, isDashed } = data.graphChanges;
+        const { action, nodeId, label, source, target, edgeId, sourceLabel, targetLabel, color, borderColor, edgeType, animated, hasArrow, isDashed } = data.graphChanges;
+        
+        // Helper to find edge by source/target labels if edgeId not provided
+        const findEdgeByLabels = (srcLabel: string, tgtLabel: string) => {
+          const sourceNode = updatedNodes.find(n => n.data.label.toLowerCase() === srcLabel.toLowerCase());
+          const targetNode = updatedNodes.find(n => n.data.label.toLowerCase() === tgtLabel.toLowerCase());
+          if (sourceNode && targetNode) {
+            return updatedEdges.find(e => e.source === sourceNode.id && e.target === targetNode.id);
+          }
+          return null;
+        };
         
         if (action === 'remove_node') {
           const searchTerm = (nodeId || label || '').toLowerCase();
@@ -203,11 +227,15 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
             changeApplied = true;
             toast.success('Updated node color');
           }
-        } else if (action === 'update_edge_color' && edgeId && color) {
-          const edgeToUpdate = updatedEdges.find(e => e.id === edgeId);
+        } else if (action === 'update_edge_color' && color) {
+          let edgeToUpdate = edgeId ? updatedEdges.find(e => e.id === edgeId) : null;
+          if (!edgeToUpdate && sourceLabel && targetLabel) {
+            edgeToUpdate = findEdgeByLabels(sourceLabel, targetLabel);
+          }
+          
           if (edgeToUpdate) {
             updatedEdges = updatedEdges.map(e => 
-              e.id === edgeId
+              e.id === edgeToUpdate!.id
                 ? { ...e, style: { ...e.style, stroke: color } } 
                 : e
             );
@@ -217,11 +245,15 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
             changeApplied = true;
             toast.success('Updated edge color');
           }
-        } else if (action === 'update_edge_type' && edgeId && edgeType) {
-          const edgeToUpdate = updatedEdges.find(e => e.id === edgeId);
+        } else if (action === 'update_edge_type' && edgeType) {
+          let edgeToUpdate = edgeId ? updatedEdges.find(e => e.id === edgeId) : null;
+          if (!edgeToUpdate && sourceLabel && targetLabel) {
+            edgeToUpdate = findEdgeByLabels(sourceLabel, targetLabel);
+          }
+          
           if (edgeToUpdate) {
             updatedEdges = updatedEdges.map(e => 
-              e.id === edgeId
+              e.id === edgeToUpdate!.id
                 ? { ...e, type: edgeType } 
                 : e
             );
@@ -231,11 +263,15 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
             changeApplied = true;
             toast.success('Updated edge type');
           }
-        } else if (action === 'update_edge_properties' && edgeId) {
-          const edgeToUpdate = updatedEdges.find(e => e.id === edgeId);
+        } else if (action === 'update_edge_properties') {
+          let edgeToUpdate = edgeId ? updatedEdges.find(e => e.id === edgeId) : null;
+          if (!edgeToUpdate && sourceLabel && targetLabel) {
+            edgeToUpdate = findEdgeByLabels(sourceLabel, targetLabel);
+          }
+          
           if (edgeToUpdate) {
             updatedEdges = updatedEdges.map(e => {
-              if (e.id !== edgeId) return e;
+              if (e.id !== edgeToUpdate!.id) return e;
               
               const updates: any = { ...e };
               
