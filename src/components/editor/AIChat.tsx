@@ -82,7 +82,7 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
       let changeApplied = false;
 
       if (data.graphChanges) {
-        const { action, nodeId, label, source, target, edgeId } = data.graphChanges;
+        const { action, nodeId, label, source, target, edgeId, color, borderColor, edgeType, animated, hasArrow, isDashed } = data.graphChanges;
         
         if (action === 'remove_node') {
           const searchTerm = (nodeId || label || '').toLowerCase();
@@ -182,6 +182,90 @@ export const AIChat = ({ nodes, edges, onNodesChange, onEdgesChange, onClose }: 
           onEdgesChange(updatedEdges);
           changeApplied = true;
           toast.success('Removed connection');
+        } else if (action === 'update_node_color' && nodeId && color) {
+          const nodeToUpdate = updatedNodes.find(n => n.id === nodeId || n.data.label.toLowerCase() === nodeId.toLowerCase());
+          if (nodeToUpdate) {
+            updatedNodes = updatedNodes.map(n => 
+              n.id === nodeToUpdate.id
+                ? { 
+                    ...n, 
+                    style: { 
+                      ...n.style, 
+                      background: color,
+                      border: borderColor ? `2px solid ${borderColor}` : n.style?.border,
+                    } 
+                  } 
+                : n
+            );
+            
+            nodesRef.current = updatedNodes;
+            onNodesChange(updatedNodes);
+            changeApplied = true;
+            toast.success('Updated node color');
+          }
+        } else if (action === 'update_edge_color' && edgeId && color) {
+          const edgeToUpdate = updatedEdges.find(e => e.id === edgeId);
+          if (edgeToUpdate) {
+            updatedEdges = updatedEdges.map(e => 
+              e.id === edgeId
+                ? { ...e, style: { ...e.style, stroke: color } } 
+                : e
+            );
+            
+            edgesRef.current = updatedEdges;
+            onEdgesChange(updatedEdges);
+            changeApplied = true;
+            toast.success('Updated edge color');
+          }
+        } else if (action === 'update_edge_type' && edgeId && edgeType) {
+          const edgeToUpdate = updatedEdges.find(e => e.id === edgeId);
+          if (edgeToUpdate) {
+            updatedEdges = updatedEdges.map(e => 
+              e.id === edgeId
+                ? { ...e, type: edgeType } 
+                : e
+            );
+            
+            edgesRef.current = updatedEdges;
+            onEdgesChange(updatedEdges);
+            changeApplied = true;
+            toast.success('Updated edge type');
+          }
+        } else if (action === 'update_edge_properties' && edgeId) {
+          const edgeToUpdate = updatedEdges.find(e => e.id === edgeId);
+          if (edgeToUpdate) {
+            updatedEdges = updatedEdges.map(e => {
+              if (e.id !== edgeId) return e;
+              
+              const updates: any = { ...e };
+              
+              if (animated !== undefined) {
+                updates.animated = animated;
+              }
+              
+              if (hasArrow !== undefined) {
+                if (hasArrow) {
+                  updates.markerEnd = { type: 'arrowClosed' };
+                } else {
+                  delete updates.markerEnd;
+                }
+              }
+              
+              if (isDashed !== undefined) {
+                updates.style = {
+                  ...updates.style,
+                  strokeDasharray: isDashed ? '5,5' : undefined,
+                };
+              }
+              
+              return updates;
+            });
+            
+            edgesRef.current = updatedEdges;
+            onEdgesChange(updatedEdges);
+            changeApplied = true;
+            toast.success('Updated edge properties');
+          }
         }
       }
 

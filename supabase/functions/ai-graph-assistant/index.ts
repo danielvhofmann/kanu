@@ -29,13 +29,16 @@ CRITICAL INSTRUCTIONS:
 - Match nodes by their label (case-insensitive), NOT by requiring users to provide IDs
 - For example: "remove CEO" → find the node with label "CEO" and use its ID
 - NEVER ask users for node IDs - always figure it out from the label yourself
+- For colors, use HSL format: hsl(hue, saturation%, lightness%)
+- For edge types: "straight", "smoothstep" (curved), or "step"
 
 Your capabilities:
 1. Answer questions about the graph
-2. Modify nodes and edges using the modify_graph tool
-3. Search the web for information using web_search tool
-4. Find images using image_search tool
-5. Help build graphs from descriptions
+2. Modify nodes and edges (add, remove, update, change colors)
+3. Update edge properties (type, animated, arrows, dashed lines)
+4. Search the web for information using web_search tool
+5. Find images using image_search tool
+6. Help build graphs from descriptions
 
 Be conversational and helpful. Always prioritize using labels over IDs when users reference nodes.`;
 
@@ -79,13 +82,13 @@ Be conversational and helpful. Always prioritize using labels over IDs when user
         type: "function",
         function: {
           name: "modify_graph",
-          description: "Modify the graph by adding/removing/updating nodes and edges. IMPORTANT: When user says 'remove CEO' or 'delete the Marketing node', find the nodeId by matching the label from the graph nodes list.",
+          description: "Modify the graph by adding/removing/updating nodes and edges, changing colors, and updating edge properties. IMPORTANT: When user says 'remove CEO' or 'delete the Marketing node', find the nodeId by matching the label from the graph nodes list.",
           parameters: {
             type: "object",
             properties: {
               action: {
                 type: "string",
-                enum: ["add_node", "remove_node", "add_edge", "remove_edge", "update_node"],
+                enum: ["add_node", "remove_node", "add_edge", "remove_edge", "update_node", "update_node_color", "update_edge_color", "update_edge_type", "update_edge_properties"],
                 description: "The action to perform"
               },
               nodeId: {
@@ -95,6 +98,14 @@ Be conversational and helpful. Always prioritize using labels over IDs when user
               label: {
                 type: "string",
                 description: "Node label (for add/update actions)"
+              },
+              color: {
+                type: "string",
+                description: "Color in HSL format like 'hsl(195, 45%, 52%)' for node or edge colors"
+              },
+              borderColor: {
+                type: "string",
+                description: "Border color in HSL format (for update_node_color)"
               },
               source: {
                 type: "string",
@@ -106,7 +117,23 @@ Be conversational and helpful. Always prioritize using labels over IDs when user
               },
               edgeId: {
                 type: "string",
-                description: "Edge ID (for remove_edge)"
+                description: "Edge ID (for update_edge actions)"
+              },
+              edgeType: {
+                type: "string",
+                description: "Edge type: 'straight', 'smoothstep', or 'step' (for update_edge_type)"
+              },
+              animated: {
+                type: "boolean",
+                description: "Whether edge should be animated (for update_edge_properties)"
+              },
+              hasArrow: {
+                type: "boolean",
+                description: "Whether edge should have an arrow (for update_edge_properties)"
+              },
+              isDashed: {
+                type: "boolean",
+                description: "Whether edge should be dashed (for update_edge_properties)"
               }
             },
             required: ["action"]
@@ -178,6 +205,14 @@ Be conversational and helpful. Always prioritize using labels over IDs when user
             finalMessage = `I've removed "${args.label || 'the node'}" from the graph.`;
           } else if (args.action === 'update_node') {
             finalMessage = `I've updated the node to "${args.label}".`;
+          } else if (args.action === 'update_node_color') {
+            finalMessage = `I've changed the color of the node.`;
+          } else if (args.action === 'update_edge_color') {
+            finalMessage = `I've changed the edge color.`;
+          } else if (args.action === 'update_edge_type') {
+            finalMessage = `I've changed the edge type.`;
+          } else if (args.action === 'update_edge_properties') {
+            finalMessage = `I've updated the edge properties.`;
           } else if (args.action === 'add_edge') {
             finalMessage = `I've added a connection in the graph.`;
           } else if (args.action === 'remove_edge') {
