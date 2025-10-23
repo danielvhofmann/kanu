@@ -442,7 +442,7 @@ const Editor = () => {
       // Save this state as the last saved state
       lastSavedStateRef.current = newState;
     }
-  }, [nodes, edges, historyIndex]);
+  }, [nodes, edges]);
 
   const handleUndo = useCallback(() => {
     if (historyIndex > 0) {
