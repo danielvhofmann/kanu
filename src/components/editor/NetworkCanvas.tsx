@@ -81,19 +81,20 @@ export const NetworkCanvas = ({
       .attr('y', -height * 5)
       .attr('fill', 'url(#grid)');
 
-    // Add arrow markers with dynamic color
+    // Add arrow markers - position adjusted for better visibility
     const arrowMarker = defs.append('marker')
       .attr('id', 'arrowhead')
       .attr('viewBox', '0 -5 10 10')
-      .attr('refX', 15)
+      .attr('refX', 25)
       .attr('refY', 0)
-      .attr('markerWidth', 8)
-      .attr('markerHeight', 8)
+      .attr('markerWidth', 10)
+      .attr('markerHeight', 10)
       .attr('orient', 'auto');
     
     arrowMarker.append('path')
       .attr('d', 'M0,-5L10,0L0,5')
-      .attr('fill', 'hsl(var(--border))');
+      .attr('fill', 'hsl(var(--foreground))')
+      .attr('stroke', 'none');
 
     // Create groups for edges and nodes
     g.append('g').attr('class', 'edges-group');
@@ -310,6 +311,7 @@ export const NetworkCanvas = ({
         }
       });
 
+    // Apply drag to new nodes only initially
     nodeEnter.call(drag);
 
     // Draw node shapes
@@ -408,6 +410,11 @@ export const NetworkCanvas = ({
 
     nodeMerge.select('.node-label')
       .text((d: any) => d.data.label || '');
+    
+    // Update cursor and reapply drag to ALL nodes based on sketch mode state
+    nodeMerge
+      .attr('cursor', isSketchMode ? 'crosshair' : 'grab')
+      .call(drag);
 
     // Update positions on tick
     simulation.on('tick', () => {
