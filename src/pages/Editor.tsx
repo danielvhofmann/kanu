@@ -3,7 +3,7 @@ import { Node, Edge, Connection, MarkerType } from 'reactflow';
 import { EditorToolbar } from '@/components/editor/EditorToolbar';
 import { EditorSidebar } from '@/components/editor/EditorSidebar';
 import { TemplateSelector } from '@/components/editor/TemplateSelector';
-import { D3Canvas } from '@/components/editor/D3Canvas';
+import { NetworkCanvas } from '@/components/editor/NetworkCanvas';
 import { ColorControls } from '@/components/editor/ColorControls';
 import { AIChat } from '@/components/editor/AIChat';
 import { Button } from '@/components/ui/button';
@@ -630,7 +630,7 @@ const Editor = () => {
         
         {/* Canvas */}
         <div ref={canvasRef} className="flex-1 relative">
-          <D3Canvas
+          <NetworkCanvas
             nodes={nodes}
             edges={edges}
             onNodesChange={setNodes}
@@ -641,7 +641,6 @@ const Editor = () => {
             onEdgeClick={onEdgeClick}
             isSketchMode={isSketchMode}
             backgroundColor={backgroundColor}
-            templateType={templateType || undefined}
           />
         </div>
 
