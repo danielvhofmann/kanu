@@ -412,6 +412,12 @@ const Editor = () => {
   // Save to history when nodes or edges change (but not during undo/redo or element modifications)
   // Debounced to prevent cascading renders
   useEffect(() => {
+    // ALWAYS clear any pending timeout first to prevent stale data saves
+    if (historySaveTimeout.current !== null) {
+      window.clearTimeout(historySaveTimeout.current);
+      historySaveTimeout.current = null;
+    }
+    
     // Skip if this is an undo/redo action
     if (isUndoRedoAction.current) {
       console.log('[HISTORY] Skipping save - undo/redo');
@@ -423,11 +429,6 @@ const Editor = () => {
     if (isModifyingElements.current) {
       console.log('[HISTORY] Skipping save - modifying elements');
       return;
-    }
-    
-    // Clear any pending history save
-    if (historySaveTimeout.current !== null) {
-      window.clearTimeout(historySaveTimeout.current);
     }
     
     // Debounce history saving to after render cycle completes
