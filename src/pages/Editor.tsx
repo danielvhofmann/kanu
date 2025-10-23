@@ -412,11 +412,16 @@ const Editor = () => {
   // Save to history when nodes or edges change (but not during undo/redo or element modifications)
   // Debounced to prevent cascading renders
   useEffect(() => {
-    // Skip if this is an undo/redo action or element modification
-    if (isUndoRedoAction.current || isModifyingElements.current) {
-      console.log('[HISTORY] Skipping save - undo/redo or modifying');
+    // Skip if this is an undo/redo action
+    if (isUndoRedoAction.current) {
+      console.log('[HISTORY] Skipping save - undo/redo');
       isUndoRedoAction.current = false;
-      isModifyingElements.current = false;
+      return;
+    }
+    
+    // Skip if we're currently modifying elements (don't reset flag yet)
+    if (isModifyingElements.current) {
+      console.log('[HISTORY] Skipping save - modifying elements');
       return;
     }
     
@@ -444,6 +449,7 @@ const Editor = () => {
           // Don't add if it's the same as last saved state
           if (newNodeIds === lastNodeIds && newEdgeIds === lastEdgeIds) {
             console.log('[HISTORY] State unchanged - not saving');
+            isModifyingElements.current = false;
             return;
           }
         }
@@ -465,6 +471,9 @@ const Editor = () => {
         
         // Save this state as the last saved state
         lastSavedStateRef.current = newState;
+        
+        // Reset the modification flag after saving
+        isModifyingElements.current = false;
       }
     }, 200); // Increased from 50ms to 200ms
     
