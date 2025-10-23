@@ -81,20 +81,20 @@ export const NetworkCanvas = ({
       .attr('y', -height * 5)
       .attr('fill', 'url(#grid)');
 
-    // Add arrow markers - position adjusted for better visibility
+    // Add arrow marker for edges with arrows
     const arrowMarker = defs.append('marker')
       .attr('id', 'arrowhead')
       .attr('viewBox', '0 -5 10 10')
-      .attr('refX', 25)
+      .attr('refX', 10)
       .attr('refY', 0)
-      .attr('markerWidth', 10)
-      .attr('markerHeight', 10)
+      .attr('markerWidth', 6)
+      .attr('markerHeight', 6)
       .attr('orient', 'auto');
     
     arrowMarker.append('path')
       .attr('d', 'M0,-5L10,0L0,5')
-      .attr('fill', 'hsl(var(--foreground))')
-      .attr('stroke', 'none');
+      .attr('fill', 'currentColor')
+      .style('color', 'inherit');
 
     // Create groups for edges and nodes
     g.append('g').attr('class', 'edges-group');
@@ -170,6 +170,9 @@ export const NetworkCanvas = ({
       });
 
     const edgeMerge = edgeEnter.merge(edgeSelection)
+      .style('color', (d: any) => 
+        d.id === selectedEdgeId ? 'hsl(var(--primary))' : (d.style?.stroke || 'hsl(var(--border))')
+      )
       .attr('stroke', (d: any) => 
         d.id === selectedEdgeId ? 'hsl(var(--primary))' : (d.style?.stroke || 'hsl(var(--border))')
       )
@@ -178,13 +181,7 @@ export const NetworkCanvas = ({
       )
       .attr('stroke-dasharray', (d: any) => d.style?.strokeDasharray || null)
       .attr('opacity', (d: any) => d.id === selectedEdgeId ? 1 : 0.6)
-      .attr('marker-end', (d: any) => {
-        const hasMarker = d.markerEnd ? 'url(#arrowhead)' : null;
-        if (d.id === selectedEdgeId && d.markerEnd) {
-          console.log('[NETWORK CANVAS] Edge marker:', d.id, 'markerEnd:', d.markerEnd, 'result:', hasMarker);
-        }
-        return hasMarker;
-      })
+      .attr('marker-end', (d: any) => d.markerEnd ? 'url(#arrowhead)' : null)
       .classed('animated-edge', (d: any) => d.animated || false);
 
     // Render nodes
@@ -421,19 +418,25 @@ export const NetworkCanvas = ({
       edgeMerge.attr('d', (d: any) => {
         const sourceX = d.source.x;
         const sourceY = d.source.y;
-        const targetX = d.target.x;
-        const targetY = d.target.y;
+        let targetX = d.target.x;
+        let targetY = d.target.y;
+
+        // Calculate arrow stop position at node boundary
+        const nodeRadius = 42.5;
+        const angle = Math.atan2(targetY - sourceY, targetX - sourceX);
+        const adjustedTargetX = targetX - Math.cos(angle) * nodeRadius;
+        const adjustedTargetY = targetY - Math.sin(angle) * nodeRadius;
 
         if (d.type === 'smoothstep') {
-          const dx = targetX - sourceX;
-          const dy = targetY - sourceY;
+          const dx = adjustedTargetX - sourceX;
+          const dy = adjustedTargetY - sourceY;
           const dr = Math.sqrt(dx * dx + dy * dy) * 0.7;
-          return `M${sourceX},${sourceY}A${dr},${dr} 0 0,1 ${targetX},${targetY}`;
+          return `M${sourceX},${sourceY}A${dr},${dr} 0 0,1 ${adjustedTargetX},${adjustedTargetY}`;
         } else if (d.type === 'step') {
-          const midX = (sourceX + targetX) / 2;
-          return `M${sourceX},${sourceY}L${midX},${sourceY}L${midX},${targetY}L${targetX},${targetY}`;
+          const midX = (sourceX + adjustedTargetX) / 2;
+          return `M${sourceX},${sourceY}L${midX},${sourceY}L${midX},${adjustedTargetY}L${adjustedTargetX},${adjustedTargetY}`;
         }
-        return `M${sourceX},${sourceY}L${targetX},${targetY}`;
+        return `M${sourceX},${sourceY}L${adjustedTargetX},${adjustedTargetY}`;
       });
 
       nodeMerge.attr('transform', (d: any) => `translate(${d.x},${d.y})`);

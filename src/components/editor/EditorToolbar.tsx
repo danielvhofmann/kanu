@@ -87,7 +87,11 @@ export const EditorToolbar = ({
         <span className="text-sm text-muted-foreground">Edge:</span>
         <Select value={edgeType} onValueChange={onEdgeTypeChange}>
           <SelectTrigger className="h-8 w-[100px]">
-            <SelectValue />
+            <SelectValue>
+              {edgeType === 'straight' && 'Straight'}
+              {edgeType === 'smoothstep' && 'Curved'}
+              {edgeType === 'step' && 'Step'}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="straight">Straight</SelectItem>

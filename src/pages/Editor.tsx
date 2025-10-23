@@ -33,7 +33,7 @@ const Editor = () => {
   const [backgroundColor, setBackgroundColor] = useState('hsl(0, 0%, 99%)');
   const [selectedPalette, setSelectedPalette] = useState('default');
   const [defaultNodeShape, setDefaultNodeShape] = useState('circle');
-  const [defaultEdgeType, setDefaultEdgeType] = useState('straight');
+  const [defaultEdgeType, setDefaultEdgeType] = useState<'straight' | 'smoothstep' | 'step'>('straight');
   const [mapTitle, setMapTitle] = useState('Untitled Map');
   const [showAIChat, setShowAIChat] = useState(false);
   const templateType = searchParams.get('template') as TemplateType;
@@ -400,24 +400,17 @@ const Editor = () => {
   );
 
   const applyEdgeTypeToAll = useCallback(
-    (edgeType: string) => {
-      const typeMap: Record<string, any> = {
-        straight: 'straight',
-        curved: 'smoothstep',
-        step: 'step',
-      };
-
-      const mappedType = typeMap[edgeType] || 'straight';
-
+    (edgeType: 'straight' | 'smoothstep' | 'step') => {
       setEdges((eds) =>
         eds.map((edge) => ({
           ...edge,
-          type: mappedType,
+          type: edgeType,
         }))
       );
 
       setDefaultEdgeType(edgeType);
-      toast.success(`Applied ${edgeType} edges`);
+      const displayNames = { straight: 'straight', smoothstep: 'curved', step: 'step' };
+      toast.success(`Applied ${displayNames[edgeType]} edges`);
     },
     []
   );
