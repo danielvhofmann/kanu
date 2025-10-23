@@ -81,19 +81,19 @@ export const NetworkCanvas = ({
       .attr('y', -height * 5)
       .attr('fill', 'url(#grid)');
 
-    // Add arrow markers
+    // Add arrow markers with dynamic color
     const arrowMarker = defs.append('marker')
       .attr('id', 'arrowhead')
       .attr('viewBox', '0 -5 10 10')
-      .attr('refX', 8)
+      .attr('refX', 15)
       .attr('refY', 0)
-      .attr('markerWidth', 6)
-      .attr('markerHeight', 6)
+      .attr('markerWidth', 8)
+      .attr('markerHeight', 8)
       .attr('orient', 'auto');
     
     arrowMarker.append('path')
       .attr('d', 'M0,-5L10,0L0,5')
-      .attr('fill', 'hsl(var(--primary))');
+      .attr('fill', 'hsl(var(--border))');
 
     // Create groups for edges and nodes
     g.append('g').attr('class', 'edges-group');
@@ -177,7 +177,13 @@ export const NetworkCanvas = ({
       )
       .attr('stroke-dasharray', (d: any) => d.style?.strokeDasharray || null)
       .attr('opacity', (d: any) => d.id === selectedEdgeId ? 1 : 0.6)
-      .attr('marker-end', (d: any) => d.markerEnd ? 'url(#arrowhead)' : null)
+      .attr('marker-end', (d: any) => {
+        const hasMarker = d.markerEnd ? 'url(#arrowhead)' : null;
+        if (d.id === selectedEdgeId && d.markerEnd) {
+          console.log('[NETWORK CANVAS] Edge marker:', d.id, 'markerEnd:', d.markerEnd, 'result:', hasMarker);
+        }
+        return hasMarker;
+      })
       .classed('animated-edge', (d: any) => d.animated || false);
 
     // Render nodes
@@ -344,13 +350,59 @@ export const NetworkCanvas = ({
         .text(d.data.label || '');
     });
 
-    // Update existing nodes
+    // Update existing nodes - handle shape changes
     const nodeMerge = nodeEnter.merge(nodeSelection);
     
+    // Update or recreate shapes when shape type changes
+    nodeMerge.each(function(d: any) {
+      const g = d3.select(this);
+      const currentShape = d.data?.shape || 'circle';
+      const existingShape = g.select('.node-shape');
+      const shapeElement = existingShape.node() as SVGElement | null;
+      const shapeType = shapeElement?.tagName.toLowerCase();
+      
+      // If shape type changed, remove old shape and create new one
+      const needsRecreate = 
+        (currentShape === 'circle' && shapeType !== 'circle') ||
+        (currentShape === 'square' && shapeType !== 'rect');
+      
+      if (needsRecreate && shapeElement) {
+        existingShape.remove();
+        
+        const size = 42.5;
+        const fill = d.style?.background || 'hsl(195, 45%, 52%)';
+        const borderString = typeof d.style?.border === 'string' ? d.style.border : '';
+        const stroke = borderString.includes('solid') ? borderString.split('solid')[1]?.trim() || 'hsl(195, 50%, 68%)' : 'hsl(195, 50%, 68%)';
+        
+        if (currentShape === 'square') {
+          g.insert('rect', '.node-label')
+            .attr('class', 'node-shape')
+            .attr('x', -size)
+            .attr('y', -size)
+            .attr('width', size * 2)
+            .attr('height', size * 2)
+            .attr('rx', 8)
+            .attr('fill', fill)
+            .attr('stroke', stroke)
+            .attr('stroke-width', 2);
+        } else {
+          g.insert('circle', '.node-label')
+            .attr('class', 'node-shape')
+            .attr('r', size)
+            .attr('fill', fill)
+            .attr('stroke', stroke)
+            .attr('stroke-width', 2);
+        }
+      }
+    });
+    
+    // Update colors and selection state
     nodeMerge.select('.node-shape')
-      .attr('stroke', (d: any) => 
-        d.id === selectedNodeId ? 'hsl(var(--primary))' : (d.style?.border?.split(' ')[2] || 'hsl(195, 50%, 68%)')
-      )
+      .attr('stroke', (d: any) => {
+        const borderString = typeof d.style?.border === 'string' ? d.style.border : '';
+        const defaultStroke = borderString.includes('solid') ? borderString.split('solid')[1]?.trim() || 'hsl(195, 50%, 68%)' : 'hsl(195, 50%, 68%)';
+        return d.id === selectedNodeId ? 'hsl(var(--primary))' : defaultStroke;
+      })
       .attr('stroke-width', (d: any) => d.id === selectedNodeId ? 4 : 2)
       .attr('fill', (d: any) => d.style?.background || 'hsl(195, 45%, 52%)');
 

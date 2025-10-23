@@ -34,6 +34,7 @@ export const EdgeEditor = ({ edge, onUpdateEdge }: EdgeEditorProps) => {
 
   const handleArrowChange = (checked: boolean) => {
     setHasArrow(checked);
+    console.log('[EDGE EDITOR] Arrow change:', checked, 'Edge ID:', edge.id);
     onUpdateEdge(edge.id, {
       markerEnd: checked ? { type: 'arrowClosed' as any } : undefined,
     });
