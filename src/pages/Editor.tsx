@@ -43,6 +43,8 @@ const Editor = () => {
   const [historyIndex, setHistoryIndex] = useState(0);
   const canvasRef = useRef<HTMLDivElement>(null);
   const isUndoRedoAction = useRef(false);
+  const lastSavedStateRef = useRef<HistoryState>({ nodes: [], edges: [] });
+  const isHistoryUpdating = useRef(false);
 
   // Color palettes
   const paletteColors: Record<string, string[]> = {
@@ -407,20 +409,33 @@ const Editor = () => {
 
   // Save to history when nodes or edges change (but not during undo/redo)
   useEffect(() => {
-    if (isUndoRedoAction.current) {
+    // Skip if this is an undo/redo action or if we're already updating history
+    if (isUndoRedoAction.current || isHistoryUpdating.current) {
       isUndoRedoAction.current = false;
       return;
     }
     
     if (nodes.length > 0 || edges.length > 0) {
       const newState = { nodes: [...nodes], edges: [...edges] };
-      const current = history[historyIndex];
+      const lastSaved = lastSavedStateRef.current;
       
-      // Don't add if it's the same as current state
-      if (current && JSON.stringify(current) === JSON.stringify(newState)) {
+      // Compare with last saved state using node/edge IDs (much faster than JSON.stringify)
+      const nodeIdsMatch = 
+        newState.nodes.length === lastSaved.nodes.length &&
+        newState.nodes.every((n, i) => n.id === lastSaved.nodes[i]?.id);
+      const edgeIdsMatch = 
+        newState.edges.length === lastSaved.edges.length &&
+        newState.edges.every((e, i) => e.id === lastSaved.edges[i]?.id);
+      
+      // Don't add if it's the same as last saved state
+      if (nodeIdsMatch && edgeIdsMatch) {
         return;
       }
       
+      // Mark that we're updating history to prevent cascades
+      isHistoryUpdating.current = true;
+      
+      // Update history and index together to prevent intermediate renders
       setHistory(prev => {
         const newHistory = prev.slice(0, historyIndex + 1);
         newHistory.push(newState);
@@ -429,8 +444,16 @@ const Editor = () => {
         return newHistory;
       });
       setHistoryIndex(prev => Math.min(prev + 1, 49));
+      
+      // Save this state as the last saved state
+      lastSavedStateRef.current = newState;
+      
+      // Allow history updates again after a microtask
+      setTimeout(() => {
+        isHistoryUpdating.current = false;
+      }, 0);
     }
-  }, [nodes, edges]);
+  }, [nodes, edges, historyIndex]);
 
   const handleUndo = useCallback(() => {
     if (historyIndex > 0) {
