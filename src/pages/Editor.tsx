@@ -48,6 +48,7 @@ const Editor = () => {
   const isModifyingElements = useRef(false);
   const lastSavedStateRef = useRef<HistoryState>({ nodes: [], edges: [] });
   const historySaveTimeout = useRef<number | null>(null);
+  const templateLoadedRef = useRef(false);
 
   // Color palettes
   const paletteColors: Record<string, string[]> = {
@@ -90,16 +91,18 @@ const Editor = () => {
 
   // Load template if specified in URL, otherwise show import dialog
   useEffect(() => {
-    if (templateType) {
+    if (templateType && !templateLoadedRef.current) {
       const template = getTemplate(templateType);
       if (template) {
+        console.log('[TEMPLATE] Loading template once:', templateType);
         setNodes(template.nodes);
         setEdges(template.edges);
+        templateLoadedRef.current = true;
       }
-    } else if (nodes.length === 0) {
+    } else if (!templateType && nodes.length === 0 && !templateLoadedRef.current) {
       setShowImportDialog(true);
     }
-  }, [searchParams, nodes.length, templateType]);
+  }, [templateType]);
 
   const onConnect = useCallback(
     (connection: Connection) => {
