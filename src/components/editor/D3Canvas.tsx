@@ -38,7 +38,6 @@ export const D3Canvas = ({
   const isInitialMount = useRef(true);
   const isInitialized = useRef(false);
   const lastProcessedStateRef = useRef<{ nodeIds: string[]; edgeIds: string[] }>({ nodeIds: [], edgeIds: [] });
-  const updateTimeoutRef = useRef<number | null>(null);
 
   // Update dimensions on mount and resize
   useEffect(() => {
@@ -227,356 +226,337 @@ export const D3Canvas = ({
   useEffect(() => {
     if (!gRef.current || !simulationRef.current || dimensions.width === 0) return;
 
-    // Clear any pending updates
-    if (updateTimeoutRef.current !== null) {
-      clearTimeout(updateTimeoutRef.current);
-    }
-
-    // Defensive check: Skip if data hasn't actually changed
-    const currentNodeIds = nodes.map(n => n.id).sort();
-    const currentEdgeIds = edges.map(e => e.id).sort();
-    const lastNodeIds = lastProcessedStateRef.current.nodeIds;
-    const lastEdgeIds = lastProcessedStateRef.current.edgeIds;
+    // Lightweight check: Only skip if IDs are identical
+    const currentNodeIds = nodes.map(n => n.id).sort().join(',');
+    const currentEdgeIds = edges.map(e => e.id).sort().join(',');
+    const lastNodeIds = lastProcessedStateRef.current.nodeIds.sort().join(',');
+    const lastEdgeIds = lastProcessedStateRef.current.edgeIds.sort().join(',');
     
-    const nodesUnchanged = currentNodeIds.length === lastNodeIds.length && 
-      currentNodeIds.every((id, idx) => id === lastNodeIds[idx]);
-    const edgesUnchanged = currentEdgeIds.length === lastEdgeIds.length && 
-      currentEdgeIds.every((id, idx) => id === lastEdgeIds[idx]);
-    
-    if (nodesUnchanged && edgesUnchanged) {
+    if (currentNodeIds === lastNodeIds && currentEdgeIds === lastEdgeIds) {
       console.log('Effect #2 SKIPPED - data unchanged');
       return;
     }
     
-    // Debounce: Wait a brief moment to ensure we have the final state
-    updateTimeoutRef.current = window.setTimeout(() => {
-      if (!gRef.current || !simulationRef.current) return;
-      
-      // Update last processed state
-      lastProcessedStateRef.current = { nodeIds: currentNodeIds, edgeIds: currentEdgeIds };
+    // Update last processed state immediately
+    lastProcessedStateRef.current = { 
+      nodeIds: nodes.map(n => n.id), 
+      edgeIds: edges.map(e => e.id) 
+    };
 
-      console.log('Effect #2 running with nodes:', nodes.map(n => n.id));
-      console.log('Effect #2 running with edges:', edges.map(e => e.id));
-      console.log('Current simulation nodes BEFORE update:', simulationRef.current?.nodes().map((n: any) => n.id));
+    console.log('Effect #2 running with nodes:', nodes.map(n => n.id));
+    console.log('Effect #2 running with edges:', edges.map(e => e.id));
+    
+    const g = gRef.current;
+    const simulation = simulationRef.current;
+    
+    console.log('Current simulation nodes BEFORE update:', simulation.nodes().map((n: any) => n.id));
 
-      const g = gRef.current;
-      const simulation = simulationRef.current;
+    // Prepare data for D3 - explicitly sync simulation with current state
+    const nodeIds = new Set(nodes.map(n => n.id));
+    const currentSimNodes = simulation.nodes();
+    
+    // Clear simulation and filter to only keep nodes that exist in current state
+    const validSimNodes = currentSimNodes.filter((n: any) => nodeIds.has(n.id));
+    
+    const d3Nodes = nodes.map(node => {
+      const existingNode = validSimNodes.find((n: any) => n.id === node.id);
+      return {
+        ...node,
+        x: existingNode?.x ?? node.position.x,
+        y: existingNode?.y ?? node.position.y,
+        vx: existingNode?.vx ?? 0,
+        vy: existingNode?.vy ?? 0,
+        fx: existingNode?.fx ?? null,
+        fy: existingNode?.fy ?? null,
+      };
+    });
+    
+    // Explicitly set simulation nodes to only current valid nodes (prevents deleted nodes from persisting)
+    simulation.nodes(d3Nodes);
+    console.log('Set simulation nodes to:', d3Nodes.map((n: any) => n.id));
 
-      // Prepare data for D3 - explicitly sync simulation with current state
-      const nodeIds = new Set(nodes.map(n => n.id));
-      const currentSimNodes = simulation.nodes();
-      
-      // Clear simulation and filter to only keep nodes that exist in current state
-      const validSimNodes = currentSimNodes.filter((n: any) => nodeIds.has(n.id));
-      
-      const d3Nodes = nodes.map(node => {
-        const existingNode = validSimNodes.find((n: any) => n.id === node.id);
-        return {
-          ...node,
-          x: existingNode?.x ?? node.position.x,
-          y: existingNode?.y ?? node.position.y,
-          vx: existingNode?.vx ?? 0,
-          vy: existingNode?.vy ?? 0,
-          fx: existingNode?.fx ?? null,
-          fy: existingNode?.fy ?? null,
-        };
+    const d3Links = edges.map(edge => ({
+      ...edge,
+      source: edge.source,
+      target: edge.target,
+    }));
+
+    // Update simulation links
+    const linkForce = simulation.force('link') as d3.ForceLink<any, any>;
+    if (linkForce) {
+      linkForce.links(d3Links);
+    }
+    simulation.alpha(0.1).restart();
+
+    // Update edges using enter-update-exit pattern
+    const linkGroup = g.select<SVGGElement>('g.edges-group').empty() 
+      ? g.insert('g', ':first-child').attr('class', 'edges-group')
+      : g.select<SVGGElement>('g.edges-group');
+
+    const link = linkGroup
+      .selectAll<SVGPathElement, any>('path')
+      .data(d3Links, (d: any) => d.id);
+
+    // Remove old edges
+    link.exit().remove();
+
+    // Add new edges
+    const linkEnter = link.enter()
+      .append('path')
+      .attr('class', (d: any) => d.animated ? 'animated-edge' : '')
+      .attr('fill', 'none')
+      .attr('cursor', 'pointer')
+      .on('click', (event, d) => {
+        event.stopPropagation();
+        onEdgeClick(d as Edge);
       });
-      
-      // Explicitly set simulation nodes to only current valid nodes (prevents deleted nodes from persisting)
-      simulation.nodes(d3Nodes);
-      console.log('Set simulation nodes to:', d3Nodes.map((n: any) => n.id));
 
-      const d3Links = edges.map(edge => ({
-        ...edge,
-        source: edge.source,
-        target: edge.target,
-      }));
+    // Merge and update all edges (NO selection styling here - moved to separate effect)
+    const linkMerged = linkEnter.merge(link)
+      .attr('stroke', (d: any) => d.style?.stroke || 'hsl(var(--border))')
+      .attr('stroke-width', (d: any) => d.style?.strokeWidth || 1.5)
+      .attr('opacity', 0.6)
+      .attr('stroke-dasharray', (d: any) => d.style?.strokeDasharray || null)
+      .attr('marker-end', (d: any) => {
+        if (!d.animated && !d.markerEnd) return null;
+        const isCurved = d.type === 'smoothstep';
+        return isCurved ? 'url(#arrowhead-curved)' : 'url(#arrowhead-straight)';
+      });
 
-      // Update simulation links
-      const linkForce = simulation.force('link') as d3.ForceLink<any, any>;
-      if (linkForce) {
-        linkForce.links(d3Links);
-      }
-      simulation.alpha(0.1).restart();
+    // Update nodes using enter-update-exit pattern
+    const nodeGroup = g.select<SVGGElement>('g.nodes-group').empty()
+      ? g.append('g').attr('class', 'nodes-group')
+      : g.select<SVGGElement>('g.nodes-group');
 
-      // Update edges using enter-update-exit pattern
-      const linkGroup = g.select<SVGGElement>('g.edges-group').empty() 
-        ? g.insert('g', ':first-child').attr('class', 'edges-group')
-        : g.select<SVGGElement>('g.edges-group');
+    const node = nodeGroup
+      .selectAll<SVGGElement, any>('g.node')
+      .data(d3Nodes, (d: any) => d.id);
 
-      const link = linkGroup
-        .selectAll<SVGPathElement, any>('path')
-        .data(d3Links, (d: any) => d.id);
+    // Remove old nodes from DOM (simulation already has correct nodes from line 256)
+    const exitNodes = node.exit();
+    console.log('Removing nodes from DOM:', exitNodes.data().map((n: any) => n.id));
+    exitNodes.remove();
 
-      // Remove old edges
-      link.exit().remove();
-
-      // Add new edges
-      const linkEnter = link.enter()
-        .append('path')
-        .attr('class', (d: any) => d.animated ? 'animated-edge' : '')
-        .attr('fill', 'none')
-        .attr('cursor', 'pointer')
-        .on('click', (event, d) => {
-          event.stopPropagation();
-          onEdgeClick(d as Edge);
-        });
-
-      // Merge and update all edges (NO selection styling here - moved to separate effect)
-      const linkMerged = linkEnter.merge(link)
-        .attr('stroke', (d: any) => d.style?.stroke || 'hsl(var(--border))')
-        .attr('stroke-width', (d: any) => d.style?.strokeWidth || 1.5)
-        .attr('opacity', 0.6)
-        .attr('stroke-dasharray', (d: any) => d.style?.strokeDasharray || null)
-        .attr('marker-end', (d: any) => {
-          if (!d.animated && !d.markerEnd) return null;
-          const isCurved = d.type === 'smoothstep';
-          return isCurved ? 'url(#arrowhead-curved)' : 'url(#arrowhead-straight)';
-        });
-
-      // Update nodes using enter-update-exit pattern
-      const nodeGroup = g.select<SVGGElement>('g.nodes-group').empty()
-        ? g.append('g').attr('class', 'nodes-group')
-        : g.select<SVGGElement>('g.nodes-group');
-
-      const node = nodeGroup
-        .selectAll<SVGGElement, any>('g.node')
-        .data(d3Nodes, (d: any) => d.id);
-
-      // Remove old nodes from DOM (simulation already has correct nodes from line 256)
-      const exitNodes = node.exit();
-      console.log('Removing nodes from DOM:', exitNodes.data().map((n: any) => n.id));
-      exitNodes.remove();
-
-      // Add new nodes
-      const enterNodes = node.enter();
-      console.log('Adding nodes to DOM:', enterNodes.data().map((n: any) => n.id));
-      const nodeEnter = enterNodes
-        .append('g')
-        .attr('class', 'node')
-        .attr('cursor', isSketchMode ? 'pointer' : 'grab')
-        .call(d3.drag<SVGGElement, any>()
-          .on('start', (event, d) => {
-            if (isSketchMode) {
-              dragLineRef.current = {
-                x1: d.x,
-                y1: d.y,
-                x2: d.x,
-                y2: d.y,
-                sourceId: d.id,
-              };
-            } else {
-              d.fx = d.x;
-              d.fy = d.y;
-            }
-          })
-          .on('drag', (event, d) => {
-            if (isSketchMode) {
-              if (dragLineRef.current) {
-                dragLineRef.current.x2 = event.x;
-                dragLineRef.current.y2 = event.y;
-                g.selectAll('.drag-line').remove();
-                g.append('line')
-                  .attr('class', 'drag-line')
-                  .attr('x1', dragLineRef.current.x1)
-                  .attr('y1', dragLineRef.current.y1)
-                  .attr('x2', dragLineRef.current.x2)
-                  .attr('y2', dragLineRef.current.y2)
-                  .attr('stroke', 'hsl(var(--primary))')
-                  .attr('stroke-width', 2)
-                  .attr('stroke-dasharray', '5,5');
-              }
-            } else {
-              if (!event.active) simulation.alphaTarget(0.1).restart();
-              d.fx = event.x;
-              d.fy = event.y;
-            }
-          })
-          .on('end', (event, d) => {
-            if (isSketchMode && dragLineRef.current) {
+    // Add new nodes
+    const enterNodes = node.enter();
+    console.log('Adding nodes to DOM:', enterNodes.data().map((n: any) => n.id));
+    const nodeEnter = enterNodes
+      .append('g')
+      .attr('class', 'node')
+      .attr('cursor', isSketchMode ? 'pointer' : 'grab')
+      .call(d3.drag<SVGGElement, any>()
+        .on('start', (event, d) => {
+          if (isSketchMode) {
+            dragLineRef.current = {
+              x1: d.x,
+              y1: d.y,
+              x2: d.x,
+              y2: d.y,
+              sourceId: d.id,
+            };
+          } else {
+            d.fx = d.x;
+            d.fy = d.y;
+          }
+        })
+        .on('drag', (event, d) => {
+          if (isSketchMode) {
+            if (dragLineRef.current) {
+              dragLineRef.current.x2 = event.x;
+              dragLineRef.current.y2 = event.y;
               g.selectAll('.drag-line').remove();
-              const targetNode = d3Nodes.find(n => {
-                const dx = n.x - event.x;
-                const dy = n.y - event.y;
-                return Math.sqrt(dx * dx + dy * dy) < 50 && n.id !== d.id;
-              });
+              g.append('line')
+                .attr('class', 'drag-line')
+                .attr('x1', dragLineRef.current.x1)
+                .attr('y1', dragLineRef.current.y1)
+                .attr('x2', dragLineRef.current.x2)
+                .attr('y2', dragLineRef.current.y2)
+                .attr('stroke', 'hsl(var(--primary))')
+                .attr('stroke-width', 2)
+                .attr('stroke-dasharray', '5,5');
+            }
+          } else {
+            if (!event.active) simulation.alphaTarget(0.1).restart();
+            d.fx = event.x;
+            d.fy = event.y;
+          }
+        })
+        .on('end', (event, d) => {
+          if (isSketchMode && dragLineRef.current) {
+            g.selectAll('.drag-line').remove();
+            const targetNode = d3Nodes.find(n => {
+              const dx = n.x - event.x;
+              const dy = n.y - event.y;
+              return Math.sqrt(dx * dx + dy * dy) < 50 && n.id !== d.id;
+            });
 
-              if (targetNode) {
+            if (targetNode) {
+              const newEdge: Edge = {
+                id: `${d.id}-${targetNode.id}`,
+                source: d.id,
+                target: targetNode.id,
+                type: 'smoothstep',
+                animated: true,
+                style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 },
+                markerEnd: { type: 'arrowClosed' as any },
+              };
+              onEdgesChange((currentEdges) => [...currentEdges, newEdge]);
+            } else {
+              onNodesChange((currentNodes) => {
+                const newNode: Node = {
+                  id: `${Date.now()}`,
+                  type: 'default',
+                  position: { x: event.x, y: event.y },
+                  data: { label: `Node ${currentNodes.length + 1}` },
+                  style: {
+                    background: 'hsl(195, 45%, 52%)',
+                    color: 'white',
+                    border: '2px solid hsl(195, 50%, 68%)',
+                    borderRadius: '50%',
+                    width: '85px',
+                    height: '85px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textAlign: 'center',
+                    boxShadow: '0 3px 12px hsl(195 45% 52% / 0.2)',
+                  },
+                };
                 const newEdge: Edge = {
-                  id: `${d.id}-${targetNode.id}`,
+                  id: `${d.id}-${newNode.id}`,
                   source: d.id,
-                  target: targetNode.id,
+                  target: newNode.id,
                   type: 'smoothstep',
                   animated: true,
                   style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 },
                   markerEnd: { type: 'arrowClosed' as any },
                 };
+                
+                // Let Effect #2 handle simulation updates
                 onEdgesChange((currentEdges) => [...currentEdges, newEdge]);
-              } else {
-                onNodesChange((currentNodes) => {
-                  const newNode: Node = {
-                    id: `${Date.now()}`,
-                    type: 'default',
-                    position: { x: event.x, y: event.y },
-                    data: { label: `Node ${currentNodes.length + 1}` },
-                    style: {
-                      background: 'hsl(195, 45%, 52%)',
-                      color: 'white',
-                      border: '2px solid hsl(195, 50%, 68%)',
-                      borderRadius: '50%',
-                      width: '85px',
-                      height: '85px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      textAlign: 'center',
-                      boxShadow: '0 3px 12px hsl(195 45% 52% / 0.2)',
-                    },
-                  };
-                  const newEdge: Edge = {
-                    id: `${d.id}-${newNode.id}`,
-                    source: d.id,
-                    target: newNode.id,
-                    type: 'smoothstep',
-                    animated: true,
-                    style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 },
-                    markerEnd: { type: 'arrowClosed' as any },
-                  };
-                  
-                  // Let Effect #2 handle simulation updates
-                  onEdgesChange((currentEdges) => [...currentEdges, newEdge]);
-                  return [...currentNodes, newNode];
-                });
-              }
-              dragLineRef.current = null;
-            } else {
-              if (!event.active) simulation.alphaTarget(0);
-              d.fx = null;
-              d.fy = null;
+                return [...currentNodes, newNode];
+              });
             }
-          })
-        )
-        .on('click', (event, d) => {
-          event.stopPropagation();
-          onNodeClick(d as Node);
-        });
-
-      // Draw node shapes for new nodes
-      nodeEnter.each(function(d: any) {
-        const g = d3.select(this);
-        const shape = d.data?.shape || 'circle';
-        const width = parseInt(d.style?.width || '85');
-        const size = width / 2;
-        const fill = d.style?.background || 'hsl(195, 45%, 52%)';
-        const stroke = d.style?.border?.split(' ')[2] || 'hsl(195, 50%, 68%)';
-        const filter = d.style?.boxShadow ? 'drop-shadow(0 3px 8px rgba(0,0,0,0.15))' : 'none';
-
-        if (shape === 'square') {
-          g.append('rect')
-            .attr('class', 'node-shape')
-            .attr('x', -size)
-            .attr('y', -size)
-            .attr('width', width)
-            .attr('height', width)
-            .attr('rx', 8)
-            .attr('fill', fill)
-            .attr('stroke', stroke)
-            .attr('stroke-width', 2)
-            .style('filter', filter);
-        } else if (shape === 'triangle') {
-          const points = `0,${-size} ${-size},${size} ${size},${size}`;
-          g.append('polygon')
-            .attr('class', 'node-shape')
-            .attr('points', points)
-            .attr('fill', fill)
-            .attr('stroke', stroke)
-            .attr('stroke-width', 2)
-            .style('filter', filter);
-        } else {
-          g.append('circle')
-            .attr('class', 'node-shape')
-            .attr('r', size)
-            .attr('fill', fill)
-            .attr('stroke', stroke)
-            .attr('stroke-width', 2)
-            .style('filter', filter);
-        }
-
-        // Add label
-        const text = g.append('text')
-          .attr('class', 'node-label')
-          .attr('text-anchor', 'middle')
-          .attr('dy', '0.35em')
-          .attr('fill', d.style?.color || 'white')
-          .attr('font-size', d.style?.fontSize || '12px')
-          .attr('font-weight', d.style?.fontWeight || '400')
-          .attr('pointer-events', 'none');
-
-        const words = d.data.label.split(/\s+/);
-        const lineHeight = 1.1;
-        const maxWidth = width * 0.8;
-        
-        let line: string[] = [];
-        let lineNumber = 0;
-        const tspan = text.append('tspan').attr('x', 0).attr('dy', 0);
-        
-        words.forEach((word: string) => {
-          line.push(word);
-          tspan.text(line.join(' '));
-          if (tspan.node()!.getComputedTextLength() > maxWidth) {
-            line.pop();
-            tspan.text(line.join(' '));
-            line = [word];
-            lineNumber++;
-            text.append('tspan')
-              .attr('x', 0)
-              .attr('dy', `${lineHeight}em`)
-              .text(word);
+            dragLineRef.current = null;
+          } else {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
           }
-        });
-        
-        const totalLines = text.selectAll('tspan').size();
-        text.attr('dy', `${-(totalLines - 1) * lineHeight * 0.5}em`);
+        })
+      )
+      .on('click', (event, d) => {
+        event.stopPropagation();
+        onNodeClick(d as Node);
       });
 
-      // Merge and update all nodes (NO selection styling here - moved to separate effect)
-      const nodeMerged = nodeEnter.merge(node);
-      
-      nodeMerged.selectAll('.node-shape')
-        .attr('stroke', (d: any) => d.style?.border?.split(' ')[2] || 'hsl(195, 50%, 68%)')
-        .attr('stroke-width', 2);
+    // Draw node shapes for new nodes
+    nodeEnter.each(function(d: any) {
+      const g = d3.select(this);
+      const shape = d.data?.shape || 'circle';
+      const width = parseInt(d.style?.width || '85');
+      const size = width / 2;
+      const fill = d.style?.background || 'hsl(195, 45%, 52%)';
+      const stroke = d.style?.border?.split(' ')[2] || 'hsl(195, 50%, 68%)';
+      const filter = d.style?.boxShadow ? 'drop-shadow(0 3px 8px rgba(0,0,0,0.15))' : 'none';
 
-      // Update simulation tick
-      simulation.on('tick', () => {
-        linkMerged.attr('d', (d: any) => {
-          const sourceX = d.source.x;
-          const sourceY = d.source.y;
-          const targetX = d.target.x;
-          const targetY = d.target.y;
-          
-          if (d.type === 'smoothstep') {
-            const dx = targetX - sourceX;
-            const dy = targetY - sourceY;
-            const dr = Math.sqrt(dx * dx + dy * dy) * 0.7;
-            return `M${sourceX},${sourceY}A${dr},${dr} 0 0,1 ${targetX},${targetY}`;
-          } else if (d.type === 'step') {
-            const midX = (sourceX + targetX) / 2;
-            return `M${sourceX},${sourceY}L${midX},${sourceY}L${midX},${targetY}L${targetX},${targetY}`;
-          }
-          return `M${sourceX},${sourceY}L${targetX},${targetY}`;
-        });
-
-        nodeMerged.attr('transform', (d: any) => `translate(${d.x},${d.y})`);
-      });
-    }, 10); // 10ms debounce
-    
-    // Cleanup function
-    return () => {
-      if (updateTimeoutRef.current !== null) {
-        clearTimeout(updateTimeoutRef.current);
+      if (shape === 'square') {
+        g.append('rect')
+          .attr('class', 'node-shape')
+          .attr('x', -size)
+          .attr('y', -size)
+          .attr('width', width)
+          .attr('height', width)
+          .attr('rx', 8)
+          .attr('fill', fill)
+          .attr('stroke', stroke)
+          .attr('stroke-width', 2)
+          .style('filter', filter);
+      } else if (shape === 'triangle') {
+        const points = `0,${-size} ${-size},${size} ${size},${size}`;
+        g.append('polygon')
+          .attr('class', 'node-shape')
+          .attr('points', points)
+          .attr('fill', fill)
+          .attr('stroke', stroke)
+          .attr('stroke-width', 2)
+          .style('filter', filter);
+      } else {
+        g.append('circle')
+          .attr('class', 'node-shape')
+          .attr('r', size)
+          .attr('fill', fill)
+          .attr('stroke', stroke)
+          .attr('stroke-width', 2)
+          .style('filter', filter);
       }
-    };
-  }, [nodes, edges, isSketchMode, onNodeClick, onEdgeClick, onNodesChange, onEdgesChange]); // ONLY data changes, no selection
+
+      // Add label
+      const text = g.append('text')
+        .attr('class', 'node-label')
+        .attr('text-anchor', 'middle')
+        .attr('dy', '0.35em')
+        .attr('fill', d.style?.color || 'white')
+        .attr('font-size', d.style?.fontSize || '12px')
+        .attr('font-weight', d.style?.fontWeight || '400')
+        .attr('pointer-events', 'none');
+
+      const words = d.data.label.split(/\s+/);
+      const lineHeight = 1.1;
+      const maxWidth = width * 0.8;
+      
+      let line: string[] = [];
+      let lineNumber = 0;
+      const tspan = text.append('tspan').attr('x', 0).attr('dy', 0);
+      
+      words.forEach((word: string) => {
+        line.push(word);
+        tspan.text(line.join(' '));
+        if (tspan.node()!.getComputedTextLength() > maxWidth) {
+          line.pop();
+          tspan.text(line.join(' '));
+          line = [word];
+          lineNumber++;
+          text.append('tspan')
+            .attr('x', 0)
+            .attr('dy', `${lineHeight}em`)
+            .text(word);
+        }
+      });
+      
+      const totalLines = text.selectAll('tspan').size();
+      text.attr('dy', `${-(totalLines - 1) * lineHeight * 0.5}em`);
+    });
+    // Merge and update all nodes (NO selection styling here - moved to separate effect)
+    const nodeMerged = nodeEnter.merge(node);
+    
+    nodeMerged.selectAll('.node-shape')
+      .attr('stroke', (d: any) => d.style?.border?.split(' ')[2] || 'hsl(195, 50%, 68%)')
+      .attr('stroke-width', 2);
+
+    // Update simulation tick
+    simulation.on('tick', () => {
+      linkMerged.attr('d', (d: any) => {
+        const sourceX = d.source.x;
+        const sourceY = d.source.y;
+        const targetX = d.target.x;
+        const targetY = d.target.y;
+        
+        if (d.type === 'smoothstep') {
+          const dx = targetX - sourceX;
+          const dy = targetY - sourceY;
+          const dr = Math.sqrt(dx * dx + dy * dy) * 0.7;
+          return `M${sourceX},${sourceY}A${dr},${dr} 0 0,1 ${targetX},${targetY}`;
+        } else if (d.type === 'step') {
+          const midX = (sourceX + targetX) / 2;
+          return `M${sourceX},${sourceY}L${midX},${sourceY}L${midX},${targetY}L${targetX},${targetY}`;
+        }
+        return `M${sourceX},${sourceY}L${targetX},${targetY}`;
+      });
+
+      nodeMerged.attr('transform', (d: any) => `translate(${d.x},${d.y})`);
+    });
+  }, [nodes, edges, isSketchMode, onNodeClick, onEdgeClick, onNodesChange, onEdgesChange]);
 
   // Effect 2B: Update selection styling ONLY (no DOM recreation)
   useEffect(() => {

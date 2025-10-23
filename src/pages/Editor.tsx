@@ -44,7 +44,6 @@ const Editor = () => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const isUndoRedoAction = useRef(false);
   const lastSavedStateRef = useRef<HistoryState>({ nodes: [], edges: [] });
-  const isHistoryUpdating = useRef(false);
 
   // Color palettes
   const paletteColors: Record<string, string[]> = {
@@ -409,8 +408,8 @@ const Editor = () => {
 
   // Save to history when nodes or edges change (but not during undo/redo)
   useEffect(() => {
-    // Skip if this is an undo/redo action or if we're already updating history
-    if (isUndoRedoAction.current || isHistoryUpdating.current) {
+    // Skip if this is an undo/redo action
+    if (isUndoRedoAction.current) {
       isUndoRedoAction.current = false;
       return;
     }
@@ -419,23 +418,18 @@ const Editor = () => {
       const newState = { nodes: [...nodes], edges: [...edges] };
       const lastSaved = lastSavedStateRef.current;
       
-      // Compare with last saved state using node/edge IDs (much faster than JSON.stringify)
-      const nodeIdsMatch = 
-        newState.nodes.length === lastSaved.nodes.length &&
-        newState.nodes.every((n, i) => n.id === lastSaved.nodes[i]?.id);
-      const edgeIdsMatch = 
-        newState.edges.length === lastSaved.edges.length &&
-        newState.edges.every((e, i) => e.id === lastSaved.edges[i]?.id);
+      // Quick comparison using joined IDs
+      const newNodeIds = newState.nodes.map(n => n.id).sort().join(',');
+      const lastNodeIds = lastSaved.nodes.map(n => n.id).sort().join(',');
+      const newEdgeIds = newState.edges.map(e => e.id).sort().join(',');
+      const lastEdgeIds = lastSaved.edges.map(e => e.id).sort().join(',');
       
       // Don't add if it's the same as last saved state
-      if (nodeIdsMatch && edgeIdsMatch) {
+      if (newNodeIds === lastNodeIds && newEdgeIds === lastEdgeIds) {
         return;
       }
       
-      // Mark that we're updating history to prevent cascades
-      isHistoryUpdating.current = true;
-      
-      // Update history and index together to prevent intermediate renders
+      // Update history immediately
       setHistory(prev => {
         const newHistory = prev.slice(0, historyIndex + 1);
         newHistory.push(newState);
@@ -447,11 +441,6 @@ const Editor = () => {
       
       // Save this state as the last saved state
       lastSavedStateRef.current = newState;
-      
-      // Allow history updates again after a microtask
-      setTimeout(() => {
-        isHistoryUpdating.current = false;
-      }, 0);
     }
   }, [nodes, edges, historyIndex]);
 
