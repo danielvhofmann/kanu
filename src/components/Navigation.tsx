@@ -25,6 +25,9 @@ export const Navigation = () => {
             <a href="#use-cases" className="text-sm text-foreground hover:text-primary transition-colors duration-300">
               Use Cases
             </a>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/explorer')} className="text-sm">
+              Explorer Mode
+            </Button>
             <a href="#community" className="text-sm text-foreground hover:text-primary transition-colors duration-300">
               Community
             </a>

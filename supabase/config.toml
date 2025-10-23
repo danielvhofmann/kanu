@@ -1,1 +1,13 @@
 project_id = "ziwpgxltfuqomcyacnzn"
+
+[functions.search-person]
+verify_jwt = false
+
+[functions.get-person-network]
+verify_jwt = false
+
+[functions.explain-connection]
+verify_jwt = false
+
+[functions.generate-bio-summary]
+verify_jwt = false
