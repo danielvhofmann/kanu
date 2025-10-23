@@ -45,6 +45,7 @@ const Editor = () => {
   });
   const canvasRef = useRef<HTMLDivElement>(null);
   const isUndoRedoAction = useRef(false);
+  const isModifyingElements = useRef(false);
   const lastSavedStateRef = useRef<HistoryState>({ nodes: [], edges: [] });
   const historySaveTimeout = useRef<number | null>(null);
 
@@ -120,50 +121,58 @@ const Editor = () => {
   );
 
   const addNode = useCallback(() => {
-    const colors = [
-      { bg: 'hsl(195, 45%, 52%)', border: 'hsl(195, 50%, 68%)' },
-      { bg: 'hsl(355, 45%, 50%)', border: 'hsl(355, 50%, 65%)' },
-      { bg: 'hsl(30, 35%, 55%)', border: 'hsl(30, 40%, 68%)' },
-      { bg: 'hsl(85, 35%, 58%)', border: 'hsl(85, 40%, 70%)' },
-      { bg: 'hsl(210, 25%, 62%)', border: 'hsl(210, 30%, 75%)' },
-    ];
-    const color = colors[nodes.length % colors.length];
+    console.log('[ADD NODE] Starting...');
+    isModifyingElements.current = true;
     
-    const shapeStyles = {
-      circle: { borderRadius: '50%', clipPath: 'none' },
-      square: { borderRadius: '8px', clipPath: 'none' },
-      triangle: { borderRadius: '0%', clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' },
-    };
+    setNodes(currentNodes => {
+      const colors = [
+        { bg: 'hsl(195, 45%, 52%)', border: 'hsl(195, 50%, 68%)' },
+        { bg: 'hsl(355, 45%, 50%)', border: 'hsl(355, 50%, 65%)' },
+        { bg: 'hsl(30, 35%, 55%)', border: 'hsl(30, 40%, 68%)' },
+        { bg: 'hsl(85, 35%, 58%)', border: 'hsl(85, 40%, 70%)' },
+        { bg: 'hsl(210, 25%, 62%)', border: 'hsl(210, 30%, 75%)' },
+      ];
+      const color = colors[currentNodes.length % colors.length];
+      
+      const shapeStyles = {
+        circle: { borderRadius: '50%', clipPath: 'none' },
+        square: { borderRadius: '8px', clipPath: 'none' },
+        triangle: { borderRadius: '0%', clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' },
+      };
+      
+      const newNode: Node = {
+        id: `node-${Date.now()}`,
+        type: 'default',
+        position: { x: Math.random() * 500 + 100, y: Math.random() * 300 + 100 },
+        data: { 
+          label: `Node ${currentNodes.length + 1}`,
+          shape: defaultNodeShape,
+        },
+        style: {
+          background: color.bg,
+          color: 'white',
+          border: `2px solid ${color.border}`,
+          ...shapeStyles[defaultNodeShape as keyof typeof shapeStyles],
+          padding: '0',
+          fontSize: '12px',
+          fontWeight: '400',
+          width: '85px',
+          height: '85px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          boxShadow: `0 3px 12px ${color.bg}33`,
+        },
+      };
+      
+      const updatedNodes = [...currentNodes, newNode];
+      console.log('[ADD NODE] New nodes length:', updatedNodes.length);
+      return updatedNodes;
+    });
     
-    const newNode: Node = {
-      id: `node-${Date.now()}`,
-      type: 'default',
-      position: { x: Math.random() * 500 + 100, y: Math.random() * 300 + 100 },
-      data: { 
-        label: `Node ${nodes.length + 1}`,
-        shape: defaultNodeShape,
-      },
-      style: {
-        background: color.bg,
-        color: 'white',
-        border: `2px solid ${color.border}`,
-        ...shapeStyles[defaultNodeShape as keyof typeof shapeStyles],
-        padding: '0',
-        fontSize: '12px',
-        fontWeight: '400',
-        width: '85px',
-        height: '85px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        textAlign: 'center',
-        boxShadow: `0 3px 12px ${color.bg}33`,
-      },
-    };
-    const updatedNodes = [...nodes, newNode];
-    setNodes(updatedNodes);
     toast.success('Node added');
-  }, [nodes, defaultNodeShape]);
+  }, [defaultNodeShape]);
 
   const handleImport = useCallback((importedNodes: Node[], importedEdges: Edge[]) => {
     setNodes(importedNodes);
@@ -289,37 +298,28 @@ const Editor = () => {
 
   const deleteElement = useCallback(
     (elementId: string) => {
-      // Use functional updates to access the latest state
-      setNodes((currentNodes) => {
-        const isNode = currentNodes.some(node => node.id === elementId);
-        
-        if (isNode) {
-          // Delete node and its connected edges
-          setEdges((currentEdges) =>
-            currentEdges.filter(
-              (edge) => edge.source !== elementId && edge.target !== elementId
-            )
-          );
-          setSelectedElement(null);
-          return currentNodes.filter((node) => node.id !== elementId);
-        }
-        
-        return currentNodes; // No change if not a node
-      });
+      console.log('[DELETE ELEMENT] Starting for:', elementId);
+      isModifyingElements.current = true;
       
-      // Check for edge deletion
-      setEdges((currentEdges) => {
-        const isEdge = currentEdges.some(edge => edge.id === elementId);
-        
-        if (isEdge) {
-          setSelectedElement(null);
-          return currentEdges.filter((edge) => edge.id !== elementId);
-        }
-        
-        return currentEdges; // No change if not an edge
-      });
+      // Check what type of element we're deleting
+      const isNode = nodes.some(node => node.id === elementId);
+      const isEdge = edges.some(edge => edge.id === elementId);
+      
+      if (isNode) {
+        console.log('[DELETE ELEMENT] Deleting node');
+        // Delete node and its connected edges in separate updates
+        setNodes(currentNodes => currentNodes.filter(node => node.id !== elementId));
+        setEdges(currentEdges => 
+          currentEdges.filter(edge => edge.source !== elementId && edge.target !== elementId)
+        );
+        setSelectedElement(null);
+      } else if (isEdge) {
+        console.log('[DELETE ELEMENT] Deleting edge');
+        setEdges(currentEdges => currentEdges.filter(edge => edge.id !== elementId));
+        setSelectedElement(null);
+      }
     },
-    []
+    [nodes, edges]
   );
 
   const toggleSketchMode = useCallback(() => {
@@ -409,12 +409,14 @@ const Editor = () => {
     []
   );
 
-  // Save to history when nodes or edges change (but not during undo/redo)
+  // Save to history when nodes or edges change (but not during undo/redo or element modifications)
   // Debounced to prevent cascading renders
   useEffect(() => {
-    // Skip if this is an undo/redo action
-    if (isUndoRedoAction.current) {
+    // Skip if this is an undo/redo action or element modification
+    if (isUndoRedoAction.current || isModifyingElements.current) {
+      console.log('[HISTORY] Skipping save - undo/redo or modifying');
       isUndoRedoAction.current = false;
+      isModifyingElements.current = false;
       return;
     }
     
@@ -425,6 +427,7 @@ const Editor = () => {
     
     // Debounce history saving to after render cycle completes
     historySaveTimeout.current = window.setTimeout(() => {
+      console.log('[HISTORY] Timeout fired - checking state');
       if (nodes.length > 0 || edges.length > 0) {
         const newState = { nodes: [...nodes], edges: [...edges] };
         const lastSaved = lastSavedStateRef.current;
@@ -440,9 +443,12 @@ const Editor = () => {
           
           // Don't add if it's the same as last saved state
           if (newNodeIds === lastNodeIds && newEdgeIds === lastEdgeIds) {
+            console.log('[HISTORY] State unchanged - not saving');
             return;
           }
         }
+        
+        console.log('[HISTORY] Saving new state - nodes:', newState.nodes.length, 'edges:', newState.edges.length);
         
         // Update history state in one atomic update
         setHistoryState(prev => {
@@ -460,7 +466,7 @@ const Editor = () => {
         // Save this state as the last saved state
         lastSavedStateRef.current = newState;
       }
-    }, 50);
+    }, 200); // Increased from 50ms to 200ms
     
     // Cleanup timeout on unmount
     return () => {

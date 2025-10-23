@@ -279,8 +279,11 @@ export const NetworkCanvas = ({
               markerEnd: { type: 'arrowClosed' as any },
             };
             
-            onNodesChange([...nodes, newNode]);
-            onEdgesChange([...edges, newEdge]);
+            console.log('[NETWORK CANVAS] Creating new node and edge in sketch mode');
+            const updatedNodes = [...nodes, newNode];
+            const updatedEdges = [...edges, newEdge];
+            onNodesChange(updatedNodes);
+            onEdgesChange(updatedEdges);
           }
           dragLineRef.current = null;
         } else {
