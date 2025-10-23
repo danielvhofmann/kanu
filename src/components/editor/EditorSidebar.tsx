@@ -179,7 +179,7 @@ export const EditorSidebar = ({
           {/* Node Shape */}
           <div className="space-y-3">
             <Label className="text-sm font-light">Node Shape</Label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <Button
                 variant="outline"
                 onClick={() => {
@@ -201,17 +201,6 @@ export const EditorSidebar = ({
                 className="h-12"
               >
                 Square
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  if (onUpdateNodeShape && isNode) {
-                    onUpdateNodeShape(element.id, 'triangle');
-                  }
-                }}
-                className="h-12"
-              >
-                Triangle
               </Button>
             </div>
           </div>

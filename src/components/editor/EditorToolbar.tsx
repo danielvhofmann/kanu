@@ -79,7 +79,6 @@ export const EditorToolbar = ({
           <SelectContent>
             <SelectItem value="circle">Round</SelectItem>
             <SelectItem value="square">Square</SelectItem>
-            <SelectItem value="triangle">Triangle</SelectItem>
           </SelectContent>
         </Select>
       </div>

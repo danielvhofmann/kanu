@@ -175,8 +175,10 @@ export const NetworkCanvas = ({
       .attr('stroke-width', (d: any) => 
         d.id === selectedEdgeId ? 3 : (d.style?.strokeWidth || 2)
       )
+      .attr('stroke-dasharray', (d: any) => d.style?.strokeDasharray || null)
       .attr('opacity', (d: any) => d.id === selectedEdgeId ? 1 : 0.6)
-      .attr('marker-end', (d: any) => d.animated ? 'url(#arrowhead)' : null);
+      .attr('marker-end', (d: any) => d.markerEnd ? 'url(#arrowhead)' : null)
+      .classed('animated-edge', (d: any) => d.animated || false);
 
     // Render nodes
     const nodesGroup = g.select<SVGGElement>('g.nodes-group');
@@ -241,42 +243,51 @@ export const NetworkCanvas = ({
           });
 
           if (targetNode) {
-            // Create edge to existing node
+            // Create edge to existing node - match style of existing edges
+            const mostCommonEdgeType = edges.length > 0 ? (edges[0].type || 'straight') : 'straight';
             const newEdge: Edge = {
               id: `${dragLineRef.current.sourceId}-${targetNode.id}-${Date.now()}`,
               source: dragLineRef.current.sourceId,
               target: targetNode.id,
-              type: 'smoothstep',
-              animated: true,
-              style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 },
-              markerEnd: { type: 'arrowClosed' as any },
+              type: mostCommonEdgeType,
+              style: { stroke: 'hsl(var(--border))', strokeWidth: 2 },
             };
             onEdgesChange([...edges, newEdge]);
           } else {
-            // Create new node and edge
+            // Create new node and edge - preserve source node color
+            const sourceNode = d3Nodes.find(n => n.id === dragLineRef.current?.sourceId);
+            const sourceColor = sourceNode?.style?.background || 'hsl(195, 45%, 52%)';
+            // Extract border color from border string
+            const sourceBorderString = typeof sourceNode?.style?.border === 'string' 
+              ? sourceNode.style.border 
+              : 'hsl(195, 50%, 68%)';
+            const sourceBorder = sourceBorderString.includes('solid') 
+              ? sourceBorderString.split('solid')[1]?.trim() || 'hsl(195, 50%, 68%)'
+              : 'hsl(195, 50%, 68%)';
+            
             const newNode: Node = {
               id: `node-${Date.now()}`,
               type: 'default',
               position: { x: event.x, y: event.y },
               data: { label: `Node ${nodes.length + 1}`, shape: 'circle' },
               style: {
-                background: 'hsl(195, 45%, 52%)',
+                background: sourceColor,
                 color: 'white',
-                border: '2px solid hsl(195, 50%, 68%)',
+                border: `2px solid ${sourceBorder}`,
                 borderRadius: '50%',
                 width: '85px',
                 height: '85px',
               },
             };
             
+            // Match edge style to existing edges
+            const mostCommonEdgeType = edges.length > 0 ? (edges[0].type || 'straight') : 'straight';
             const newEdge: Edge = {
               id: `${dragLineRef.current.sourceId}-${newNode.id}`,
               source: dragLineRef.current.sourceId,
               target: newNode.id,
-              type: 'smoothstep',
-              animated: true,
-              style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 },
-              markerEnd: { type: 'arrowClosed' as any },
+              type: mostCommonEdgeType,
+              style: { stroke: 'hsl(var(--border))', strokeWidth: 2 },
             };
             
             console.log('[NETWORK CANVAS] Creating new node and edge in sketch mode');
@@ -311,14 +322,6 @@ export const NetworkCanvas = ({
           .attr('width', size * 2)
           .attr('height', size * 2)
           .attr('rx', 8)
-          .attr('fill', fill)
-          .attr('stroke', stroke)
-          .attr('stroke-width', 2);
-      } else if (shape === 'triangle') {
-        const points = `0,${-size} ${-size},${size} ${size},${size}`;
-        g.append('polygon')
-          .attr('class', 'node-shape')
-          .attr('points', points)
           .attr('fill', fill)
           .attr('stroke', stroke)
           .attr('stroke-width', 2);

@@ -231,7 +231,6 @@ const Editor = () => {
           const shapeStyles = {
             circle: { borderRadius: '50%', clipPath: 'none' },
             square: { borderRadius: '8px', clipPath: 'none' },
-            triangle: { borderRadius: '0%', clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' },
           };
           
           return {
@@ -269,12 +268,24 @@ const Editor = () => {
 
   const updateEdge = useCallback(
     (edgeId: string, updates: Partial<Edge>) => {
+      console.log('[UPDATE EDGE]', edgeId, updates);
       setEdges((eds) =>
-        eds.map((edge) =>
-          edge.id === edgeId
-            ? { ...edge, ...updates }
-            : edge
-        )
+        eds.map((edge) => {
+          if (edge.id !== edgeId) return edge;
+          
+          // Merge updates properly, handling nested objects
+          const updatedEdge = {
+            ...edge,
+            ...updates,
+            style: {
+              ...edge.style,
+              ...updates.style,
+            },
+          };
+          
+          console.log('[UPDATE EDGE] Updated edge:', updatedEdge);
+          return updatedEdge;
+        })
       );
     },
     []
@@ -369,7 +380,6 @@ const Editor = () => {
       const shapeStyles = {
         circle: { borderRadius: '50%', clipPath: 'none' },
         square: { borderRadius: '8px', clipPath: 'none' },
-        triangle: { borderRadius: '0%', clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' },
       };
 
       setNodes((nds) =>
