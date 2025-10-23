@@ -38,12 +38,15 @@ const Editor = () => {
   const [showAIChat, setShowAIChat] = useState(false);
   const templateType = searchParams.get('template') as TemplateType;
   
-  // History management for undo/redo
-  const [history, setHistory] = useState<HistoryState[]>([{ nodes: [], edges: [] }]);
-  const [historyIndex, setHistoryIndex] = useState(0);
+  // History management for undo/redo - consolidated state
+  const [historyState, setHistoryState] = useState({
+    history: [{ nodes: [], edges: [] }] as HistoryState[],
+    index: 0,
+  });
   const canvasRef = useRef<HTMLDivElement>(null);
   const isUndoRedoAction = useRef(false);
   const lastSavedStateRef = useRef<HistoryState>({ nodes: [], edges: [] });
+  const historySaveTimeout = useRef<number | null>(null);
 
   // Color palettes
   const paletteColors: Record<string, string[]> = {
@@ -407,6 +410,7 @@ const Editor = () => {
   );
 
   // Save to history when nodes or edges change (but not during undo/redo)
+  // Debounced to prevent cascading renders
   useEffect(() => {
     // Skip if this is an undo/redo action
     if (isUndoRedoAction.current) {
@@ -414,59 +418,81 @@ const Editor = () => {
       return;
     }
     
-    if (nodes.length > 0 || edges.length > 0) {
-      const newState = { nodes: [...nodes], edges: [...edges] };
-      const lastSaved = lastSavedStateRef.current;
-      
-      // Quick comparison using joined IDs
-      const newNodeIds = newState.nodes.map(n => n.id).sort().join(',');
-      const lastNodeIds = lastSaved.nodes.map(n => n.id).sort().join(',');
-      const newEdgeIds = newState.edges.map(e => e.id).sort().join(',');
-      const lastEdgeIds = lastSaved.edges.map(e => e.id).sort().join(',');
-      
-      // Don't add if it's the same as last saved state
-      if (newNodeIds === lastNodeIds && newEdgeIds === lastEdgeIds) {
-        return;
-      }
-      
-      // Update history immediately
-      setHistory(prev => {
-        const newHistory = prev.slice(0, historyIndex + 1);
-        newHistory.push(newState);
-        // Keep history limited to 50 states
-        if (newHistory.length > 50) newHistory.shift();
-        return newHistory;
-      });
-      setHistoryIndex(prev => Math.min(prev + 1, 49));
-      
-      // Save this state as the last saved state
-      lastSavedStateRef.current = newState;
+    // Clear any pending history save
+    if (historySaveTimeout.current !== null) {
+      window.clearTimeout(historySaveTimeout.current);
     }
+    
+    // Debounce history saving to after render cycle completes
+    historySaveTimeout.current = window.setTimeout(() => {
+      if (nodes.length > 0 || edges.length > 0) {
+        const newState = { nodes: [...nodes], edges: [...edges] };
+        const lastSaved = lastSavedStateRef.current;
+        
+        // Fast comparison: check array lengths first
+        if (newState.nodes.length === lastSaved.nodes.length && 
+            newState.edges.length === lastSaved.edges.length) {
+          // Then check IDs
+          const newNodeIds = newState.nodes.map(n => n.id).sort().join(',');
+          const lastNodeIds = lastSaved.nodes.map(n => n.id).sort().join(',');
+          const newEdgeIds = newState.edges.map(e => e.id).sort().join(',');
+          const lastEdgeIds = lastSaved.edges.map(e => e.id).sort().join(',');
+          
+          // Don't add if it's the same as last saved state
+          if (newNodeIds === lastNodeIds && newEdgeIds === lastEdgeIds) {
+            return;
+          }
+        }
+        
+        // Update history state in one atomic update
+        setHistoryState(prev => {
+          const newHistory = prev.history.slice(0, prev.index + 1);
+          newHistory.push(newState);
+          // Keep history limited to 50 states
+          if (newHistory.length > 50) newHistory.shift();
+          
+          return {
+            history: newHistory,
+            index: Math.min(prev.index + 1, 49),
+          };
+        });
+        
+        // Save this state as the last saved state
+        lastSavedStateRef.current = newState;
+      }
+    }, 50);
+    
+    // Cleanup timeout on unmount
+    return () => {
+      if (historySaveTimeout.current !== null) {
+        window.clearTimeout(historySaveTimeout.current);
+      }
+    };
   }, [nodes, edges]);
 
   const handleUndo = useCallback(() => {
-    if (historyIndex > 0) {
+    if (historyState.index > 0) {
       isUndoRedoAction.current = true;
-      const newIndex = historyIndex - 1;
-      const state = history[newIndex];
+      const newIndex = historyState.index - 1;
+      const state = historyState.history[newIndex];
       setNodes(state.nodes);
       setEdges(state.edges);
-      setHistoryIndex(newIndex);
+      setHistoryState(prev => ({ ...prev, index: newIndex }));
       toast.success('Undo');
     }
-  }, [historyIndex, history]);
+  }, [historyState]);
 
   const handleRedo = useCallback(() => {
-    if (historyIndex < history.length - 1) {
+    if (historyState.index < historyState.history.length - 1) {
       isUndoRedoAction.current = true;
-      const newIndex = historyIndex + 1;
-      const state = history[newIndex];
+      const newIndex = historyState.index + 1;
+      const state = historyState.history[newIndex];
       setNodes(state.nodes);
       setEdges(state.edges);
-      setHistoryIndex(newIndex);
+      setHistoryState(prev => ({ ...prev, index: newIndex }));
       toast.success('Redo');
     }
-  }, [historyIndex, history]);
+  }, [historyState]);
 
   const handleExport = useCallback((format: 'png' | 'svg' | 'pdf') => {
     const svgElement = canvasRef.current?.querySelector('svg');
@@ -556,7 +582,7 @@ const Editor = () => {
             variant="ghost"
             size="sm"
             onClick={handleUndo}
-            disabled={historyIndex <= 0}
+            disabled={historyState.index <= 0}
             className="gap-2"
           >
             <Undo className="w-4 h-4" />
@@ -565,7 +591,7 @@ const Editor = () => {
             variant="ghost"
             size="sm"
             onClick={handleRedo}
-            disabled={historyIndex >= history.length - 1}
+            disabled={historyState.index >= historyState.history.length - 1}
             className="gap-2"
           >
             <Redo className="w-4 h-4" />
@@ -596,8 +622,8 @@ const Editor = () => {
             onEdgeTypeChange={applyEdgeTypeToAll}
             onUndo={handleUndo}
             onRedo={handleRedo}
-            canUndo={historyIndex > 0}
-            canRedo={historyIndex < history.length - 1}
+            canUndo={historyState.index > 0}
+            canRedo={historyState.index < historyState.history.length - 1}
           />
           <div className="h-6 w-px bg-border mx-2" />
           <Button
