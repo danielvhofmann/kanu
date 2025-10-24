@@ -33,15 +33,6 @@ const Explorer = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
-      {/* Back button to landing page */}
-      <button
-        onClick={() => navigate("/")}
-        className="absolute top-6 left-6 p-2 hover:bg-accent rounded-lg transition-colors flex items-center gap-2"
-      >
-        <ArrowLeft className="w-5 h-5" />
-        <span className="text-sm font-medium">Back to Home</span>
-      </button>
-
       <div className="text-center max-w-3xl mb-12">
         <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-hero mb-6">
           <Network className="w-10 h-10 text-white" strokeWidth={1.5} />
