@@ -74,6 +74,7 @@ export const KnowledgeGraph = ({
   const [isLoadingExplanation, setIsLoadingExplanation] = useState(false);
   const [showTimeline, setShowTimeline] = useState(true);
   const [isBioExpanded, setIsBioExpanded] = useState(false);
+  const [isConnectedBioExpanded, setIsConnectedBioExpanded] = useState(false);
 
   const handlePersonChange = (newPersonId: string, newPersonName: string) => {
     setPersonId(newPersonId);
@@ -182,6 +183,7 @@ export const KnowledgeGraph = ({
     setSelectedTimelineEvent(null);
     setExplanation("");
     setBioSummary("");
+    setIsConnectedBioExpanded(false);
     
     // If this is NOT the main person, generate connection explanation
     if (node.id !== personId) {
@@ -294,9 +296,9 @@ export const KnowledgeGraph = ({
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         {/* Graph - Use calc to leave room for right panel */}
-        <div className="flex-1 min-w-0 relative bg-card">
+        <div className="flex-1 min-w-0 relative bg-card z-0">
           <ForceGraph2D
             ref={graphRef}
             graphData={graphData}
@@ -352,7 +354,7 @@ export const KnowledgeGraph = ({
         </div>
 
         {/* Info Panel - Always visible with fixed width */}
-        <div className="w-96 h-full flex-shrink-0 border-l border-border bg-card overflow-y-auto">
+        <div className="w-96 h-full flex-shrink-0 border-l border-border bg-card overflow-y-auto relative z-10">
           <div className="p-6 space-y-6">
             {selectedNode ? (
               <>
@@ -454,7 +456,7 @@ export const KnowledgeGraph = ({
                     {/* Connected Person View - Connection Explanation */}
                     <div className="space-y-4">
                       <div>
-                        <h3 className="text-sm font-semibold mb-3">
+                        <h3 className="text-base font-semibold mb-3">
                           How are {personName} and {selectedNode.name} connected?
                         </h3>
                         {isLoadingExplanation ? (
@@ -473,9 +475,9 @@ export const KnowledgeGraph = ({
                       </div>
 
                       {/* Collapsible Biography */}
-                      <Collapsible open={isBioExpanded} onOpenChange={setIsBioExpanded}>
+                      <Collapsible open={isConnectedBioExpanded} onOpenChange={setIsConnectedBioExpanded}>
                         <CollapsibleTrigger className="flex items-center gap-2 w-full py-3 border-t text-sm hover:bg-accent/50 transition-colors rounded-lg px-2">
-                          {isBioExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                          {isConnectedBioExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                           <span className="font-medium">Who was {selectedNode.name}?</span>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
