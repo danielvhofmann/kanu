@@ -49,7 +49,7 @@ export const UseCases = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="py-32 relative overflow-hidden bg-muted/30">
+    <section className="py-32 relative overflow-hidden bg-background">
       <div className="container mx-auto px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-20 space-y-4">
