@@ -112,15 +112,8 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
           )}
         </div>
 
-        {/* Right: Back and Import Buttons */}
+        {/* Right: Import Button and User Icon */}
         <div className="flex items-center gap-2">
-          <button 
-            onClick={onBack}
-            className="p-2 hover:bg-accent rounded-lg transition-colors"
-            title="Back to search"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
           {onImportToBuilder && (
             <Button 
               variant="hero" 
