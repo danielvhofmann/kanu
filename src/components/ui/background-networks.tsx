@@ -19,16 +19,33 @@ interface Edge {
 
 function FloatingNetwork({ layer }: { layer: number }) {
   const { nodes, edges } = useMemo(() => {
-    // Offset clusters significantly based on layer to avoid overlap
-    const layerOffsetX = (layer - 1) * 15;
-    const layerOffsetY = (layer - 1) * 5;
+    // Offset clusters based on layer to avoid overlap
+    const layerOffsetX = (layer - 1) * 12;
+    const layerOffsetY = (layer - 1) * 8;
     
-    // Create fewer, well-spaced clusters for a cleaner look
+    // Create varied clusters matching the reference image structure
     const clusters = [
-      { x: 20 + layerOffsetX, y: 40 + layerOffsetY, nodeCount: 6, hubRadius: 8 },   // Left cluster
-      { x: 50 + layerOffsetX, y: 30 + layerOffsetY, nodeCount: 8, hubRadius: 9 },   // Center-top (main)
-      { x: 75 + layerOffsetX, y: 45 + layerOffsetY, nodeCount: 7, hubRadius: 8.5 }, // Right cluster
-      { x: 45 + layerOffsetX, y: 65 + layerOffsetY, nodeCount: 5, hubRadius: 7 },   // Bottom cluster
+      // Small left clusters
+      { x: 15 + layerOffsetX, y: 30 + layerOffsetY, nodeCount: 4, hubRadius: 4, density: 0.7 },
+      { x: 22 + layerOffsetX, y: 42 + layerOffsetY, nodeCount: 6, hubRadius: 5, density: 0.8 },
+      
+      // Medium teal-like cluster left
+      { x: 28 + layerOffsetX, y: 52 + layerOffsetY, nodeCount: 8, hubRadius: 7, density: 0.75 },
+      
+      // Large bottom-left cluster
+      { x: 20 + layerOffsetX, y: 68 + layerOffsetY, nodeCount: 12, hubRadius: 8, density: 0.8 },
+      
+      // Top-center orange-like cluster
+      { x: 48 + layerOffsetX, y: 25 + layerOffsetY, nodeCount: 9, hubRadius: 7, density: 0.75 },
+      
+      // Large central-right blue-like cluster (biggest)
+      { x: 62 + layerOffsetX, y: 48 + layerOffsetY, nodeCount: 20, hubRadius: 12, density: 0.85 },
+      
+      // Small pink-like center cluster
+      { x: 50 + layerOffsetX, y: 62 + layerOffsetY, nodeCount: 6, hubRadius: 6, density: 0.7 },
+      
+      // Bottom-right yellow-like cluster
+      { x: 78 + layerOffsetX, y: 68 + layerOffsetY, nodeCount: 10, hubRadius: 8, density: 0.75 },
     ];
     
     const generatedNodes: Node[] = [];
@@ -36,13 +53,13 @@ function FloatingNetwork({ layer }: { layer: number }) {
     let nodeId = 0;
     
     clusters.forEach((cluster) => {
-      const { x: targetCenterX, y: targetCenterY, nodeCount, hubRadius } = cluster;
+      const { x: targetCenterX, y: targetCenterY, nodeCount, hubRadius, density } = cluster;
       
       // Initial positions - completely random and chaotic across the whole canvas
       const chaosSpread = 150;
       
-      // Create 1 hub node per cluster for simplicity
-      const hubCount = 1;
+      // Create 1-2 hub nodes based on cluster size
+      const hubCount = nodeCount > 10 ? 2 : 1;
       
       for (let h = 0; h < hubCount; h++) {
         const hubInitialX = Math.random() * chaosSpread - 25;
@@ -61,17 +78,18 @@ function FloatingNetwork({ layer }: { layer: number }) {
         hubNodes.push(hubNode);
       }
       
-      // Create spoke nodes around the hub
+      // Create spoke nodes with varied positioning
       const spokeCount = nodeCount - hubCount;
       for (let s = 0; s < spokeCount; s++) {
         // Chaotic initial position
         const spokeInitialX = Math.random() * chaosSpread - 25;
         const spokeInitialY = Math.random() * chaosSpread - 25;
         
-        // Organized target position with more spread
-        const angle = (s / spokeCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
-        const radiusVariation = Math.random() * 3;
-        const radius = hubRadius + radiusVariation;
+        // Organized target position with natural spread
+        const angle = (s / spokeCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.6;
+        const radiusVariation = Math.random() * 5;
+        const layerRadius = Math.floor(s / 5); // Create layers of nodes
+        const radius = hubRadius + radiusVariation + layerRadius * 3;
         
         generatedNodes.push({
           id: nodeId++,
@@ -79,7 +97,7 @@ function FloatingNetwork({ layer }: { layer: number }) {
           y: spokeInitialY,
           targetX: targetCenterX + Math.cos(angle) * radius,
           targetY: targetCenterY + Math.sin(angle) * radius,
-          size: 2.5 + Math.random() * 2, // Bigger spokes
+          size: 2 + Math.random() * 2,
         });
       }
     });
@@ -89,54 +107,82 @@ function FloatingNetwork({ layer }: { layer: number }) {
     let currentNodeIndex = 0;
     
     clusters.forEach((cluster) => {
-      const { nodeCount } = cluster;
-      const hubCount = 1;
+      const { nodeCount, density } = cluster;
+      const hubCount = nodeCount > 10 ? 2 : 1;
       
       const clusterHubs = generatedNodes.slice(currentNodeIndex, currentNodeIndex + hubCount);
-      const mainHub = clusterHubs[0];
       
-      // Connect spokes to hub
+      // Connect hubs if there are multiple
+      if (hubCount === 2) {
+        generatedEdges.push({ from: clusterHubs[0], to: clusterHubs[1] });
+      }
+      
+      // Connect spokes to hubs
       for (let s = hubCount; s < nodeCount; s++) {
         const spokeNode = generatedNodes[currentNodeIndex + s];
-        generatedEdges.push({ from: mainHub, to: spokeNode });
+        const targetHub = clusterHubs[s % hubCount];
+        generatedEdges.push({ from: targetHub, to: spokeNode });
         
-        // Fewer spoke-to-spoke connections for cleaner look
-        if (s > hubCount + 1 && Math.random() > 0.85) {
-          const prevSpoke = generatedNodes[currentNodeIndex + s - 1];
-          generatedEdges.push({ from: prevSpoke, to: spokeNode });
+        // Dense intra-cluster connections based on density
+        for (let t = hubCount; t < s; t++) {
+          const otherSpoke = generatedNodes[currentNodeIndex + t];
+          const distance = Math.sqrt(
+            Math.pow(spokeNode.targetX - otherSpoke.targetX, 2) +
+            Math.pow(spokeNode.targetY - otherSpoke.targetY, 2)
+          );
+          
+          // Connect nearby nodes within cluster
+          if (distance < 12 && Math.random() < density) {
+            generatedEdges.push({ from: spokeNode, to: otherSpoke });
+          }
         }
       }
       
       currentNodeIndex += nodeCount;
     });
     
-    // Selective hub-to-hub connections for connected but not cluttered network
+    // Connect hubs between clusters
     hubNodes.forEach((hub, i) => {
-      // Each hub connects to 1-2 other hubs maximum
-      if (i < hubNodes.length - 1) {
-        generatedEdges.push({ from: hub, to: hubNodes[i + 1] });
-      }
-      // Occasionally add one more connection
-      if (i < hubNodes.length - 2 && Math.random() > 0.7) {
-        generatedEdges.push({ from: hub, to: hubNodes[i + 2] });
-      }
+      hubNodes.slice(i + 1).forEach((otherHub) => {
+        const distance = Math.sqrt(
+          Math.pow(hub.targetX - otherHub.targetX, 2) +
+          Math.pow(hub.targetY - otherHub.targetY, 2)
+        );
+        
+        // Connect hubs that are reasonably close
+        if (distance < 40 && Math.random() > 0.4) {
+          generatedEdges.push({ from: hub, to: otherHub });
+        }
+      });
     });
     
-    // Add very few inter-cluster spoke connections for variety
+    // Add some inter-cluster spoke connections
     currentNodeIndex = 0;
     clusters.forEach((cluster, clusterIdx) => {
       const { nodeCount } = cluster;
-      const hubCount = 1;
+      const hubCount = nodeCount > 10 ? 2 : 1;
       
-      if (clusterIdx < clusters.length - 1 && Math.random() > 0.7) {
-        const spokeNode = generatedNodes[currentNodeIndex + hubCount + 1];
-        const nextClusterStart = currentNodeIndex + nodeCount;
-        const nextHubCount = 1;
-        const nextSpokeNode = generatedNodes[nextClusterStart + nextHubCount];
+      if (clusterIdx < clusters.length - 1) {
+        // Get a few spoke nodes from this cluster
+        const clusterSpokes = generatedNodes.slice(
+          currentNodeIndex + hubCount,
+          currentNodeIndex + Math.min(nodeCount, hubCount + 3)
+        );
         
-        if (spokeNode && nextSpokeNode) {
-          generatedEdges.push({ from: spokeNode, to: nextSpokeNode });
-        }
+        const nextClusterStart = currentNodeIndex + nodeCount;
+        const nextCluster = clusters[clusterIdx + 1];
+        const nextHubCount = nextCluster.nodeCount > 10 ? 2 : 1;
+        const nextSpokes = generatedNodes.slice(
+          nextClusterStart + nextHubCount,
+          nextClusterStart + Math.min(nextCluster.nodeCount, nextHubCount + 3)
+        );
+        
+        // Create 1-2 connections between cluster spokes
+        clusterSpokes.slice(0, 2).forEach((spoke, idx) => {
+          if (nextSpokes[idx] && Math.random() > 0.6) {
+            generatedEdges.push({ from: spoke, to: nextSpokes[idx] });
+          }
+        });
       }
       
       currentNodeIndex += nodeCount;
@@ -207,14 +253,11 @@ function FloatingNetwork({ layer }: { layer: number }) {
 export function BackgroundNetworks() {
   return (
     <>
-      <div className="absolute inset-0 text-primary/40">
+      <div className="absolute inset-0 text-cyan-400/40">
         <FloatingNetwork layer={1} />
       </div>
-      <div className="absolute inset-0 text-secondary/40">
+      <div className="absolute inset-0 text-red-400/40">
         <FloatingNetwork layer={2} />
-      </div>
-      <div className="absolute inset-0 text-accent/30">
-        <FloatingNetwork layer={3} />
       </div>
     </>
   );
