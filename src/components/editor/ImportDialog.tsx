@@ -380,9 +380,20 @@ export const ImportDialog = ({ open, onOpenChange, onImport }: ImportDialogProps
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        {tableData.length > 0 && Object.keys(tableData[0]).map((key) => (
-                          <TableHead key={key} className="capitalize">{key}</TableHead>
-                        ))}
+                        {tableData.length > 0 && Object.keys(tableData[0]).map((key) => {
+                          const labelMap: Record<string, string> = {
+                            source: 'From Node',
+                            target: 'To Node',
+                            label: 'Connection Label',
+                            id: 'Node ID',
+                            type: 'Node Type'
+                          };
+                          return (
+                            <TableHead key={key} className="font-medium">
+                              {labelMap[key] || key.charAt(0).toUpperCase() + key.slice(1)}
+                            </TableHead>
+                          );
+                        })}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
