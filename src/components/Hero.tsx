@@ -1,94 +1,61 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Network } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import heroImage from "@/assets/hero-network-clarity.jpg";
-import { DemoPresentation } from "./DemoPresentation";
 
 export const Hero = () => {
   const navigate = useNavigate();
-  const [showDemo, setShowDemo] = useState(false);
   
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
-      {/* Subtle gradient background */}
-      <div className="absolute inset-0 bg-gradient-subtle -z-10" />
-      
-      {/* Animated glow orbs */}
-      <div className="absolute top-20 left-10 w-96 h-96 bg-primary-glow/20 rounded-full blur-3xl animate-glow" />
-      <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent-light/20 rounded-full blur-3xl animate-glow" style={{ animationDelay: "1s" }} />
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-orange-100 via-rose-50 to-background">
+      {/* Large circular gradient background */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140vh] h-[140vh] rounded-full bg-gradient-to-br from-orange-200/40 via-white to-rose-100/40 blur-3xl" />
       
       <div className="container mx-auto px-6 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          {/* Left content */}
-          <div className="space-y-8 animate-fade-in">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-muted/50 rounded-full border border-border/50 backdrop-blur-sm">
-              <Network className="w-4 h-4 text-primary" />
-              <span className="text-sm text-muted-foreground">Visualize Complex Systems</span>
-            </div>
-            
-            <h1 className="text-6xl lg:text-7xl font-extralight leading-tight text-balance">
-              Turn complexity into{" "}
-              <span className="bg-gradient-accent bg-clip-text text-transparent">
-                clarity
-              </span>
-            </h1>
-            
-            <p className="text-xl text-muted-foreground leading-relaxed max-w-xl text-balance">
-              Organize complex data into beautiful relationship maps that reveal connections, 
-              patterns, and insights—making systems thinking effortless and elegant.
-            </p>
-            
-            <div className="flex flex-wrap gap-4 pt-4">
-              <Button 
-                size="lg" 
-                variant="hero" 
-                className="group"
-                onClick={() => navigate('/editor?template=stakeholder')}
-              >
-                See Demo
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </Button>
-            </div>
-            
-            <div className="flex items-center gap-8 pt-6 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                <span>No credit card required</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
-                <span>Free forever plan</span>
-              </div>
-            </div>
+        <div className="text-center max-w-5xl mx-auto space-y-12 animate-fade-in">
+          {/* Main headline */}
+          <h1 className="text-7xl lg:text-8xl xl:text-9xl font-light leading-[0.95] text-balance">
+            Turn complexity into{" "}
+            <span className="font-light italic">clarity</span>.
+          </h1>
+          
+          {/* Subheadline with inline badges */}
+          <p className="text-2xl lg:text-3xl text-foreground/80 leading-relaxed max-w-4xl mx-auto">
+            Explore existing{" "}
+            <span className="inline-flex items-center px-4 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+              knowledge networks
+            </span>
+            {" "}or build your own—making{" "}
+            <span className="inline-flex items-center px-4 py-1 rounded-full bg-secondary/10 text-secondary border border-secondary/20">
+              systems thinking
+            </span>
+            {" "}effortless and elegant.
+          </p>
+          
+          {/* CTA Button */}
+          <div className="flex flex-wrap justify-center gap-4 pt-8">
+            <Button 
+              size="lg" 
+              className="text-lg px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all"
+              onClick={() => navigate('/editor?template=stakeholder')}
+            >
+              Get Started
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
           </div>
           
-          {/* Right visual */}
-          <div className="relative animate-slide-up">
-            <div className="relative rounded-3xl overflow-hidden shadow-glow border border-white/10">
-              <img 
-                src={heroImage} 
-                alt="Network visualization showing interconnected nodes and relationships"
-                className="w-full h-auto"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent" />
+          {/* Trust indicators */}
+          <div className="flex items-center justify-center gap-8 pt-6 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span>No credit card required</span>
             </div>
-            
-            {/* Floating cards */}
-            <div className="absolute -bottom-6 -left-6 bg-card p-4 rounded-xl shadow-lg border border-border/50 backdrop-blur-sm animate-fade-in" style={{ animationDelay: "0.3s" }}>
-              <div className="text-sm text-muted-foreground">Network Nodes</div>
-              <div className="text-2xl font-light text-foreground">1,247</div>
-            </div>
-            
-            <div className="absolute -top-6 -right-6 bg-card p-4 rounded-xl shadow-lg border border-border/50 backdrop-blur-sm animate-fade-in" style={{ animationDelay: "0.5s" }}>
-              <div className="text-sm text-muted-foreground">Connections</div>
-              <div className="text-2xl font-light text-foreground">3,891</div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
+              <span>Free forever plan</span>
             </div>
           </div>
         </div>
       </div>
-
-      <DemoPresentation open={showDemo} onOpenChange={setShowDemo} />
     </section>
   );
 };
