@@ -377,35 +377,37 @@ export const ImportDialog = ({ open, onOpenChange, onImport }: ImportDialogProps
                   <h3 className="font-medium text-sm">Data Table</h3>
                 </div>
                 <ScrollArea className="flex-1">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        {tableData.length > 0 && Object.keys(tableData[0]).map((key) => {
-                          const labelMap: Record<string, string> = {
-                            source: 'From Node',
-                            target: 'To Node',
-                            label: 'Connection Label',
-                            id: 'Node ID',
-                            type: 'Node Type'
-                          };
-                          return (
-                            <TableHead key={key} className="font-medium">
-                              {labelMap[key] || key.charAt(0).toUpperCase() + key.slice(1)}
-                            </TableHead>
-                          );
-                        })}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {tableData.map((row, index) => (
-                        <TableRow key={index}>
-                          {Object.values(row).map((value, i) => (
-                            <TableCell key={i}>{value}</TableCell>
-                          ))}
+                  <div className="w-full min-w-max">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          {tableData.length > 0 && Object.keys(tableData[0]).map((key) => {
+                            const labelMap: Record<string, string> = {
+                              source: 'From Node',
+                              target: 'To Node',
+                              label: 'Connection Label',
+                              id: 'Node ID',
+                              type: 'Node Type'
+                            };
+                            return (
+                              <TableHead key={key} className="font-medium">
+                                {labelMap[key] || key.charAt(0).toUpperCase() + key.slice(1)}
+                              </TableHead>
+                            );
+                          })}
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {tableData.map((row, index) => (
+                          <TableRow key={index}>
+                            {Object.values(row).map((value, i) => (
+                              <TableCell key={i} className="whitespace-nowrap">{value}</TableCell>
+                            ))}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </ScrollArea>
               </div>
 
