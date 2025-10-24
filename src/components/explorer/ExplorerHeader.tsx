@@ -75,7 +75,7 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
 
   return (
     <header className="border-b border-border bg-card sticky top-0 z-50 relative">
-      <div className="px-6 py-2 flex items-center gap-6">
+      <div className="px-6 py-1 flex items-center gap-6">
         {/* Search Bar - Top Priority */}
         <div ref={wrapperRef} className="flex-1 max-w-2xl relative">
           <div className="relative">
