@@ -77,14 +77,15 @@ function FloatingNetwork({ layer }: { layer: number }) {
             strokeWidth={0.2}
             strokeOpacity={0.4}
             animate={{
-              x1: [edge.from.x, edge.from.targetX, edge.from.x],
-              y1: [edge.from.y, edge.from.targetY, edge.from.y],
-              x2: [edge.to.x, edge.to.targetX, edge.to.x],
-              y2: [edge.to.y, edge.to.targetY, edge.to.y],
-              opacity: [0.1, 0.5, 0.1],
+              x1: [edge.from.x, edge.from.x, edge.from.targetX, edge.from.targetX, edge.from.x],
+              y1: [edge.from.y, edge.from.y, edge.from.targetY, edge.from.targetY, edge.from.y],
+              x2: [edge.to.x, edge.to.x, edge.to.targetX, edge.to.targetX, edge.to.x],
+              y2: [edge.to.y, edge.to.y, edge.to.targetY, edge.to.targetY, edge.to.y],
+              opacity: [0, 0.1, 0.6, 0.6, 0],
             }}
             transition={{
-              duration: 20,
+              duration: 35,
+              times: [0, 0.25, 0.45, 0.7, 1],
               ease: "easeInOut",
               repeat: Infinity,
               delay: i * 0.02,
@@ -102,13 +103,14 @@ function FloatingNetwork({ layer }: { layer: number }) {
             fill="currentColor"
             fillOpacity={0.6}
             animate={{
-              cx: [node.x, node.targetX, node.x],
-              cy: [node.y, node.targetY, node.y],
-              scale: [0.8, 1.2, 0.8],
-              opacity: [0.4, 0.7, 0.4],
+              cx: [node.x, node.x, node.targetX, node.targetX, node.x],
+              cy: [node.y, node.y, node.targetY, node.targetY, node.y],
+              scale: [0.7, 0.7, 1.3, 1.3, 0.7],
+              opacity: [0.4, 0.4, 0.8, 0.8, 0.4],
             }}
             transition={{
-              duration: 20,
+              duration: 35,
+              times: [0, 0.25, 0.45, 0.7, 1],
               ease: "easeInOut",
               repeat: Infinity,
               delay: node.id * 0.05,
