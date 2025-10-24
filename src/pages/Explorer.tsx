@@ -14,12 +14,17 @@ const Explorer = () => {
     setSelectedPerson(null);
   };
 
+  const handlePersonChange = (personId: string, personName: string) => {
+    setSelectedPerson({ id: personId, name: personName });
+  };
+
   if (selectedPerson) {
     return (
       <KnowledgeGraph 
         personId={selectedPerson.id}
         personName={selectedPerson.name}
         onBack={handleBack}
+        onPersonChange={handlePersonChange}
       />
     );
   }
