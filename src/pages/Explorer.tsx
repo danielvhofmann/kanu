@@ -20,7 +20,7 @@ const Explorer = () => {
 
   if (selectedPerson) {
     return (
-      <div className="h-full w-full overflow-hidden">
+      <div className="h-screen w-full overflow-hidden">
         <KnowledgeGraph 
           personId={selectedPerson.id}
           personName={selectedPerson.name}

@@ -51,8 +51,8 @@ function AppLayout() {
   const isExplorerOrEditor = location.pathname === '/explorer' || location.pathname === '/editor';
   
   return (
-    <SidebarProvider className={isExplorerOrEditor ? 'h-screen' : 'min-h-screen'}>
-      <div className={`${isExplorerOrEditor ? 'h-screen' : 'min-h-screen'} flex w-full overflow-hidden`}>
+    <SidebarProvider className={isExplorerOrEditor ? '!h-screen !max-h-screen overflow-hidden' : 'min-h-screen'}>
+      <div className={`${isExplorerOrEditor ? '!h-screen !max-h-screen' : 'min-h-screen'} flex w-full overflow-hidden`}>
         {!isLandingPage && !isAuthPage && <AppSidebar />}
         <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
           <AppContent />
