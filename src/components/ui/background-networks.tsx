@@ -33,7 +33,7 @@ function FloatingNetwork({ layer }: { layer: number }) {
         const distance = Math.sqrt(
           Math.pow(node.x - otherNode.x, 2) + Math.pow(node.y - otherNode.y, 2)
         );
-        if (distance < 25 && Math.random() > 0.7) {
+        if (distance < 30 && Math.random() > 0.5) {
           generatedEdges.push({ from: node, to: otherNode });
         }
       });

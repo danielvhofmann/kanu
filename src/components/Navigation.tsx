@@ -19,23 +19,23 @@ export const Navigation = () => {
           
           {/* Navigation links */}
           <div className="hidden md:flex items-center gap-8">
-            <a href="#what" className="text-sm text-foreground hover:text-primary transition-colors duration-300">
+            <a href="#what" className="text-base font-medium text-foreground hover:text-primary transition-colors duration-300">
               What
             </a>
-            <a href="#why" className="text-sm text-foreground hover:text-primary transition-colors duration-300">
+            <a href="#why" className="text-base font-medium text-foreground hover:text-primary transition-colors duration-300">
               Why
             </a>
-            <a href="#how" className="text-sm text-foreground hover:text-primary transition-colors duration-300">
+            <a href="#how" className="text-base font-medium text-foreground hover:text-primary transition-colors duration-300">
               How
             </a>
           </div>
           
           {/* CTA buttons */}
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/auth')}>
+            <Button variant="ghost" size="default" onClick={() => navigate('/auth')} className="text-base">
               Login
             </Button>
-            <Button variant="default" size="sm" onClick={() => navigate('/auth')}>
+            <Button variant="default" size="default" onClick={() => navigate('/auth')} className="text-base">
               Sign Up
             </Button>
           </div>
