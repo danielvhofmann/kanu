@@ -4,6 +4,7 @@ import { ModeCard } from "@/components/ModeCard";
 import { WhatWhyHow } from "@/components/WhatWhyHow";
 import { Features } from "@/components/Features";
 import { UseCases } from "@/components/UseCases";
+import { CollectionsShowcase } from "@/components/CollectionsShowcase";
 import { Footer } from "@/components/Footer";
 import { useNavigate } from "react-router-dom";
 import { Search, Pencil, Share2 } from "lucide-react";
@@ -75,6 +76,7 @@ const Index = () => {
         <WhatWhyHow />
         <UseCases />
         <Features />
+        <CollectionsShowcase />
       </main>
       <Footer />
     </div>
