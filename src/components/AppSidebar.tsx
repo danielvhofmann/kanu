@@ -1,6 +1,6 @@
 import { Home, Search, Pencil, HelpCircle, Settings } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
-import logo from "/favicon.png";
+import logo from "/logo.png";
 
 import {
   Sidebar,
