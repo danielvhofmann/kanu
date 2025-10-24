@@ -6,9 +6,9 @@ import { toast } from "sonner";
 import { Loader2, ExternalLink, ChevronDown, ChevronRight } from "lucide-react";
 import { Timeline } from "./Timeline";
 import { ExplorerHeader } from "./ExplorerHeader";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useNavigate } from "react-router-dom";
 import { convertExplorerToBuilder } from "@/utils/graphConverter";
 
@@ -403,15 +403,16 @@ export const KnowledgeGraph = ({
             <Dialog>
               <DialogTrigger asChild>
                 <Button 
-                  className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20"
-                  variant="secondary"
+                  className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 shadow-lg"
+                  variant="default"
+                  size="lg"
                 >
-                  Open Timeline
+                  Open Timeline ({timelineEvents.length} events)
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-4xl max-h-[80vh]">
                 <DialogHeader>
-                  <DialogTitle>Timeline ({timelineEvents.length} events)</DialogTitle>
+                  <DialogTitle>Timeline</DialogTitle>
                 </DialogHeader>
                 <div className="max-h-[60vh] overflow-y-auto">
                   <Timeline 
