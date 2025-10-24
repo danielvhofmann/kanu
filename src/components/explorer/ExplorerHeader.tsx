@@ -76,22 +76,22 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
 
   return (
     <header className="border-b border-border bg-card sticky top-0 z-50">
-      <div className="px-4 py-1 flex items-center gap-2">
+      <div className="px-4 py-1 flex items-center gap-2 justify-between">
         {/* Sidebar Trigger - Left */}
         <div className="flex-shrink-0">
           <SidebarTrigger />
         </div>
         
-        {/* Search Bar - Center (flexible) */}
-        <div ref={wrapperRef} className="flex-1 min-w-0 relative">
+        {/* Search Bar - Compact center */}
+        <div ref={wrapperRef} className="flex-shrink-0 w-80 relative">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search historical figures..."
+              placeholder="Search..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="pl-9 pr-9 h-10 bg-white border-border focus:border-border focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none w-full"
+              className="pl-9 pr-9 h-9 bg-white border-border focus:border-border focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none w-full"
             />
             {isLoading && (
               <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground animate-spin" />
