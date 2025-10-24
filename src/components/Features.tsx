@@ -53,9 +53,8 @@ export const Features = () => {
       <div className="container mx-auto px-6">
         <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
           <h2 className="text-5xl font-extralight tracking-tight text-balance">
-            <span className="text-foreground">Explorer Mode</span>{" "}
-            <span className="text-muted-foreground">Beautiful by design.</span>{" "}
-            <span className="text-muted-foreground">Powerful by nature.</span>
+            <span className="text-foreground">Explore Mode: </span>
+            <span className="text-secondary">Your Use Cases</span>
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
             Everything you need to explore and build complex systems—
