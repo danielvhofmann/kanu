@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload, FileSpreadsheet, Link2, X, Check, ArrowLeft } from 'lucide-react';
+import { Upload, FileSpreadsheet, Link2, X, Check, ArrowLeft, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Node, Edge } from 'reactflow';
 import ReactFlow, { Background, Controls } from 'reactflow';
@@ -22,6 +22,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Slider } from '@/components/ui/slider';
+import { supabase } from '@/integrations/supabase/client';
+import { convertCorrelationToNetwork } from '@/utils/correlationConverter';
 
 interface ImportDialogProps {
   open: boolean;
@@ -36,10 +39,14 @@ export const ImportDialog = ({ open, onOpenChange, onImport }: ImportDialogProps
   const [previewNodes, setPreviewNodes] = useState<Node[]>([]);
   const [previewEdges, setPreviewEdges] = useState<Edge[]>([]);
   const [tableData, setTableData] = useState<Array<Record<string, string>>>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [correlationThreshold, setCorrelationThreshold] = useState(0.3);
+  const [statistics, setStatistics] = useState<any>(null);
+  const [dataType, setDataType] = useState<'edgelist' | 'nodelist' | 'rawdata'>('edgelist');
 
-  const handleFileUpload = (file: File) => {
+  const handleFileUpload = async (file: File) => {
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const text = e.target?.result as string;
         const lines = text.split('\n').filter(line => line.trim());
@@ -48,11 +55,99 @@ export const ImportDialog = ({ open, onOpenChange, onImport }: ImportDialogProps
           throw new Error('File is empty');
         }
 
-        // Parse CSV/Excel - expect format: source,target,label (for edges) or id,label,type (for nodes)
         const header = lines[0].toLowerCase();
         const headerParts = lines[0].split(',').map(s => s.trim());
         
+        // Detect data type
         if (header.includes('source') && header.includes('target')) {
+          // Edge list format
+          setDataType('edgelist');
+          handleEdgeListData(lines);
+        } else if (lines.length > 2 && headerParts.length > 3) {
+          // Raw dataset format - multiple variables
+          setDataType('rawdata');
+          await handleRawDataset(lines, headerParts);
+        } else {
+          // Node list format
+          setDataType('nodelist');
+          handleNodeListData(lines);
+        }
+      } catch (error) {
+        toast({
+          title: 'Import failed',
+          description: error instanceof Error ? error.message : 'Failed to parse file',
+          variant: 'destructive',
+        });
+        setIsProcessing(false);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleRawDataset = async (lines: string[], headerParts: string[]) => {
+    setIsProcessing(true);
+    
+    try {
+      // Parse all data rows
+      const dataObjects = [];
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map(s => s.trim());
+        const obj: Record<string, string> = {};
+        headerParts.forEach((header, index) => {
+          if (header && index < values.length) {
+            obj[header] = values[index];
+          }
+        });
+        dataObjects.push(obj);
+      }
+
+      setTableData(dataObjects.slice(0, 20)); // Show first 20 rows in preview
+
+      toast({
+        title: 'Calculating correlations...',
+        description: `Processing ${dataObjects.length} observations with ${headerParts.length} variables`,
+      });
+
+      // Call edge function to calculate correlation matrix
+      const { data, error } = await supabase.functions.invoke('calculate-correlation-matrix', {
+        body: {
+          data: dataObjects,
+          threshold: correlationThreshold,
+        },
+      });
+
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error || 'Failed to calculate correlations');
+
+      const correlationData = data.data;
+      const variableNames = data.metadata.variableNames;
+
+      // Convert correlation matrix to network
+      const { nodes, edges } = convertCorrelationToNetwork(correlationData, variableNames);
+
+      setPreviewNodes(nodes);
+      setPreviewEdges(edges);
+      setStatistics(correlationData.statistics);
+      setPreviewMode(true);
+
+      toast({
+        title: 'Correlation network generated',
+        description: `Created ${nodes.length} nodes and ${edges.length} connections`,
+      });
+
+    } catch (error) {
+      console.error('Error processing raw dataset:', error);
+      toast({
+        title: 'Processing failed',
+        description: error instanceof Error ? error.message : 'Failed to calculate correlations',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleEdgeListData = (lines: string[]) => {
           // Edge list format
           const newNodes = new Map<string, Node>();
           const newEdges: Edge[] = [];
@@ -149,12 +244,13 @@ export const ImportDialog = ({ open, onOpenChange, onImport }: ImportDialogProps
             });
           }
           
-          setPreviewNodes(Array.from(newNodes.values()));
-          setPreviewEdges(newEdges);
-          setTableData(rawData);
-          setPreviewMode(true);
-        } else {
-          // Node list format
+    setPreviewNodes(Array.from(newNodes.values()));
+    setPreviewEdges(newEdges);
+    setTableData(rawData);
+    setPreviewMode(true);
+  };
+
+  const handleNodeListData = (lines: string[]) => {
           const newNodes: Node[] = [];
           const rawData: Array<Record<string, string>> = [];
           
@@ -206,20 +302,10 @@ export const ImportDialog = ({ open, onOpenChange, onImport }: ImportDialogProps
             });
           }
           
-          setPreviewNodes(newNodes);
-          setPreviewEdges([]);
-          setTableData(rawData);
-          setPreviewMode(true);
-        }
-      } catch (error) {
-        toast({
-          title: 'Import failed',
-          description: error instanceof Error ? error.message : 'Failed to parse file',
-          variant: 'destructive',
-        });
-      }
-    };
-    reader.readAsText(file);
+    setPreviewNodes(newNodes);
+    setPreviewEdges([]);
+    setTableData(rawData);
+    setPreviewMode(true);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -263,6 +349,7 @@ export const ImportDialog = ({ open, onOpenChange, onImport }: ImportDialogProps
     setPreviewNodes([]);
     setPreviewEdges([]);
     setTableData([]);
+    setStatistics(null);
   };
 
   return (
@@ -370,11 +457,38 @@ export const ImportDialog = ({ open, onOpenChange, onImport }: ImportDialogProps
               </DialogDescription>
             </DialogHeader>
 
+            {/* Statistics Display */}
+            {statistics && dataType === 'rawdata' && (
+              <div className="grid grid-cols-4 gap-4 p-4 bg-muted/30 rounded-lg">
+                <div>
+                  <p className="text-xs text-muted-foreground">Variables</p>
+                  <p className="text-lg font-semibold">{statistics.totalVariables}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Observations</p>
+                  <p className="text-lg font-semibold">{statistics.totalObservations}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Missing Data</p>
+                  <p className="text-lg font-semibold">{statistics.missingPercent}%</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Correlations</p>
+                  <p className="text-lg font-semibold">{statistics.totalCorrelations}</p>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4 mt-4" style={{ height: '60vh' }}>
               {/* Table Preview - Left */}
               <div className="border rounded-lg overflow-hidden flex flex-col">
-                <div className="bg-muted px-4 py-2 border-b">
-                  <h3 className="font-medium text-sm">Data Table</h3>
+                <div className="bg-muted px-4 py-2 border-b flex items-center justify-between">
+                  <h3 className="font-medium text-sm">
+                    {dataType === 'rawdata' ? 'Sample Data (First 20 rows)' : 'Data Table'}
+                  </h3>
+                  {isProcessing && (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  )}
                 </div>
                 <ScrollArea className="flex-1">
                   <div className="w-full min-w-max">
@@ -414,7 +528,14 @@ export const ImportDialog = ({ open, onOpenChange, onImport }: ImportDialogProps
               {/* Network Preview - Right */}
               <div className="border rounded-lg overflow-hidden flex flex-col">
                 <div className="bg-muted px-4 py-2 border-b">
-                  <h3 className="font-medium text-sm">Network Preview</h3>
+                  <h3 className="font-medium text-sm">
+                    {dataType === 'rawdata' ? 'Correlation Network' : 'Network Preview'}
+                  </h3>
+                  {dataType === 'rawdata' && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Nodes = variables, Edges = correlations (|r| ≥ {correlationThreshold})
+                    </p>
+                  )}
                 </div>
                 <div className="flex-1 bg-background">
                   <ReactFlow

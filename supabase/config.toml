@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.generate-bio-summary]
 verify_jwt = false
+
+[functions.calculate-correlation-matrix]
+verify_jwt = false
