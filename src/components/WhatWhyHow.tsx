@@ -1,7 +1,6 @@
 import { Network, Lightbulb, Zap } from "lucide-react";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
-import whatIsCornersImg from "@/assets/what-is-corners.jpg";
 import howItWorksImg from "@/assets/how-it-works.jpg";
 
 export const WhatWhyHow = () => {
@@ -18,11 +17,6 @@ export const WhatWhyHow = () => {
           <div className="max-w-5xl mx-auto">
             <div className="bg-card border border-border rounded-3xl p-8 md:p-12 shadow-2xl relative z-10">
               <div className="text-center mb-8">
-                <img 
-                  src={whatIsCornersImg} 
-                  alt="What is corners visualization" 
-                  className="w-full h-48 object-cover rounded-2xl mb-8"
-                />
                 <h2 className="text-4xl lg:text-5xl font-light mb-6">What is corners?</h2>
                 <p className="text-xl text-muted-foreground leading-relaxed mb-8">
                   Corners is a powerful visualization platform that helps you map, explore, and understand 
