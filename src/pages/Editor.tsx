@@ -12,7 +12,7 @@ import { AIChat } from '@/components/editor/AIChat';
 import { NodeEditorOverlay } from '@/components/editor/NodeEditorOverlay';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Pencil, Undo, Redo, MessageSquare, Badge as BadgeIcon } from 'lucide-react';
+import { ArrowLeft, Pencil, Undo, Redo, MessageSquare, Badge as BadgeIcon, Save, Check, Loader2 } from 'lucide-react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { getTemplate, type TemplateType } from '@/lib/templates';
 import { toast } from 'sonner';
@@ -47,6 +47,7 @@ const Editor = () => {
   const [showProjectSelector, setShowProjectSelector] = useState(true);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const templateType = searchParams.get('template') as TemplateType;
   
   // Handle imported data from Explorer Mode
@@ -273,6 +274,7 @@ const Editor = () => {
           .eq('id', currentProjectId);
 
         if (error) throw error;
+        setLastSaved(new Date());
       } else {
         // Create new
         const { data, error } = await supabase
@@ -283,6 +285,7 @@ const Editor = () => {
 
         if (error) throw error;
         setCurrentProjectId(data.id);
+        setLastSaved(new Date());
         toast.success('Project saved');
       }
     } catch (error) {
@@ -747,6 +750,42 @@ const Editor = () => {
             className="h-8 w-64 bg-background/50 text-muted-foreground focus:text-foreground border-none"
             placeholder="Untitled Map"
           />
+          <div className="h-6 w-px bg-border" />
+          
+          {/* Save Button and Status */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={saveProject}
+            disabled={isSaving || nodes.length === 0}
+            className="gap-2"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Saving...
+              </>
+            ) : lastSaved ? (
+              <>
+                <Check className="w-4 h-4 text-green-500" />
+                Saved
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                Save
+              </>
+            )}
+          </Button>
+          
+          {lastSaved && !isSaving && (
+            <span className="text-xs text-muted-foreground">
+              {new Date().getTime() - lastSaved.getTime() < 60000
+                ? 'Just now'
+                : `${Math.floor((new Date().getTime() - lastSaved.getTime()) / 60000)}m ago`}
+            </span>
+          )}
+          
           <div className="h-6 w-px bg-border" />
           <Button
             variant="ghost"
