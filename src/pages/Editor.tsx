@@ -4,7 +4,9 @@ import { EditorToolbar } from '@/components/editor/EditorToolbar';
 import { EditorSidebar } from '@/components/editor/EditorSidebar';
 import { TemplateSelector } from '@/components/editor/TemplateSelector';
 import { ImportDialog } from '@/components/editor/ImportDialog';
+import { ProjectSelector } from '@/components/editor/ProjectSelector';
 import { NetworkCanvas } from '@/components/editor/NetworkCanvas';
+import { supabase } from '@/integrations/supabase/client';
 import { ColorControls } from '@/components/editor/ColorControls';
 import { AIChat } from '@/components/editor/AIChat';
 import { NodeEditorOverlay } from '@/components/editor/NodeEditorOverlay';
@@ -42,6 +44,9 @@ const Editor = () => {
   const [defaultEdgeType, setDefaultEdgeType] = useState<'straight' | 'smoothstep' | 'step'>('straight');
   const [mapTitle, setMapTitle] = useState('Untitled Map');
   const [showAIChat, setShowAIChat] = useState(false);
+  const [showProjectSelector, setShowProjectSelector] = useState(true);
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const templateType = searchParams.get('template') as TemplateType;
   
   // Handle imported data from Explorer Mode
@@ -110,6 +115,7 @@ const Editor = () => {
       setNodes(importedData.nodes);
       setEdges(importedData.edges);
       setMapTitle(`${importedData.sourcePersonName} Network`);
+      setShowProjectSelector(false);
       templateLoadedRef.current = true;
       toast.success('Network imported from Explorer Mode');
       // Clear location state
@@ -117,7 +123,7 @@ const Editor = () => {
     }
   }, [importedData]);
 
-  // Load template if specified in URL, otherwise show import dialog
+  // Load template if specified in URL
   useEffect(() => {
     if (templateType && !templateLoadedRef.current && !importedData) {
       const template = getTemplate(templateType);
@@ -125,10 +131,9 @@ const Editor = () => {
         console.log('[TEMPLATE] Loading template once:', templateType);
         setNodes(template.nodes);
         setEdges(template.edges);
+        setShowProjectSelector(false);
         templateLoadedRef.current = true;
       }
-    } else if (!templateType && nodes.length === 0 && !templateLoadedRef.current) {
-      setShowTemplateSelector(true);
     }
   }, [templateType]);
 
@@ -205,9 +210,104 @@ const Editor = () => {
     toast.success('Node added');
   }, [defaultNodeShape]);
 
+  // Project management functions
+  const createNewProject = useCallback(async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Please sign in to create projects');
+        navigate('/auth');
+        return;
+      }
+
+      setShowProjectSelector(false);
+      setShowTemplateSelector(true);
+    } catch (error) {
+      console.error('Error creating project:', error);
+      toast.error('Failed to create project');
+    }
+  }, [navigate]);
+
+  const loadExistingProject = useCallback(async (projectId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', projectId)
+        .single();
+
+      if (error) throw error;
+
+      setCurrentProjectId(data.id);
+      setMapTitle(data.title);
+      setNodes((data.nodes as any) || []);
+      setEdges((data.edges as any) || []);
+      setShowProjectSelector(false);
+      toast.success('Project loaded');
+    } catch (error) {
+      console.error('Error loading project:', error);
+      toast.error('Failed to load project');
+    }
+  }, []);
+
+  const saveProject = useCallback(async () => {
+    if (isSaving || nodes.length === 0) return;
+
+    try {
+      setIsSaving(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const projectData = {
+        user_id: user.id,
+        title: mapTitle,
+        nodes: nodes as any,
+        edges: edges as any,
+      };
+
+      if (currentProjectId) {
+        // Update existing
+        const { error } = await supabase
+          .from('projects')
+          .update(projectData)
+          .eq('id', currentProjectId);
+
+        if (error) throw error;
+      } else {
+        // Create new
+        const { data, error } = await supabase
+          .from('projects')
+          .insert([projectData])
+          .select()
+          .single();
+
+        if (error) throw error;
+        setCurrentProjectId(data.id);
+        toast.success('Project saved');
+      }
+    } catch (error) {
+      console.error('Error saving project:', error);
+      toast.error('Failed to save project');
+    } finally {
+      setIsSaving(false);
+    }
+  }, [nodes, edges, mapTitle, currentProjectId, isSaving]);
+
+  // Auto-save project every 30 seconds
+  useEffect(() => {
+    if (!showProjectSelector && nodes.length > 0) {
+      const interval = setInterval(() => {
+        saveProject();
+      }, 30000);
+
+      return () => clearInterval(interval);
+    }
+  }, [showProjectSelector, nodes.length, saveProject]);
+
   const handleImport = useCallback((importedNodes: Node[], importedEdges: Edge[]) => {
     setNodes(importedNodes);
     setEdges(importedEdges);
+    setShowProjectSelector(false);
   }, []);
 
   const onNodeClick = useCallback((node: Node) => {
@@ -605,6 +705,11 @@ const Editor = () => {
       toast.info('PDF export coming soon');
     }
   }, [mapTitle, backgroundColor]);
+
+  // Show project selector if no project is loaded
+  if (showProjectSelector) {
+    return <ProjectSelector onSelectNew={createNewProject} onSelectExisting={loadExistingProject} />;
+  }
 
   return (
     <div className="h-screen flex flex-col bg-background">
