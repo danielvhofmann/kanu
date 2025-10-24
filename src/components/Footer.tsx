@@ -18,7 +18,7 @@ export const Footer = () => {
               <div className="w-10 h-10 rounded-xl bg-gradient-hero flex items-center justify-center shadow-md">
                 <Network className="w-6 h-6 text-white" strokeWidth={1.5} />
               </div>
-              <span className="text-2xl font-extralight tracking-tight">Kumu</span>
+              <span className="text-2xl font-extralight tracking-tight">Corners</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
               A powerful visualization platform for mapping systems and understanding relationships.
@@ -58,7 +58,7 @@ export const Footer = () => {
         
         {/* Bottom bar */}
         <div className="pt-8 border-t border-border/50 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-          <p>© 2024 Kumu. All rights reserved.</p>
+          <p>© 2024 Corners. All rights reserved.</p>
           <p className="text-xs">Made with clarity and care for systems thinkers worldwide.</p>
         </div>
       </div>

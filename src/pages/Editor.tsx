@@ -64,11 +64,11 @@ const Editor = () => {
   // Color palettes
   const paletteColors: Record<string, string[]> = {
     default: [
+      'hsl(16, 85%, 60%)',
       'hsl(195, 45%, 52%)',
       'hsl(355, 45%, 50%)',
       'hsl(30, 35%, 55%)',
       'hsl(85, 35%, 58%)',
-      'hsl(210, 25%, 62%)',
     ],
     ocean: [
       'hsl(200, 70%, 45%)',
@@ -154,11 +154,11 @@ const Editor = () => {
     
     setNodes(currentNodes => {
       const colors = [
+        { bg: 'hsl(16, 85%, 60%)', border: 'hsl(16, 90%, 70%)' },
         { bg: 'hsl(195, 45%, 52%)', border: 'hsl(195, 50%, 68%)' },
         { bg: 'hsl(355, 45%, 50%)', border: 'hsl(355, 50%, 65%)' },
         { bg: 'hsl(30, 35%, 55%)', border: 'hsl(30, 40%, 68%)' },
         { bg: 'hsl(85, 35%, 58%)', border: 'hsl(85, 40%, 70%)' },
-        { bg: 'hsl(210, 25%, 62%)', border: 'hsl(210, 30%, 75%)' },
       ];
       const color = colors[currentNodes.length % colors.length];
       
@@ -618,6 +618,19 @@ const Editor = () => {
             Back
           </Button>
           <div className="h-6 w-px bg-border" />
+          
+          {/* Builder Mode Badge */}
+          <Badge variant="secondary" className="gap-2 bg-primary/10 text-primary border-primary/20">
+            <BadgeIcon className="w-3 h-3" />
+            Builder Mode
+            {importedData?.importedFrom === 'explorer' && (
+              <span className="text-xs opacity-75">
+                (from {importedData.sourcePersonName})
+              </span>
+            )}
+          </Badge>
+          
+          <div className="h-6 w-px bg-border" />
           <Input
             value={mapTitle}
             onChange={(e) => setMapTitle(e.target.value)}
@@ -687,8 +700,8 @@ const Editor = () => {
 
       {/* Main editor area */}
       <div className="flex-1 flex relative overflow-hidden">
-        {/* Sidebar */}
-        {selectedElement && (
+        {/* Left Sidebar - Only show when AI chat is closed */}
+        {selectedElement && !showAIChat && (
           <EditorSidebar
             element={selectedElement}
             onClose={() => setSelectedElement(null)}
@@ -715,9 +728,23 @@ const Editor = () => {
             isSketchMode={isSketchMode}
             backgroundColor={backgroundColor}
           />
+          
+          {/* Node Editor Overlay - Show when AI chat is open AND element is selected */}
+          {showAIChat && selectedElement && (
+            <NodeEditorOverlay
+              element={selectedElement}
+              onClose={() => setSelectedElement(null)}
+              onUpdateLabel={updateNodeLabel}
+              onUpdateColor={updateNodeColor}
+              onUpdateTags={updateNodeTags}
+              onUpdateNodeShape={updateNodeShape}
+              onUpdateEdge={updateEdge}
+              onDelete={deleteElement}
+            />
+          )}
         </div>
 
-        {/* AI Chat */}
+        {/* AI Chat - Right pane */}
         {showAIChat && (
           <AIChat
             nodes={nodes}

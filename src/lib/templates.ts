@@ -10,8 +10,9 @@ export interface Template {
   edges: Edge[];
 }
 
-// Muted, sophisticated color palette matching Kumu's aesthetic
+// Muted, sophisticated color palette
 const nodeColors = {
+  orange: { bg: 'hsl(16, 85%, 60%)', border: 'hsl(16, 90%, 70%)' },
   teal: { bg: 'hsl(195, 45%, 52%)', border: 'hsl(195, 50%, 68%)' },
   burgundy: { bg: 'hsl(355, 45%, 50%)', border: 'hsl(355, 50%, 65%)' },
   brown: { bg: 'hsl(30, 35%, 55%)', border: 'hsl(30, 40%, 68%)' },

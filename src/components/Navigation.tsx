@@ -14,7 +14,7 @@ export const Navigation = () => {
             <div className="w-10 h-10 rounded-xl bg-gradient-hero flex items-center justify-center shadow-md">
               <Network className="w-6 h-6 text-white" strokeWidth={1.5} />
             </div>
-            <span className="text-2xl font-extralight tracking-tight">Kumu</span>
+            <span className="text-2xl font-extralight tracking-tight">Corners</span>
           </div>
           
           {/* Navigation links */}
@@ -41,7 +41,7 @@ export const Navigation = () => {
             <Button variant="ghost" size="sm" onClick={() => navigate('/auth')}>
               Sign In
             </Button>
-            <Button variant="default" size="sm" onClick={() => navigate('/auth')}>
+            <Button variant="default" size="sm" onClick={() => navigate('/auth')} className="bg-primary hover:bg-primary-light">
               Register
             </Button>
           </div>

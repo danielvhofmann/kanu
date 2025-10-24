@@ -26,12 +26,12 @@ interface EditorSidebarProps {
 }
 
 const colorPalettes = {
-  'Kumu Default': [
+  'Default': [
+    { name: 'Orange', value: 'hsl(16, 85%, 60%)' },
     { name: 'Teal', value: 'hsl(195, 45%, 52%)' },
     { name: 'Burgundy', value: 'hsl(355, 45%, 50%)' },
     { name: 'Brown', value: 'hsl(30, 35%, 55%)' },
     { name: 'Sage', value: 'hsl(85, 35%, 58%)' },
-    { name: 'Slate', value: 'hsl(210, 25%, 62%)' },
   ],
   'Ocean': [
     { name: 'Deep Blue', value: 'hsl(210, 60%, 45%)' },
@@ -79,7 +79,7 @@ export const EditorSidebar = ({
   const [label, setLabel] = useState(isNode ? element.data.label || '' : '');
   const [tags, setTags] = useState<string[]>(isNode ? element.data.tags || [] : []);
   const [newTag, setNewTag] = useState('');
-  const [selectedPalette, setSelectedPalette] = useState<keyof typeof colorPalettes>('Kumu Default');
+  const [selectedPalette, setSelectedPalette] = useState<keyof typeof colorPalettes>('Default');
 
   const handleLabelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newLabel = e.target.value;
