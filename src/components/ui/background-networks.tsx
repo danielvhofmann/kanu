@@ -226,11 +226,11 @@ function FloatingNetwork({ layer }: { layer: number }) {
             <stop offset="70%" stopOpacity="1" />
             <stop offset="100%" stopOpacity="0" />
           </linearGradient>
-        </defs>
-        <g mask={`url(#fade-mask-${layer})`}>
           <mask id={`fade-mask-${layer}`}>
             <rect x="0" y="0" width="100" height="100" fill={`url(#fade-gradient-${layer})`} />
           </mask>
+        </defs>
+        <g mask={`url(#fade-mask-${layer})`}>
         
         <title>Network Background Layer {layer}</title>
         
