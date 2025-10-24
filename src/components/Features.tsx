@@ -93,9 +93,6 @@ export const Features = () => {
 
         {/* Builder Mode Features */}
         <div>
-          <h3 className="text-3xl font-extralight text-center mb-10">
-            <span className="text-secondary">Your Use Cases</span>
-          </h3>
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {builderFeatures.map((feature, index) => (
               <div
