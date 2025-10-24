@@ -96,11 +96,16 @@ export const KnowledgeGraph = ({
       if (error) throw error;
 
       // Add colors and scale node sizes
-      const nodesWithColors = data.nodes.map((node: Node) => ({
-        ...node,
-        color: categoryColors[node.category] || categoryColors.Other,
-        val: 15 + (node.importanceScore || 0) / 70
-      }));
+      const nodesWithColors = data.nodes.map((node: Node) => {
+        const baseSize = 25 + (node.importanceScore || 0) / 40;
+        // Make the main person 1.5x larger
+        const size = node.id === personId ? baseSize * 1.5 : baseSize;
+        return {
+          ...node,
+          color: categoryColors[node.category] || categoryColors.Other,
+          val: size
+        };
+      });
 
       setGraphData({ nodes: nodesWithColors, links: data.links });
       
@@ -173,13 +178,25 @@ export const KnowledgeGraph = ({
     setSelectedTimelineEvent(null);
     setExplanation("");
     setBioSummary("");
-    generateBioSummary(node);
+    
+    // If this is NOT the main person, generate connection explanation
+    if (node.id !== personId) {
+      const mainPersonNode = graphData.nodes.find(n => n.id === personId);
+      if (mainPersonNode) {
+        explainConnection(mainPersonNode.name, node.name);
+      }
+      // Also generate their bio
+      generateBioSummary(node);
+    } else {
+      // If it IS the main person, just generate their bio
+      generateBioSummary(node);
+    }
     
     if (graphRef.current) {
       graphRef.current.centerAt(node.x, node.y, 1000);
       graphRef.current.zoom(3, 1000);
     }
-  }, []);
+  }, [graphData.nodes, personId]);
 
   const handleLinkClick = useCallback((link: Link) => {
     setSelectedLink(link);
@@ -316,7 +333,7 @@ export const KnowledgeGraph = ({
               ctx.textAlign = 'center';
               ctx.textBaseline = 'top';
               ctx.fillStyle = 'hsl(var(--foreground))';
-              ctx.fillText(label, node.x, node.y + node.val + 2);
+              ctx.fillText(label, node.x, node.y + node.val + 4);
             }}
           />
         </div>
@@ -331,7 +348,7 @@ export const KnowledgeGraph = ({
                   <img 
                     src={selectedNode.imageUrl} 
                     alt={selectedNode.name}
-                    className="w-full aspect-square object-cover rounded-2xl shadow-lg"
+                    className="w-full aspect-[3/4] object-cover rounded-2xl shadow-lg"
                   />
                 )}
                 
@@ -348,68 +365,146 @@ export const KnowledgeGraph = ({
                   )}
                 </div>
 
-                {/* Bio Summary */}
-                {bioSummary && (
-                  <div>
-                    <p className="text-sm leading-relaxed">{bioSummary}</p>
-                    <p className="text-xs text-muted-foreground mt-2">Source: Wikipedia</p>
-                  </div>
-                )}
+                {/* Check if this is the main person or a connected person */}
+                {selectedNode.id === personId ? (
+                  <>
+                    {/* Main Person View - Biography */}
+                    {bioSummary && (
+                      <div>
+                        <p className="text-base leading-relaxed">{bioSummary}</p>
+                        <p className="text-xs text-muted-foreground mt-2">Source: Wikipedia</p>
+                      </div>
+                    )}
 
-                {/* External Links */}
-                <div className="flex gap-3">
-                  {selectedNode.wikipediaUrl && (
-                    <a 
-                      href={selectedNode.wikipediaUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-sm text-primary hover:underline"
-                    >
-                      Read on Wikipedia
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  )}
-                  <a 
-                    href={`https://www.wikidata.org/wiki/${selectedNode.id}`}
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-sm text-primary hover:underline"
-                  >
-                    View on Wikidata
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                </div>
-
-                {/* All Connections */}
-                <div>
-                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                    All Connections
-                    <span className="text-xs font-normal text-muted-foreground">
-                      ({getNodeConnections(selectedNode.id).length})
-                    </span>
-                  </h3>
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {getNodeConnections(selectedNode.id).map(({ node, relationship }, index) => {
-                      if (!node) return null;
-                      return (
-                        <button
-                          key={index}
-                          onClick={() => handleNodeClick(node)}
-                          className="w-full flex items-start gap-2 p-2 rounded-lg hover:bg-accent transition-colors text-left"
+                    {/* External Links */}
+                    <div className="flex gap-3">
+                      {selectedNode.wikipediaUrl && (
+                        <a 
+                          href={selectedNode.wikipediaUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-sm text-primary hover:underline"
                         >
-                          <div 
-                            className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0"
-                            style={{ backgroundColor: node.color }}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{node.name}</p>
-                            <p className="text-xs text-muted-foreground">{relationship}</p>
+                          Read on Wikipedia
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+                      <a 
+                        href={`https://www.wikidata.org/wiki/${selectedNode.id}`}
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-sm text-primary hover:underline"
+                      >
+                        View on Wikidata
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+
+                    {/* All Connections */}
+                    <Collapsible defaultOpen>
+                      <CollapsibleTrigger className="flex items-center justify-between w-full py-3 border-t text-sm hover:bg-accent/50 transition-colors rounded-lg px-2">
+                        <span className="font-medium flex items-center gap-2">
+                          All Connections
+                          <span className="text-xs font-normal text-muted-foreground">
+                            ({getNodeConnections(selectedNode.id).length})
+                          </span>
+                        </span>
+                        <ChevronDown className="w-4 h-4 transition-transform duration-200 data-[state=open]:rotate-180" />
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="space-y-2 max-h-48 overflow-y-auto pt-2">
+                          {getNodeConnections(selectedNode.id).map(({ node, relationship }, index) => {
+                            if (!node) return null;
+                            return (
+                              <button
+                                key={index}
+                                onClick={() => handleNodeClick(node)}
+                                className="w-full flex items-start gap-2 p-2 rounded-lg hover:bg-accent transition-colors text-left"
+                              >
+                                <div 
+                                  className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0"
+                                  style={{ backgroundColor: node.color }}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium truncate">{node.name}</p>
+                                  <p className="text-xs text-muted-foreground">{relationship}</p>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </>
+                ) : (
+                  <>
+                    {/* Connected Person View - Connection Explanation */}
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-sm font-semibold mb-3">
+                          How are {personName} and {selectedNode.name} connected?
+                        </h3>
+                        {isLoadingExplanation ? (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span className="text-sm">Generating explanation...</span>
                           </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                        ) : explanation ? (
+                          <>
+                            <p className="text-base leading-relaxed">{explanation}</p>
+                            <p className="text-xs text-muted-foreground mt-2">
+                              Generated by AI from knowledge graph analysis
+                            </p>
+                          </>
+                        ) : null}
+                      </div>
+
+                      {/* Collapsible Biography */}
+                      <Collapsible>
+                        <CollapsibleTrigger className="flex items-center justify-between w-full py-3 border-t text-sm hover:bg-accent/50 transition-colors rounded-lg px-2">
+                          <span className="font-medium">Who is {selectedNode.name}?</span>
+                          <ChevronDown className="w-4 h-4 transition-transform duration-200 data-[state=open]:rotate-180" />
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="pt-3 pb-2 space-y-3">
+                            {bioSummary ? (
+                              <>
+                                <p className="text-sm leading-relaxed">{bioSummary}</p>
+                                <p className="text-xs text-muted-foreground">Source: Wikipedia</p>
+                              </>
+                            ) : (
+                              <p className="text-sm text-muted-foreground">Loading biography...</p>
+                            )}
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+
+                      {/* External Links */}
+                      <div className="flex gap-3 pt-2">
+                        {selectedNode.wikipediaUrl && (
+                          <a 
+                            href={selectedNode.wikipediaUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-sm text-primary hover:underline"
+                          >
+                            Read on Wikipedia
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+                        <a 
+                          href={`https://www.wikidata.org/wiki/${selectedNode.id}`}
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-sm text-primary hover:underline"
+                        >
+                          View on Wikidata
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 {/* Sources Section */}
                 <Collapsible>
