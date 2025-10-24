@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Network } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import logo from "/favicon.png";
 
 export const Navigation = () => {
   const navigate = useNavigate();
@@ -11,9 +11,7 @@ export const Navigation = () => {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-hero flex items-center justify-center shadow-md">
-              <Network className="w-6 h-6 text-white" strokeWidth={1.5} />
-            </div>
+            <img src={logo} alt="Corners logo" className="w-10 h-10" />
             <span className="text-2xl font-extralight tracking-tight">corners</span>
           </div>
           
