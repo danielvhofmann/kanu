@@ -20,12 +20,14 @@ const Explorer = () => {
 
   if (selectedPerson) {
     return (
-      <KnowledgeGraph 
-        personId={selectedPerson.id}
-        personName={selectedPerson.name}
-        onBack={handleBack}
-        onPersonChange={handlePersonChange}
-      />
+      <div className="h-full w-full overflow-hidden">
+        <KnowledgeGraph 
+          personId={selectedPerson.id}
+          personName={selectedPerson.name}
+          onBack={handleBack}
+          onPersonChange={handlePersonChange}
+        />
+      </div>
     );
   }
 

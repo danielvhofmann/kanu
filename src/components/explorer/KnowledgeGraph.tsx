@@ -399,7 +399,7 @@ export const KnowledgeGraph = ({
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden relative h-full min-h-0">
         {/* Graph - Use calc to leave room for right panel */}
-        <div ref={canvasRef} className="flex-1 relative bg-card overflow-hidden h-full">
+        <div ref={canvasRef} className="flex-1 relative bg-card overflow-hidden h-full min-h-0">
           {/* Timeline Button - Positioned absolutely at bottom */}
           {timelineEvents.length > 0 && (
             <Dialog>
