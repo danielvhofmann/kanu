@@ -83,16 +83,19 @@ const Explorer = () => {
       <div className="mt-12">
         <p className="text-sm text-muted-foreground mb-4">Try searching for:</p>
         <div className="flex flex-wrap gap-2 justify-center">
-          {['Albert Einstein', 'Leonardo da Vinci', 'Marie Curie', 'William Shakespeare', 'Ada Lovelace'].map(name => (
+          {[
+            { name: 'Albert Einstein', id: 'Q937' },
+            { name: 'Leonardo da Vinci', id: 'Q762' },
+            { name: 'Marie Curie', id: 'Q7186' },
+            { name: 'William Shakespeare', id: 'Q692' },
+            { name: 'Ada Lovelace', id: 'Q7259' }
+          ].map(person => (
             <button
-              key={name}
-              onClick={() => {
-                // This would require the ID, so it's just a visual example
-                // In a real implementation, you'd search for these and get their IDs
-              }}
+              key={person.id}
+              onClick={() => handlePersonSelect(person.id, person.name)}
               className="px-4 py-2 rounded-full bg-secondary hover:bg-secondary/80 text-sm transition-colors"
             >
-              {name}
+              {person.name}
             </button>
           ))}
         </div>

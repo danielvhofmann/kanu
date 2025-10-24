@@ -1,4 +1,4 @@
-import { Menu, User, Search, Loader2 } from "lucide-react";
+import { Menu, User, Search, Loader2, ArrowLeft } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,9 +13,10 @@ interface SearchResult {
 interface ExplorerHeaderProps {
   currentPersonName: string;
   onSearch: (personId: string, personName: string) => void;
+  onBack: () => void;
 }
 
-export const ExplorerHeader = ({ currentPersonName, onSearch }: ExplorerHeaderProps) => {
+export const ExplorerHeader = ({ currentPersonName, onSearch, onBack }: ExplorerHeaderProps) => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -73,8 +74,15 @@ export const ExplorerHeader = ({ currentPersonName, onSearch }: ExplorerHeaderPr
   return (
     <header className="border-b border-border bg-card sticky top-0 z-50">
       <div className="px-6 h-16 flex items-center gap-6">
-        {/* Left: Menu and Branding */}
+        {/* Left: Back, Menu and Branding */}
         <div className="flex items-center gap-3">
+          <button 
+            onClick={onBack}
+            className="p-2 hover:bg-accent rounded-lg transition-colors"
+            title="Back to search"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
           <button className="p-2 hover:bg-accent rounded-lg transition-colors">
             <Menu className="w-5 h-5" />
           </button>
