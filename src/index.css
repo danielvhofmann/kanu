@@ -36,11 +36,11 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 215 20% 25%;
 
-    /* Primary: Vibrant turquoise-teal */
-    --primary: 168 38% 52%;
+    /* Primary: Ocean turquoise */
+    --primary: 182 42% 50%;
     --primary-foreground: 0 0% 100%;
-    --primary-light: 168 35% 65%;
-    --primary-glow: 168 42% 70%;
+    --primary-light: 182 40% 63%;
+    --primary-glow: 182 45% 68%;
 
     /* Secondary: Deep burgundy/red (like Kumu's reds) */
     --secondary: 355 45% 50%;
@@ -71,10 +71,10 @@ All colors MUST be HSL.
 
     --radius: 0.75rem;
 
-    /* Gradients: Vibrant turquoise transitions */
-    --gradient-hero: linear-gradient(135deg, hsl(168 38% 52%) 0%, hsl(175 40% 58%) 100%);
+    /* Gradients: Ocean turquoise transitions */
+    --gradient-hero: linear-gradient(135deg, hsl(182 42% 50%) 0%, hsl(188 45% 56%) 100%);
     --gradient-subtle: linear-gradient(180deg, hsl(0 0% 99%) 0%, hsl(210 20% 97%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(168 35% 65%) 0%, hsl(175 38% 60%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(182 40% 63%) 0%, hsl(188 42% 58%) 100%);
 
     /* Shadows: Soft, elegant depth */
     --shadow-sm: 0 2px 8px -2px hsl(215 20% 25% / 0.06);

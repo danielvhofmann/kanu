@@ -27,7 +27,7 @@ interface EditorSidebarProps {
 
 const colorPalettes = {
   'Default': [
-    { name: 'Turquoise', value: 'hsl(168, 38%, 52%)' },
+    { name: 'Turquoise', value: 'hsl(182, 42%, 50%)' },
     { name: 'Teal', value: 'hsl(195, 45%, 52%)' },
     { name: 'Burgundy', value: 'hsl(355, 45%, 50%)' },
     { name: 'Brown', value: 'hsl(30, 35%, 55%)' },
