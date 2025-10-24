@@ -22,9 +22,9 @@ function FloatingNetwork({ layer }: { layer: number }) {
     // Generate random nodes with initial and target positions
     const nodeCount = 12 + layer * 3;
     const generatedNodes: Node[] = Array.from({ length: nodeCount }, (_, i) => {
-      // Initial random position - spread far apart
-      const initialX = Math.random() * 150 - 25;
-      const initialY = Math.random() * 150 - 25;
+      // Initial random position - closer together
+      const initialX = 30 + Math.random() * 40;
+      const initialY = 30 + Math.random() * 40;
       
       // Target position - create distinct clusters
       const clusterCount = 3;
@@ -94,7 +94,7 @@ function FloatingNetwork({ layer }: { layer: number }) {
               y2: [edge.to.y, edge.to.targetY, edge.to.targetY, edge.to.targetY, edge.to.y],
             }}
             transition={{
-              duration: 80,
+              duration: 30,
               times: [0, 0.3, 0.5, 0.7, 1],
               ease: "easeInOut",
               repeat: Infinity,
@@ -117,7 +117,7 @@ function FloatingNetwork({ layer }: { layer: number }) {
               cy: [node.y, node.targetY, node.targetY, node.targetY, node.y],
             }}
             transition={{
-              duration: 80,
+              duration: 30,
               times: [0, 0.3, 0.5, 0.7, 1],
               ease: "easeInOut",
               repeat: Infinity,
