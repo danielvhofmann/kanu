@@ -12,8 +12,8 @@ export const Hero = () => {
       {/* Large circular gradient background */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140vh] h-[140vh] rounded-full bg-gradient-to-br from-orange-200/40 via-white to-rose-100/40 blur-3xl" />
       
-      {/* Stronger top-left glow */}
-      <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-primary/15 blur-[100px]" />
+      {/* Top-left red glow */}
+      <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-red-500/15 blur-[100px]" />
       
       {/* Animated network background */}
       <BackgroundNetworks />
