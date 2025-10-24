@@ -28,15 +28,17 @@ function AppContent() {
           <SidebarTrigger />
         </header>
       )}
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/editor" element={<ProtectedRoute><Editor /></ProtectedRoute>} />
-        <Route path="/explorer" element={<ProtectedRoute><Explorer /></ProtectedRoute>} />
-        <Route path="/collections" element={<ProtectedRoute><Collections /></ProtectedRoute>} />
-        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <div className={isExplorerOrEditor ? 'flex-1 flex flex-col overflow-hidden min-h-0' : ''}>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/editor" element={<ProtectedRoute><Editor /></ProtectedRoute>} />
+          <Route path="/explorer" element={<ProtectedRoute><Explorer /></ProtectedRoute>} />
+          <Route path="/collections" element={<ProtectedRoute><Collections /></ProtectedRoute>} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </div>
     </>
   );
 }
@@ -49,7 +51,7 @@ function AppLayout() {
   const isExplorerOrEditor = location.pathname === '/explorer' || location.pathname === '/editor';
   
   return (
-    <SidebarProvider>
+    <SidebarProvider className={isExplorerOrEditor ? 'h-screen' : 'min-h-screen'}>
       <div className={`${isExplorerOrEditor ? 'h-screen' : 'min-h-screen'} flex w-full overflow-hidden`}>
         {!isLandingPage && !isAuthPage && <AppSidebar />}
         <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
