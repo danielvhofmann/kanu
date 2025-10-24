@@ -18,7 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { User as SupabaseUser } from "@supabase/supabase-js";
-import logo from "/favicon.png";
+import logo from "/logo.png";
 
 export const Navigation = () => {
   const navigate = useNavigate();
