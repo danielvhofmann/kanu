@@ -7,6 +7,8 @@ import { Loader2, ExternalLink, ChevronDown, ChevronRight } from "lucide-react";
 import { Timeline } from "./Timeline";
 import { ExplorerHeader } from "./ExplorerHeader";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { convertExplorerToBuilder } from "@/utils/graphConverter";
 
@@ -396,28 +398,31 @@ export const KnowledgeGraph = ({
       <div className="flex-1 flex overflow-hidden relative">
         {/* Graph - Use calc to leave room for right panel */}
         <div ref={canvasRef} className="flex-1 min-w-0 relative bg-card">
-          {/* Timeline - Positioned absolutely at bottom */}
+          {/* Timeline Button - Positioned absolutely at bottom */}
           {timelineEvents.length > 0 && (
-            <div className="absolute bottom-0 left-0 right-0 z-20">
-              <Collapsible open={showTimeline} onOpenChange={setShowTimeline}>
-                <div className="border-t border-border bg-card/95 backdrop-blur-sm">
-                  <CollapsibleTrigger className="w-full px-6 py-2 flex items-center justify-between hover:bg-accent/50 transition-colors">
-                    <span className="text-sm font-medium">Timeline ({timelineEvents.length} events)</span>
-                    <ChevronDown className="w-4 h-4 transition-transform duration-200 data-[state=open]:rotate-180" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="max-h-32 overflow-y-auto">
-                      <Timeline 
-                        events={timelineEvents} 
-                        nodes={graphData.nodes}
-                        onEventClick={handleTimelineEventClick}
-                        selectedEvent={selectedTimelineEvent}
-                      />
-                    </div>
-                  </CollapsibleContent>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button 
+                  className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20"
+                  variant="secondary"
+                >
+                  Open Timeline
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[80vh]">
+                <DialogHeader>
+                  <DialogTitle>Timeline ({timelineEvents.length} events)</DialogTitle>
+                </DialogHeader>
+                <div className="max-h-[60vh] overflow-y-auto">
+                  <Timeline 
+                    events={timelineEvents} 
+                    nodes={graphData.nodes}
+                    onEventClick={handleTimelineEventClick}
+                    selectedEvent={selectedTimelineEvent}
+                  />
                 </div>
-              </Collapsible>
-            </div>
+              </DialogContent>
+            </Dialog>
           )}
           <ForceGraph2D
             ref={graphRef}
