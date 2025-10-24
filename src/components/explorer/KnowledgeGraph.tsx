@@ -333,7 +333,7 @@ export const KnowledgeGraph = ({
   };
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-background">
+    <div className="w-full h-screen flex flex-col overflow-hidden bg-background">
       {/* Header */}
       <ExplorerHeader 
         currentPersonName={personName}
@@ -424,7 +424,7 @@ export const KnowledgeGraph = ({
         </div>
 
         {/* Info Panel - Always visible with fixed width */}
-        <div className="w-96 h-full flex-shrink-0 border-l border-border bg-card overflow-y-auto z-10">
+        <div className="w-96 max-w-[384px] h-full flex-shrink-0 border-l border-border bg-card overflow-y-auto z-10">
           <div className="p-6 space-y-6">
             {selectedNode ? (
               <>

@@ -48,9 +48,9 @@ function AppLayout() {
   
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="min-h-screen flex w-full overflow-hidden">
         {!isLandingPage && !isAuthPage && <AppSidebar />}
-        <main className="flex-1 flex flex-col">
+        <main className="flex-1 flex flex-col min-w-0">
           <AppContent />
         </main>
       </div>

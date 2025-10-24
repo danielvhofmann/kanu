@@ -75,15 +75,15 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
   };
 
   return (
-    <header className="border-b border-border bg-card sticky top-0 z-50">
-      <div className="px-4 py-1 flex items-center gap-2 justify-between">
+    <header className="border-b border-border bg-card sticky top-0 z-50 w-full">
+      <div className="px-4 py-2 flex items-center gap-3 w-full">
         {/* Sidebar Trigger - Left */}
         <div className="flex-shrink-0">
           <SidebarTrigger />
         </div>
         
-        {/* Search Bar - Compact center */}
-        <div ref={wrapperRef} className="flex-shrink-0 w-80 relative">
+        {/* Search Bar - Flexible with max-width */}
+        <div ref={wrapperRef} className="flex-1 min-w-0 max-w-md relative">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -115,19 +115,19 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
         </div>
 
         {/* Import Button and User Icon - Right */}
-        <div className="flex-shrink-0 flex items-center gap-1">
+        <div className="flex-shrink-0 flex items-center gap-2">
           {onImportToBuilder && (
             <Button 
               variant="hero" 
               size="sm"
               onClick={onImportToBuilder}
-              className="gap-1.5 h-8 text-xs px-2.5"
+              className="gap-1.5 h-9 text-sm px-3"
             >
-              <Upload className="w-3.5 h-3.5" />
-              <span className="hidden lg:inline">Import</span>
+              <Upload className="w-4 h-4" />
+              <span className="hidden sm:inline">Import</span>
             </Button>
           )}
-          <button className="p-1.5 hover:bg-accent rounded-full transition-colors">
+          <button className="p-2 hover:bg-accent rounded-full transition-colors">
             <User className="w-4 h-4" />
           </button>
         </div>
