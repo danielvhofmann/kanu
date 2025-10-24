@@ -7,6 +7,8 @@ interface Node {
   id: number;
   x: number;
   y: number;
+  targetX: number;
+  targetY: number;
   size: number;
 }
 
@@ -17,23 +19,39 @@ interface Edge {
 
 function FloatingNetwork({ layer }: { layer: number }) {
   const { nodes, edges } = useMemo(() => {
-    // Generate random nodes
+    // Generate random nodes with initial and target positions
     const nodeCount = 20 + layer * 5;
-    const generatedNodes: Node[] = Array.from({ length: nodeCount }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: 2 + Math.random() * 3,
-    }));
+    const generatedNodes: Node[] = Array.from({ length: nodeCount }, (_, i) => {
+      // Initial random position
+      const initialX = Math.random() * 100;
+      const initialY = Math.random() * 100;
+      
+      // Target position - more structured (grid-like with some randomness)
+      const cols = Math.ceil(Math.sqrt(nodeCount));
+      const row = Math.floor(i / cols);
+      const col = i % cols;
+      const spacing = 100 / cols;
+      const targetX = col * spacing + spacing / 2 + (Math.random() - 0.5) * spacing * 0.3;
+      const targetY = row * spacing + spacing / 2 + (Math.random() - 0.5) * spacing * 0.3;
+      
+      return {
+        id: i,
+        x: initialX,
+        y: initialY,
+        targetX,
+        targetY,
+        size: 2 + Math.random() * 3,
+      };
+    });
 
-    // Generate edges between nearby nodes
+    // Generate edges between nearby nodes in the target formation
     const generatedEdges: Edge[] = [];
     generatedNodes.forEach((node, i) => {
       generatedNodes.slice(i + 1).forEach((otherNode) => {
         const distance = Math.sqrt(
-          Math.pow(node.x - otherNode.x, 2) + Math.pow(node.y - otherNode.y, 2)
+          Math.pow(node.targetX - otherNode.targetX, 2) + Math.pow(node.targetY - otherNode.targetY, 2)
         );
-        if (distance < 30 && Math.random() > 0.5) {
+        if (distance < 35 && Math.random() > 0.4) {
           generatedEdges.push({ from: node, to: otherNode });
         }
       });
@@ -58,19 +76,19 @@ function FloatingNetwork({ layer }: { layer: number }) {
             stroke="currentColor"
             strokeWidth={0.2}
             strokeOpacity={0.4}
-            initial={{ pathLength: 0 }}
+            initial={{ pathLength: 0, opacity: 0 }}
             animate={{
-              pathLength: [0, 1, 0],
-              x1: edge.from.x + Math.sin(i) * 3,
-              y1: edge.from.y + Math.cos(i) * 3,
-              x2: edge.to.x + Math.sin(i + 1) * 3,
-              y2: edge.to.y + Math.cos(i + 1) * 3,
+              pathLength: 1,
+              opacity: 0.4,
+              x1: edge.from.targetX,
+              y1: edge.from.targetY,
+              x2: edge.to.targetX,
+              y2: edge.to.targetY,
             }}
             transition={{
-              duration: 30 + Math.random() * 20,
-              repeat: Infinity,
-              ease: "linear",
-              delay: Math.random() * 5,
+              duration: 8,
+              ease: "easeInOut",
+              delay: i * 0.02,
             }}
           />
         ))}
@@ -84,17 +102,17 @@ function FloatingNetwork({ layer }: { layer: number }) {
             r={node.size / 8}
             fill="currentColor"
             fillOpacity={0.6}
-            initial={{ scale: 0.8 }}
+            initial={{ scale: 0, opacity: 0 }}
             animate={{
-              scale: [0.8, 1.2, 0.8],
-              cx: node.x + Math.sin(node.id) * 2,
-              cy: node.y + Math.cos(node.id) * 2,
+              scale: 1,
+              opacity: 0.6,
+              cx: node.targetX,
+              cy: node.targetY,
             }}
             transition={{
-              duration: 20 + node.id * 0.5,
-              repeat: Infinity,
+              duration: 8,
               ease: "easeInOut",
-              delay: node.id * 0.1,
+              delay: node.id * 0.05,
             }}
           />
         ))}
