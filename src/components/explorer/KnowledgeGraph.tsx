@@ -70,7 +70,13 @@ export const KnowledgeGraph = ({
   const [personName, setPersonName] = useState(initialPersonName);
   const graphRef = useRef<any>();
   const canvasRef = useRef<HTMLDivElement>(null);
-  const [canvasDimensions, setCanvasDimensions] = useState({ width: 800, height: 600 });
+  const [canvasDimensions, setCanvasDimensions] = useState(() => {
+    const headerHeight = 56;
+    return {
+      width: window.innerWidth,
+      height: window.innerHeight - headerHeight
+    };
+  });
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
   const [isLoading, setIsLoading] = useState(true);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -114,24 +120,47 @@ export const KnowledgeGraph = ({
     }
   };
 
-  // Track canvas dimensions with ResizeObserver
+  // Track canvas dimensions based on viewport
   useEffect(() => {
-    if (!canvasRef.current) return;
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      requestAnimationFrame(() => {
-        for (const entry of entries) {
-          const { width, height } = entry.contentRect;
-          console.log('🎨 Canvas dimensions:', { width, height });
-          console.log('📏 Viewport height:', window.innerHeight);
-          console.log('📐 Expected height:', window.innerHeight - 56); // minus header
-          setCanvasDimensions({ width, height });
-        }
-      });
+    const updateDimensions = () => {
+      if (!canvasRef.current) return;
+      
+      // Calculate dimensions directly from viewport
+      const headerHeight = 56; // ExplorerHeader h-14 = 3.5rem = 56px
+      const viewportHeight = window.innerHeight;
+      const viewportWidth = window.innerWidth;
+      
+      // Get actual container width (accounting for sidebar and info panel)
+      const rect = canvasRef.current.getBoundingClientRect();
+      const width = rect.width || viewportWidth;
+      const height = viewportHeight - headerHeight;
+      
+      console.log('🎨 Canvas dimensions:', { width, height });
+      console.log('📏 Viewport height:', viewportHeight);
+      console.log('📐 Expected height:', height);
+      
+      setCanvasDimensions({ width, height });
+    };
+    
+    // Initial measurement
+    updateDimensions();
+    
+    // Update on window resize
+    window.addEventListener('resize', updateDimensions);
+    
+    // Also use ResizeObserver for when sidebar/panel toggles
+    const resizeObserver = new ResizeObserver(() => {
+      requestAnimationFrame(updateDimensions);
     });
-
-    resizeObserver.observe(canvasRef.current);
-    return () => resizeObserver.disconnect();
+    
+    if (canvasRef.current) {
+      resizeObserver.observe(canvasRef.current);
+    }
+    
+    return () => {
+      window.removeEventListener('resize', updateDimensions);
+      resizeObserver.disconnect();
+    };
   }, []);
 
   useEffect(() => {
@@ -390,7 +419,7 @@ export const KnowledgeGraph = ({
   };
 
   return (
-    <div className="w-full flex-1 flex flex-col overflow-hidden bg-background !max-h-screen">
+    <div className="w-full flex-1 flex flex-col overflow-hidden bg-background">
       {/* Header */}
       <ExplorerHeader 
         currentPersonName={personName}
@@ -402,7 +431,7 @@ export const KnowledgeGraph = ({
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden relative min-h-0">
         {/* Graph - Use calc to leave room for right panel */}
-        <div ref={canvasRef} className="!flex-1 relative bg-card overflow-hidden !min-h-0">
+        <div ref={canvasRef} className="!flex-1 !h-full relative bg-card overflow-hidden !min-h-0">
           {/* Timeline Button - Positioned absolutely at bottom */}
           {timelineEvents.length > 0 && (
             <Dialog>
@@ -430,10 +459,11 @@ export const KnowledgeGraph = ({
               </DialogContent>
             </Dialog>
           )}
-          <ForceGraph2D
-            ref={graphRef}
-            width={canvasDimensions.width}
-            height={canvasDimensions.height}
+          {canvasDimensions.width > 100 && canvasDimensions.height > 100 && (
+            <ForceGraph2D
+              ref={graphRef}
+              width={canvasDimensions.width}
+              height={canvasDimensions.height}
             graphData={graphData}
             nodeLabel="name"
             nodeColor="color"
@@ -483,7 +513,8 @@ export const KnowledgeGraph = ({
               ctx.fillStyle = 'hsl(var(--foreground))';
               ctx.fillText(label, node.x, node.y + node.val + 4);
             }}
-          />
+            />
+          )}
         </div>
 
         {/* Info Panel - Always visible with fixed width */}
