@@ -89,20 +89,6 @@ export const UseCases = () => {
               </div>
             ))}
           </div>
-          
-          <div className="text-center space-y-6 pt-8">
-            <p className="text-muted-foreground text-lg">
-              Trusted by hundreds of organizations worldwide
-            </p>
-            <div className="flex justify-center gap-4">
-              <Button variant="hero" size="lg">
-                Explore Use Cases
-              </Button>
-              <Button variant="outline" size="lg">
-                View Community Projects
-              </Button>
-            </div>
-          </div>
         </div>
       </div>
     </section>
