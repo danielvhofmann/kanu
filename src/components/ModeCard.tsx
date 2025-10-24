@@ -24,12 +24,12 @@ export const ModeCard = ({
 }: ModeCardProps) => {
   return (
     <div
-      className="group relative bg-card border border-border/50 rounded-3xl p-10 hover:border-primary/30 transition-all duration-500 hover:shadow-glow animate-fade-in"
+      className="group relative bg-card border border-border/50 rounded-3xl p-10 hover:border-primary/30 transition-all duration-500 hover:shadow-glow animate-fade-in flex flex-col"
       style={{ animationDelay: `${delay}s` }}
     >
       <div className={`absolute inset-0 bg-gradient-to-br ${gradient} rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10`} />
       
-      <div className="space-y-6">
+      <div className="space-y-6 flex-grow flex flex-col">
         {/* Icon */}
         <div className="w-16 h-16 rounded-2xl bg-gradient-hero flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
           <Icon className="w-8 h-8 text-white" strokeWidth={1.5} />
@@ -46,7 +46,7 @@ export const ModeCard = ({
         </div>
         
         {/* Features */}
-        <ul className="space-y-3 pt-4">
+        <ul className="space-y-3 pt-4 flex-grow">
           {features.map((feature, index) => (
             <li key={index} className="flex items-start gap-3 text-muted-foreground">
               <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
@@ -56,7 +56,7 @@ export const ModeCard = ({
         </ul>
         
         {/* CTA */}
-        <div className="pt-6">
+        <div className="pt-6 mt-auto">
           <Button 
             size="lg" 
             variant="hero" 
