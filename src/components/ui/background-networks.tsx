@@ -23,12 +23,12 @@ function FloatingNetwork({ layer }: { layer: number }) {
     const layerOffsetX = (layer - 1) * 15;
     const layerOffsetY = (layer - 1) * 5;
     
-    // Create one large interconnected network with fewer, larger clusters
+    // Create fewer, well-spaced clusters for a cleaner look
     const clusters = [
-      { x: 30 + layerOffsetX, y: 35 + layerOffsetY, nodeCount: 12, hubRadius: 7 },  // Large left cluster
-      { x: 55 + layerOffsetX, y: 30 + layerOffsetY, nodeCount: 10, hubRadius: 6.5 }, // Large center-top
-      { x: 70 + layerOffsetX, y: 50 + layerOffsetY, nodeCount: 11, hubRadius: 6.5 }, // Large right cluster
-      { x: 45 + layerOffsetX, y: 60 + layerOffsetY, nodeCount: 9, hubRadius: 6 },    // Medium center-bottom
+      { x: 20 + layerOffsetX, y: 40 + layerOffsetY, nodeCount: 6, hubRadius: 8 },   // Left cluster
+      { x: 50 + layerOffsetX, y: 30 + layerOffsetY, nodeCount: 8, hubRadius: 9 },   // Center-top (main)
+      { x: 75 + layerOffsetX, y: 45 + layerOffsetY, nodeCount: 7, hubRadius: 8.5 }, // Right cluster
+      { x: 45 + layerOffsetX, y: 65 + layerOffsetY, nodeCount: 5, hubRadius: 7 },   // Bottom cluster
     ];
     
     const generatedNodes: Node[] = [];
@@ -41,8 +41,8 @@ function FloatingNetwork({ layer }: { layer: number }) {
       // Initial positions - completely random and chaotic across the whole canvas
       const chaosSpread = 150;
       
-      // Create 1-2 hub nodes based on cluster size
-      const hubCount = nodeCount > 8 ? 2 : 1;
+      // Create 1 hub node per cluster for simplicity
+      const hubCount = 1;
       
       for (let h = 0; h < hubCount; h++) {
         const hubInitialX = Math.random() * chaosSpread - 25;
@@ -55,7 +55,7 @@ function FloatingNetwork({ layer }: { layer: number }) {
           y: hubInitialY,
           targetX: targetCenterX + hubOffset,
           targetY: targetCenterY + hubOffset,
-          size: 4.5 + Math.random() * 2, // Bigger hubs
+          size: 5 + Math.random() * 2, // Bigger hubs
         };
         generatedNodes.push(hubNode);
         hubNodes.push(hubNode);
@@ -68,9 +68,9 @@ function FloatingNetwork({ layer }: { layer: number }) {
         const spokeInitialX = Math.random() * chaosSpread - 25;
         const spokeInitialY = Math.random() * chaosSpread - 25;
         
-        // Organized target position in tighter formation
-        const angle = (s / spokeCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
-        const radiusVariation = Math.random() * 2; // Less variation for tighter clusters
+        // Organized target position with more spread
+        const angle = (s / spokeCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
+        const radiusVariation = Math.random() * 3;
         const radius = hubRadius + radiusVariation;
         
         generatedNodes.push({
@@ -79,7 +79,7 @@ function FloatingNetwork({ layer }: { layer: number }) {
           y: spokeInitialY,
           targetX: targetCenterX + Math.cos(angle) * radius,
           targetY: targetCenterY + Math.sin(angle) * radius,
-          size: 2 + Math.random() * 2, // Bigger spokes
+          size: 2.5 + Math.random() * 2, // Bigger spokes
         });
       }
     });
@@ -90,75 +90,53 @@ function FloatingNetwork({ layer }: { layer: number }) {
     
     clusters.forEach((cluster) => {
       const { nodeCount } = cluster;
-      const hubCount = nodeCount > 8 ? 2 : 1;
+      const hubCount = 1;
       
       const clusterHubs = generatedNodes.slice(currentNodeIndex, currentNodeIndex + hubCount);
+      const mainHub = clusterHubs[0];
       
-      // Connect hubs within cluster if there are 2
-      if (hubCount === 2) {
-        generatedEdges.push({ from: clusterHubs[0], to: clusterHubs[1] });
-      }
-      
-      // Connect spokes to nearest hub
+      // Connect spokes to hub
       for (let s = hubCount; s < nodeCount; s++) {
         const spokeNode = generatedNodes[currentNodeIndex + s];
-        const targetHub = clusterHubs[s % hubCount];
-        generatedEdges.push({ from: targetHub, to: spokeNode });
+        generatedEdges.push({ from: mainHub, to: spokeNode });
         
-        // Connect some spokes to each other for web effect (only nearby)
-        if (s > hubCount + 1 && Math.random() > 0.7) {
-          const nearbySpoke = generatedNodes[currentNodeIndex + s - 1];
-          generatedEdges.push({ from: nearbySpoke, to: spokeNode });
+        // Fewer spoke-to-spoke connections for cleaner look
+        if (s > hubCount + 1 && Math.random() > 0.85) {
+          const prevSpoke = generatedNodes[currentNodeIndex + s - 1];
+          generatedEdges.push({ from: prevSpoke, to: spokeNode });
         }
       }
       
       currentNodeIndex += nodeCount;
     });
     
-    // Add extensive cross-cluster connections for one big network
+    // Selective hub-to-hub connections for connected but not cluttered network
     hubNodes.forEach((hub, i) => {
-      hubNodes.slice(i + 1).forEach((otherHub) => {
-        // Calculate distance in target positions
-        const distance = Math.sqrt(
-          Math.pow(hub.targetX - otherHub.targetX, 2) + 
-          Math.pow(hub.targetY - otherHub.targetY, 2)
-        );
-        
-        // Connect all hubs that are reasonably close
-        if (distance < 35 && Math.random() > 0.3) {
-          generatedEdges.push({ from: hub, to: otherHub });
-        }
-      });
+      // Each hub connects to 1-2 other hubs maximum
+      if (i < hubNodes.length - 1) {
+        generatedEdges.push({ from: hub, to: hubNodes[i + 1] });
+      }
+      // Occasionally add one more connection
+      if (i < hubNodes.length - 2 && Math.random() > 0.7) {
+        generatedEdges.push({ from: hub, to: hubNodes[i + 2] });
+      }
     });
     
-    // Add more inter-cluster connections between spokes of different clusters
+    // Add very few inter-cluster spoke connections for variety
     currentNodeIndex = 0;
     clusters.forEach((cluster, clusterIdx) => {
       const { nodeCount } = cluster;
-      const hubCount = nodeCount > 8 ? 2 : 1;
+      const hubCount = 1;
       
-      // Get some spoke nodes from this cluster
-      const spokeNodes = generatedNodes.slice(
-        currentNodeIndex + hubCount, 
-        currentNodeIndex + Math.min(hubCount + 3, nodeCount)
-      );
-      
-      // Connect to spokes in next cluster
-      if (clusterIdx < clusters.length - 1) {
+      if (clusterIdx < clusters.length - 1 && Math.random() > 0.7) {
+        const spokeNode = generatedNodes[currentNodeIndex + hubCount + 1];
         const nextClusterStart = currentNodeIndex + nodeCount;
-        const nextCluster = clusters[clusterIdx + 1];
-        const nextHubCount = nextCluster.nodeCount > 8 ? 2 : 1;
-        const nextSpokeNodes = generatedNodes.slice(
-          nextClusterStart + nextHubCount,
-          nextClusterStart + Math.min(nextHubCount + 2, nextCluster.nodeCount)
-        );
+        const nextHubCount = 1;
+        const nextSpokeNode = generatedNodes[nextClusterStart + nextHubCount];
         
-        // Create 2-3 connections between cluster spokes
-        spokeNodes.slice(0, 2).forEach((spoke, idx) => {
-          if (nextSpokeNodes[idx] && Math.random() > 0.5) {
-            generatedEdges.push({ from: spoke, to: nextSpokeNodes[idx] });
-          }
-        });
+        if (spokeNode && nextSpokeNode) {
+          generatedEdges.push({ from: spokeNode, to: nextSpokeNode });
+        }
       }
       
       currentNodeIndex += nodeCount;
