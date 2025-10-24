@@ -18,6 +18,8 @@ const Index = () => {
       <main>
         <Hero />
 
+        <WhatWhyHow />
+
         {/* Three Mode Cards Section */}
         <section className="relative py-20">
           <div className="container mx-auto px-6">
@@ -73,7 +75,6 @@ const Index = () => {
           </div>
         </section>
 
-        <WhatWhyHow />
         <UseCases />
         <Features />
         <CollectionsShowcase />
