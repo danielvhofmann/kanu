@@ -19,17 +19,19 @@ interface Edge {
 
 function FloatingNetwork({ layer }: { layer: number }) {
   const { nodes, edges } = useMemo(() => {
-    // Offset clusters based on layer to avoid overlap
-    const layerOffset = (layer - 1) * 8;
+    // Offset clusters significantly based on layer to avoid overlap
+    const layerOffsetX = (layer - 1) * 15;
+    const layerOffsetY = (layer - 1) * 5;
     
     // Create varied, closer clusters with safer positioning (away from edges)
+    // Each layer gets distinct positioning
     const clusters = [
-      { x: 25 + layerOffset, y: 35, nodeCount: 9, hubRadius: 6 },   // Large left cluster
-      { x: 45 + layerOffset, y: 28, nodeCount: 5, hubRadius: 5 },   // Small top-middle
-      { x: 60 + layerOffset, y: 40, nodeCount: 7, hubRadius: 5.5 }, // Medium right cluster
-      { x: 32 + layerOffset, y: 58, nodeCount: 6, hubRadius: 5 },   // Medium bottom-left
-      { x: 52 + layerOffset, y: 68, nodeCount: 4, hubRadius: 4.5 }, // Small bottom-middle
-      { x: 72 + layerOffset, y: 60, nodeCount: 6, hubRadius: 5 },   // Medium bottom-right
+      { x: 25 + layerOffsetX, y: 35 + layerOffsetY, nodeCount: 9, hubRadius: 6 },   // Large left cluster
+      { x: 45 + layerOffsetX, y: 28 + layerOffsetY, nodeCount: 5, hubRadius: 5 },   // Small top-middle
+      { x: 60 + layerOffsetX, y: 40 + layerOffsetY, nodeCount: 7, hubRadius: 5.5 }, // Medium right cluster
+      { x: 32 + layerOffsetX, y: 58 + layerOffsetY, nodeCount: 6, hubRadius: 5 },   // Medium bottom-left
+      { x: 52 + layerOffsetX, y: 68 + layerOffsetY, nodeCount: 4, hubRadius: 4.5 }, // Small bottom-middle
+      { x: 72 + layerOffsetX, y: 60 + layerOffsetY, nodeCount: 6, hubRadius: 5 },   // Medium bottom-right
     ];
     
     const generatedNodes: Node[] = [];
