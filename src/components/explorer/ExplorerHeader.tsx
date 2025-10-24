@@ -2,6 +2,7 @@ import { Menu, User, Search, Loader2, ArrowLeft, Upload } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -75,8 +76,11 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
 
   return (
     <header className="border-b border-border bg-card sticky top-0 z-50 relative">
-      <div className="px-6 py-1 flex items-center gap-6">
-        {/* Search Bar - Top Priority */}
+      <div className="px-6 py-1 flex items-center gap-4">
+        {/* Sidebar Trigger */}
+        <SidebarTrigger />
+        
+        {/* Search Bar */}
         <div ref={wrapperRef} className="flex-1 max-w-2xl relative">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
