@@ -23,8 +23,27 @@ export const Auth = () => {
 
     try {
       if (isLogin) {
+        let loginEmail = email;
+        
+        // Check if input is username (no @ symbol)
+        if (!email.includes('@')) {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('username', email)
+            .maybeSingle();
+
+          if (profileError || !profile) {
+            toast.error('Username not found');
+            setIsLoading(false);
+            return;
+          }
+          
+          loginEmail = profile.email;
+        }
+
         const { error } = await supabase.auth.signInWithPassword({
-          email,
+          email: loginEmail,
           password,
         });
 
@@ -94,13 +113,13 @@ export const Auth = () => {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{isLogin ? 'Email or Username' : 'Email'}</Label>
               <Input
                 id="email"
-                type="email"
+                type={isLogin ? "text" : "email"}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
+                placeholder={isLogin ? "Enter your email or username" : "Enter your email"}
                 required
                 disabled={isLoading}
               />
