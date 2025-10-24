@@ -4,7 +4,7 @@ import { Features } from "@/components/Features";
 import { UseCases } from "@/components/UseCases";
 import { Footer } from "@/components/Footer";
 import { useNavigate } from "react-router-dom";
-import { Search, Pencil } from "lucide-react";
+import { Search, Pencil, Share2 } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -14,10 +14,10 @@ const Index = () => {
       <main>
         <Hero />
 
-        {/* Two Mode Cards Section */}
+        {/* Three Mode Cards Section */}
         <section className="relative py-20">
           <div className="container mx-auto px-6">
-            <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
               <ModeCard
                 icon={Search}
                 title="Explorer Mode"
@@ -48,6 +48,22 @@ const Index = () => {
                 onCtaClick={() => navigate('/editor')}
                 gradient="from-secondary/10 to-primary/5"
                 delay={0.4}
+              />
+
+              <ModeCard
+                icon={Share2}
+                title="Collections"
+                description="Explore shared networks"
+                features={[
+                  "Browse publicly shared knowledge graphs",
+                  "Discover community-created networks",
+                  "Get inspired by others' work",
+                  "Save and remix shared collections"
+                ]}
+                ctaText="View Collections"
+                onCtaClick={() => navigate('/collections')}
+                gradient="from-accent/10 to-secondary/5"
+                delay={0.6}
               />
             </div>
           </div>
