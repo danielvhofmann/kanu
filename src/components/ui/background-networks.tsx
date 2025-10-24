@@ -43,7 +43,7 @@ function FloatingNetwork({ layer }: { layer: number }) {
   }, [layer]);
 
   return (
-    <div className="absolute inset-0 pointer-events-none opacity-30">
+    <div className="absolute inset-0 pointer-events-none opacity-50">
       <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
         <title>Network Background Layer {layer}</title>
         
@@ -56,8 +56,8 @@ function FloatingNetwork({ layer }: { layer: number }) {
             x2={edge.to.x}
             y2={edge.to.y}
             stroke="currentColor"
-            strokeWidth={0.1}
-            strokeOpacity={0.2}
+            strokeWidth={0.2}
+            strokeOpacity={0.4}
             initial={{ pathLength: 0 }}
             animate={{
               pathLength: [0, 1, 0],
@@ -81,9 +81,9 @@ function FloatingNetwork({ layer }: { layer: number }) {
             key={`node-${layer}-${node.id}`}
             cx={node.x}
             cy={node.y}
-            r={node.size / 10}
+            r={node.size / 8}
             fill="currentColor"
-            fillOpacity={0.4}
+            fillOpacity={0.6}
             initial={{ scale: 0.8 }}
             animate={{
               scale: [0.8, 1.2, 0.8],
@@ -106,13 +106,13 @@ function FloatingNetwork({ layer }: { layer: number }) {
 export function BackgroundNetworks() {
   return (
     <>
-      <div className="absolute inset-0 text-primary/20">
+      <div className="absolute inset-0 text-primary/40">
         <FloatingNetwork layer={1} />
       </div>
-      <div className="absolute inset-0 text-secondary/20">
+      <div className="absolute inset-0 text-secondary/40">
         <FloatingNetwork layer={2} />
       </div>
-      <div className="absolute inset-0 text-accent/20">
+      <div className="absolute inset-0 text-accent/30">
         <FloatingNetwork layer={3} />
       </div>
     </>
