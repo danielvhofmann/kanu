@@ -195,9 +195,9 @@ export const KnowledgeGraph = ({
       generateBioSummary(node);
     }
     
+    // DO NOT zoom - just center gently without zoom
     if (graphRef.current) {
-      graphRef.current.centerAt(node.x, node.y, 1000);
-      graphRef.current.zoom(3, 1000);
+      graphRef.current.centerAt(node.x, node.y, 500);
     }
   }, [graphData.nodes, personId]);
 
@@ -294,8 +294,8 @@ export const KnowledgeGraph = ({
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Graph */}
-        <div className="flex-1 relative bg-card">
+        {/* Graph - Use calc to leave room for right panel */}
+        <div className="flex-1 min-w-0 relative bg-card">
           <ForceGraph2D
             ref={graphRef}
             graphData={graphData}
@@ -323,6 +323,15 @@ export const KnowledgeGraph = ({
               const fontSize = 12 / globalScale;
               ctx.font = `${fontSize}px Sans-Serif`;
               
+              // Highlight selected node with a ring
+              if (selectedNode && node.id === selectedNode.id) {
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, node.val + 3, 0, 2 * Math.PI);
+                ctx.strokeStyle = node.color;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+              }
+              
               // Draw node
               ctx.beginPath();
               ctx.arc(node.x, node.y, node.val, 0, 2 * Math.PI);
@@ -341,8 +350,8 @@ export const KnowledgeGraph = ({
           />
         </div>
 
-        {/* Info Panel - Always visible */}
-        <div className="w-96 border-l border-border bg-card overflow-y-auto">
+        {/* Info Panel - Always visible with fixed width */}
+        <div className="w-96 flex-shrink-0 border-l border-border bg-card overflow-y-auto">
           <div className="p-6 space-y-6">
             {selectedNode ? (
               <>
