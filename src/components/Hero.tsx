@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Network } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import heroImage from "@/assets/hero-network.jpg";
+import heroImage from "@/assets/hero-network-clarity.jpg";
 import { DemoPresentation } from "./DemoPresentation";
 
 export const Hero = () => {
