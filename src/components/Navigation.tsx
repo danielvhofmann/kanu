@@ -19,30 +19,24 @@ export const Navigation = () => {
           
           {/* Navigation links */}
           <div className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-sm text-foreground hover:text-primary transition-colors duration-300">
-              Features
+            <a href="#what" className="text-sm text-foreground hover:text-primary transition-colors duration-300">
+              What
             </a>
-            <a href="#use-cases" className="text-sm text-foreground hover:text-primary transition-colors duration-300">
-              Use Cases
+            <a href="#why" className="text-sm text-foreground hover:text-primary transition-colors duration-300">
+              Why
             </a>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/explorer')} className="text-sm">
-              Explorer Mode
-            </Button>
-            <a href="#community" className="text-sm text-foreground hover:text-primary transition-colors duration-300">
-              Community
-            </a>
-            <a href="#docs" className="text-sm text-foreground hover:text-primary transition-colors duration-300">
-              Docs
+            <a href="#how" className="text-sm text-foreground hover:text-primary transition-colors duration-300">
+              How
             </a>
           </div>
           
           {/* CTA buttons */}
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => navigate('/auth')}>
-              Sign In
+              Login
             </Button>
-            <Button variant="default" size="sm" onClick={() => navigate('/auth')} className="bg-primary hover:bg-primary-light">
-              Register
+            <Button variant="default" size="sm" onClick={() => navigate('/auth')}>
+              Sign Up
             </Button>
           </div>
         </div>

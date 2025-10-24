@@ -1,5 +1,7 @@
+import { Navigation } from "@/components/Navigation";
 import { Hero } from "@/components/Hero";
 import { ModeCard } from "@/components/ModeCard";
+import { WhatWhyHow } from "@/components/WhatWhyHow";
 import { Features } from "@/components/Features";
 import { UseCases } from "@/components/UseCases";
 import { Footer } from "@/components/Footer";
@@ -11,6 +13,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Navigation />
       <main>
         <Hero />
 
@@ -69,6 +72,7 @@ const Index = () => {
           </div>
         </section>
 
+        <WhatWhyHow />
         <UseCases />
         <Features />
       </main>
