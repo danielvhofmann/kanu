@@ -31,7 +31,7 @@ export const BuilderFeatures = () => {
           {builderFeatures.map((feature, index) => (
             <div
               key={feature.title}
-              className="group relative bg-card border border-border/50 rounded-2xl p-8 hover:shadow-lg transition-all duration-500 hover:-translate-y-1 animate-fade-in"
+              className="group relative bg-card border border-border/50 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 animate-fade-in"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10`} />

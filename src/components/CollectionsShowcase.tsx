@@ -78,7 +78,7 @@ export const CollectionsShowcase = () => {
           {collectionExamples.map((collection, index) => (
             <Card
               key={collection.title}
-              className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-fade-in bg-card border-border/50 cursor-pointer"
+              className="overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 animate-fade-in bg-card border-border/50 cursor-pointer"
               style={{ animationDelay: `${index * 0.1}s` }}
               onClick={() => setSelectedCollection(collection)}
             >

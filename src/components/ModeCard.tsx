@@ -24,7 +24,7 @@ export const ModeCard = ({
 }: ModeCardProps) => {
   return (
     <div
-      className="group relative bg-card border border-border/50 rounded-3xl p-10 hover:border-primary/30 transition-all duration-500 hover:shadow-glow animate-fade-in flex flex-col"
+      className="group relative bg-card border border-border/50 rounded-3xl p-10 hover:border-primary/30 transition-all duration-500 shadow-lg hover:shadow-glow animate-fade-in flex flex-col"
       style={{ animationDelay: `${delay}s` }}
     >
       <div className={`absolute inset-0 bg-gradient-to-br ${gradient} rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10`} />

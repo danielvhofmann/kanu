@@ -68,7 +68,7 @@ export const UseCases = () => {
               <div
                 key={useCase.title}
                 onClick={() => navigate(`/editor?template=${useCase.template}`)}
-                className="bg-card border border-border/50 rounded-2xl p-8 hover:border-primary/30 transition-all duration-500 hover:shadow-md animate-fade-in cursor-pointer group"
+                className="bg-card border border-border/50 rounded-2xl p-8 hover:border-primary/30 transition-all duration-500 shadow-lg hover:shadow-2xl animate-fade-in cursor-pointer group"
                 style={{ animationDelay: `${index * 0.15}s` }}
               >
                 <div className={`inline-flex items-center justify-center w-14 h-14 rounded-xl ${useCase.bg} mb-6`}>
