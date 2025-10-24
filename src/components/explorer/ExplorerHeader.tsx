@@ -72,7 +72,7 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack }: Explorer
   };
 
   return (
-    <header className="border-b border-border bg-card sticky top-0 z-50">
+    <header className="border-b border-border bg-card sticky top-0 z-50 relative">
       <div className="px-6 h-16 flex items-center gap-6">
         {/* Left: Back, Menu and Branding */}
         <div className="flex items-center gap-3">
@@ -98,7 +98,7 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack }: Explorer
               placeholder={`Search... (currently viewing ${currentPersonName})`}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="pl-9 pr-9 h-10 bg-secondary/50 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-primary"
+              className="pl-9 pr-9 h-10 bg-secondary/50 focus-visible:ring-0 focus-visible:ring-offset-0 border-border focus:border-border"
             />
             {isLoading && (
               <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground animate-spin" />
@@ -120,12 +120,12 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack }: Explorer
             </div>
           )}
         </div>
-
-        {/* Right: User Icon */}
-        <button className="hover:bg-accent rounded-full transition-colors">
-          <User className="w-5 h-5" />
-        </button>
       </div>
+
+      {/* Right: User Icon - Absolutely positioned */}
+      <button className="absolute top-4 right-6 p-2 hover:bg-accent rounded-full transition-colors">
+        <User className="w-5 h-5" />
+      </button>
     </header>
   );
 };

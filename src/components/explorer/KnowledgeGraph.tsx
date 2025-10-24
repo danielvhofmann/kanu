@@ -285,7 +285,7 @@ export const KnowledgeGraph = ({
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-screen overflow-hidden bg-background">
       {/* Header */}
       <ExplorerHeader 
         currentPersonName={personName}
@@ -352,7 +352,7 @@ export const KnowledgeGraph = ({
         </div>
 
         {/* Info Panel - Always visible with fixed width */}
-        <div className="w-96 flex-shrink-0 border-l border-border bg-card overflow-y-auto">
+        <div className="w-96 h-full flex-shrink-0 border-l border-border bg-card overflow-y-auto">
           <div className="p-6 space-y-6">
             {selectedNode ? (
               <>
@@ -361,7 +361,7 @@ export const KnowledgeGraph = ({
                   <img 
                     src={selectedNode.imageUrl} 
                     alt={selectedNode.name}
-                    className="w-48 h-64 object-cover rounded-lg mx-auto"
+                    className="w-48 h-48 object-cover rounded-2xl mx-auto"
                   />
                 )}
                 
