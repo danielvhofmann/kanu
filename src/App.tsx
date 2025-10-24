@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Editor from "./pages/Editor";
 import Auth from "./pages/Auth";
@@ -28,10 +29,10 @@ function AppContent() {
       )}
       <Routes>
         <Route path="/" element={<Index />} />
-        <Route path="/editor" element={<Editor />} />
-        <Route path="/explorer" element={<Explorer />} />
-        <Route path="/collections" element={<Collections />} />
         <Route path="/auth" element={<Auth />} />
+        <Route path="/editor" element={<ProtectedRoute><Editor /></ProtectedRoute>} />
+        <Route path="/explorer" element={<ProtectedRoute><Explorer /></ProtectedRoute>} />
+        <Route path="/collections" element={<ProtectedRoute><Collections /></ProtectedRoute>} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
