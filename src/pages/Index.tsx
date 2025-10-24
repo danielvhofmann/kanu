@@ -2,7 +2,8 @@ import { Navigation } from "@/components/Navigation";
 import { Hero } from "@/components/Hero";
 import { ModeCard } from "@/components/ModeCard";
 import { WhatWhyHow } from "@/components/WhatWhyHow";
-import { Features } from "@/components/Features";
+import { ExplorerFeatures } from "@/components/ExplorerFeatures";
+import { BuilderFeatures } from "@/components/BuilderFeatures";
 import { UseCases } from "@/components/UseCases";
 import { CollectionsShowcase } from "@/components/CollectionsShowcase";
 import { Footer } from "@/components/Footer";
@@ -75,8 +76,9 @@ const Index = () => {
           </div>
         </section>
 
+        <ExplorerFeatures />
+        <BuilderFeatures />
         <UseCases />
-        <Features />
         <CollectionsShowcase />
       </main>
       <Footer />
