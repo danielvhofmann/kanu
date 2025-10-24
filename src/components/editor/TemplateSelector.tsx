@@ -6,7 +6,7 @@ import {
   DialogTitle 
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Users, GitBranch, Brain, Server, Sparkles } from 'lucide-react';
+import { Users, GitBranch, Brain, Server, Sparkles, Upload } from 'lucide-react';
 import { Node, Edge } from 'reactflow';
 import { getTemplate, type TemplateType } from '@/lib/templates';
 
@@ -14,10 +14,17 @@ interface TemplateSelectorProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelect: (nodes: Node[], edges: Edge[]) => void;
+  onImportData?: () => void;
 }
 
-export const TemplateSelector = ({ open, onOpenChange, onSelect }: TemplateSelectorProps) => {
+export const TemplateSelector = ({ open, onOpenChange, onSelect, onImportData }: TemplateSelectorProps) => {
   const templates = [
+    {
+      id: 'import',
+      name: 'Import Data',
+      description: 'Use an existing CSV or XLSX dataset',
+      icon: Upload,
+    },
     {
       id: 'custom',
       name: 'Start from Scratch',
@@ -51,15 +58,19 @@ export const TemplateSelector = ({ open, onOpenChange, onSelect }: TemplateSelec
   ];
 
   const handleSelectTemplate = (templateId: string) => {
-    if (templateId === 'custom') {
+    if (templateId === 'import') {
+      onOpenChange(false);
+      onImportData?.();
+    } else if (templateId === 'custom') {
       onSelect([], []);
+      onOpenChange(false);
     } else {
       const template = getTemplate(templateId as TemplateType);
       if (template) {
         onSelect(template.nodes, template.edges);
       }
+      onOpenChange(false);
     }
-    onOpenChange(false);
   };
 
   return (

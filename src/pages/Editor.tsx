@@ -3,6 +3,7 @@ import { Node, Edge, Connection, MarkerType } from 'reactflow';
 import { EditorToolbar } from '@/components/editor/EditorToolbar';
 import { EditorSidebar } from '@/components/editor/EditorSidebar';
 import { TemplateSelector } from '@/components/editor/TemplateSelector';
+import { ImportDialog } from '@/components/editor/ImportDialog';
 import { NetworkCanvas } from '@/components/editor/NetworkCanvas';
 import { ColorControls } from '@/components/editor/ColorControls';
 import { AIChat } from '@/components/editor/AIChat';
@@ -32,6 +33,7 @@ const Editor = () => {
   const [nodes, setNodes] = useState<Node[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
   const [selectedElement, setSelectedElement] = useState<Node | Edge | null>(null);
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [isSketchMode, setIsSketchMode] = useState(false);
   const [backgroundColor, setBackgroundColor] = useState('hsl(0, 0%, 99%)');
@@ -126,7 +128,7 @@ const Editor = () => {
         templateLoadedRef.current = true;
       }
     } else if (!templateType && nodes.length === 0 && !templateLoadedRef.current) {
-      setShowImportDialog(true);
+      setShowTemplateSelector(true);
     }
   }, [templateType]);
 
@@ -677,7 +679,7 @@ const Editor = () => {
           />
           <EditorToolbar 
             onAddNode={addNode} 
-            onImport={() => setShowImportDialog(true)}
+            onImport={() => setShowTemplateSelector(true)}
             onExport={handleExport}
             nodeShape={defaultNodeShape}
             onNodeShapeChange={applyNodeShapeToAll}
@@ -761,9 +763,17 @@ const Editor = () => {
 
       {/* Template Selector Dialog */}
       <TemplateSelector
+        open={showTemplateSelector}
+        onOpenChange={setShowTemplateSelector}
+        onSelect={handleImport}
+        onImportData={() => setShowImportDialog(true)}
+      />
+      
+      {/* Import Data Dialog */}
+      <ImportDialog
         open={showImportDialog}
         onOpenChange={setShowImportDialog}
-        onSelect={handleImport}
+        onImport={handleImport}
       />
     </div>
   );
