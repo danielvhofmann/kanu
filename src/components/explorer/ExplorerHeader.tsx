@@ -98,7 +98,7 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack }: Explorer
               placeholder={`Search... (currently viewing ${currentPersonName})`}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="pl-9 pr-9 h-10 bg-secondary/50"
+              className="pl-9 pr-9 h-10 bg-secondary/50 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-primary"
             />
             {isLoading && (
               <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground animate-spin" />
@@ -122,7 +122,7 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack }: Explorer
         </div>
 
         {/* Right: User Icon */}
-        <button className="p-2 hover:bg-accent rounded-full transition-colors">
+        <button className="hover:bg-accent rounded-full transition-colors">
           <User className="w-5 h-5" />
         </button>
       </div>

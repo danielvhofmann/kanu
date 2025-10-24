@@ -3,7 +3,7 @@ import ForceGraph2D from "react-force-graph-2d";
 import * as d3 from "d3-force";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, ExternalLink, ChevronDown } from "lucide-react";
+import { Loader2, ExternalLink, ChevronDown, ChevronRight } from "lucide-react";
 import { Timeline } from "./Timeline";
 import { ExplorerHeader } from "./ExplorerHeader";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -73,6 +73,7 @@ export const KnowledgeGraph = ({
   const [bioSummary, setBioSummary] = useState<string>("");
   const [isLoadingExplanation, setIsLoadingExplanation] = useState(false);
   const [showTimeline, setShowTimeline] = useState(true);
+  const [isBioExpanded, setIsBioExpanded] = useState(false);
 
   const handlePersonChange = (newPersonId: string, newPersonName: string) => {
     setPersonId(newPersonId);
@@ -360,7 +361,7 @@ export const KnowledgeGraph = ({
                   <img 
                     src={selectedNode.imageUrl} 
                     alt={selectedNode.name}
-                    className="w-full aspect-[3/4] object-cover rounded-2xl shadow-lg"
+                    className="w-48 h-64 object-cover rounded-lg mx-auto"
                   />
                 )}
                 
@@ -472,10 +473,10 @@ export const KnowledgeGraph = ({
                       </div>
 
                       {/* Collapsible Biography */}
-                      <Collapsible>
-                        <CollapsibleTrigger className="flex items-center justify-between w-full py-3 border-t text-sm hover:bg-accent/50 transition-colors rounded-lg px-2">
-                          <span className="font-medium">Who is {selectedNode.name}?</span>
-                          <ChevronDown className="w-4 h-4 transition-transform duration-200 data-[state=open]:rotate-180" />
+                      <Collapsible open={isBioExpanded} onOpenChange={setIsBioExpanded}>
+                        <CollapsibleTrigger className="flex items-center gap-2 w-full py-3 border-t text-sm hover:bg-accent/50 transition-colors rounded-lg px-2">
+                          {isBioExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                          <span className="font-medium">Who was {selectedNode.name}?</span>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                           <div className="pt-3 pb-2 space-y-3">
