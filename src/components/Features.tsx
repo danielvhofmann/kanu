@@ -64,9 +64,6 @@ export const Features = () => {
         
         {/* Explorer Mode Features */}
         <div className="mb-20">
-          <h3 className="text-3xl font-extralight text-center mb-10 text-foreground">
-            Explorer Mode Features
-          </h3>
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {explorerFeatures.map((feature, index) => (
               <div
