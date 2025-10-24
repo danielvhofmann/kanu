@@ -19,54 +19,75 @@ interface Edge {
 
 function FloatingNetwork({ layer }: { layer: number }) {
   const { nodes, edges } = useMemo(() => {
-    // Generate random nodes with initial and target positions
-    const nodeCount = 12 + layer * 3;
-    const generatedNodes: Node[] = Array.from({ length: nodeCount }, (_, i) => {
-      // Initial random position - closer together
-      const initialX = 30 + Math.random() * 40;
-      const initialY = 30 + Math.random() * 40;
+    // Generate random nodes with hub-and-spoke clusters
+    const clusterCount = 4;
+    const nodesPerCluster = 4; // 1 hub + 3 spokes
+    const nodeCount = clusterCount * nodesPerCluster;
+    
+    // Cluster centers positioned away from middle
+    const clusterCenters = [
+      { x: 25, y: 25 },
+      { x: 75, y: 25 },
+      { x: 25, y: 75 },
+      { x: 75, y: 75 }
+    ];
+    
+    const generatedNodes: Node[] = [];
+    
+    for (let c = 0; c < clusterCount; c++) {
+      const center = clusterCenters[c];
       
-      // Target position - create distinct clusters
-      const clusterCount = 3;
-      const cluster = i % clusterCount;
-      const nodesPerCluster = Math.ceil(nodeCount / clusterCount);
-      const indexInCluster = Math.floor(i / clusterCount);
+      // Create hub node (first node in each cluster)
+      const hubInitialX = center.x + (Math.random() - 0.5) * 60;
+      const hubInitialY = center.y + (Math.random() - 0.5) * 60;
       
-      // Cluster centers
-      const clusterCenters = [
-        { x: 30, y: 40 },
-        { x: 70, y: 35 },
-        { x: 50, y: 70 }
-      ];
-      
-      const center = clusterCenters[cluster];
-      const angle = (indexInCluster / nodesPerCluster) * Math.PI * 2;
-      const radius = 8 + Math.random() * 8;
-      const targetX = center.x + Math.cos(angle) * radius;
-      const targetY = center.y + Math.sin(angle) * radius;
-      
-      return {
-        id: i,
-        x: initialX,
-        y: initialY,
-        targetX,
-        targetY,
-        size: 2 + Math.random() * 3,
-      };
-    });
-
-    // Generate edges within and between clusters
-    const generatedEdges: Edge[] = [];
-    generatedNodes.forEach((node, i) => {
-      generatedNodes.slice(i + 1).forEach((otherNode) => {
-        const distance = Math.sqrt(
-          Math.pow(node.targetX - otherNode.targetX, 2) + Math.pow(node.targetY - otherNode.targetY, 2)
-        );
-        if (distance < 20 && Math.random() > 0.5) {
-          generatedEdges.push({ from: node, to: otherNode });
-        }
+      generatedNodes.push({
+        id: c * nodesPerCluster,
+        x: hubInitialX,
+        y: hubInitialY,
+        targetX: center.x,
+        targetY: center.y,
+        size: 3 + Math.random() * 2, // Hub nodes slightly larger
       });
-    });
+      
+      // Create spoke nodes around the hub
+      for (let s = 1; s < nodesPerCluster; s++) {
+        const angle = (s / (nodesPerCluster - 1)) * Math.PI * 2;
+        const radius = 12 + Math.random() * 6;
+        
+        const spokeInitialX = center.x + (Math.random() - 0.5) * 60;
+        const spokeInitialY = center.y + (Math.random() - 0.5) * 60;
+        
+        generatedNodes.push({
+          id: c * nodesPerCluster + s,
+          x: spokeInitialX,
+          y: spokeInitialY,
+          targetX: center.x + Math.cos(angle) * radius,
+          targetY: center.y + Math.sin(angle) * radius,
+          size: 2 + Math.random() * 2,
+        });
+      }
+    }
+
+    // Generate edges: spoke nodes connect to their hub
+    const generatedEdges: Edge[] = [];
+    
+    for (let c = 0; c < clusterCount; c++) {
+      const hubIndex = c * nodesPerCluster;
+      const hubNode = generatedNodes[hubIndex];
+      
+      // Connect all spokes to the hub
+      for (let s = 1; s < nodesPerCluster; s++) {
+        const spokeNode = generatedNodes[hubIndex + s];
+        generatedEdges.push({ from: hubNode, to: spokeNode });
+      }
+      
+      // Occasionally connect between clusters (10% chance)
+      if (c < clusterCount - 1 && Math.random() > 0.9) {
+        const nextHubNode = generatedNodes[(c + 1) * nodesPerCluster];
+        generatedEdges.push({ from: hubNode, to: nextHubNode });
+      }
+    }
 
     return { nodes: generatedNodes, edges: generatedEdges };
   }, [layer]);
