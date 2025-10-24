@@ -345,7 +345,30 @@ export const KnowledgeGraph = ({
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden relative">
         {/* Graph - Use calc to leave room for right panel */}
-        <div className="flex-1 min-w-0 relative bg-card z-0">
+        <div className="flex-1 min-w-0 relative bg-card">
+          {/* Timeline - Positioned absolutely at bottom */}
+          {timelineEvents.length > 0 && (
+            <div className="absolute bottom-0 left-0 right-0 z-20">
+              <Collapsible open={showTimeline} onOpenChange={setShowTimeline}>
+                <div className="border-t border-border bg-card/95 backdrop-blur-sm">
+                  <CollapsibleTrigger className="w-full px-6 py-2 flex items-center justify-between hover:bg-accent/50 transition-colors">
+                    <span className="text-sm font-medium">Timeline ({timelineEvents.length} events)</span>
+                    <ChevronDown className="w-4 h-4 transition-transform duration-200 data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="max-h-32 overflow-y-auto">
+                      <Timeline 
+                        events={timelineEvents} 
+                        nodes={graphData.nodes}
+                        onEventClick={handleTimelineEventClick}
+                        selectedEvent={selectedTimelineEvent}
+                      />
+                    </div>
+                  </CollapsibleContent>
+                </div>
+              </Collapsible>
+            </div>
+          )}
           <ForceGraph2D
             ref={graphRef}
             graphData={graphData}
@@ -401,7 +424,7 @@ export const KnowledgeGraph = ({
         </div>
 
         {/* Info Panel - Always visible with fixed width */}
-        <div className="w-96 h-full flex-shrink-0 border-l border-border bg-card overflow-y-auto relative z-10">
+        <div className="w-96 h-full flex-shrink-0 border-l border-border bg-card overflow-y-auto z-10">
           <div className="p-6 space-y-6">
             {selectedNode ? (
               <>
@@ -623,26 +646,6 @@ export const KnowledgeGraph = ({
           </div>
         </div>
       </div>
-
-      {/* Timeline */}
-      {timelineEvents.length > 0 && (
-        <Collapsible open={showTimeline} onOpenChange={setShowTimeline}>
-          <div className="border-t border-border bg-card">
-            <CollapsibleTrigger className="w-full px-6 py-2 flex items-center justify-between hover:bg-accent/50 transition-colors">
-              <span className="text-sm font-medium">Timeline ({timelineEvents.length} events)</span>
-              <ChevronDown className="w-4 h-4 transition-transform duration-200 data-[state=open]:rotate-180" />
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <Timeline 
-                events={timelineEvents} 
-                nodes={graphData.nodes}
-                onEventClick={handleTimelineEventClick}
-                selectedEvent={selectedTimelineEvent}
-              />
-            </CollapsibleContent>
-          </div>
-        </Collapsible>
-      )}
     </div>
   );
 };
