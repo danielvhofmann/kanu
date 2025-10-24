@@ -112,24 +112,24 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
           )}
         </div>
 
-        {/* Right: Import Button and User Icon */}
-        <div className="flex items-center gap-2">
-          {onImportToBuilder && (
-            <Button 
-              variant="hero" 
-              size="sm"
-              onClick={onImportToBuilder}
-              className="gap-2"
-            >
-              <Upload className="w-4 h-4" />
-              Import to Builder
-            </Button>
-          )}
-          <button className="p-2 hover:bg-accent rounded-full transition-colors">
-            <User className="w-5 h-5" />
-          </button>
-        </div>
+        {/* Import Button */}
+        {onImportToBuilder && (
+          <Button 
+            variant="hero" 
+            size="sm"
+            onClick={onImportToBuilder}
+            className="gap-2"
+          >
+            <Upload className="w-4 h-4" />
+            Import to Builder
+          </Button>
+        )}
       </div>
+
+      {/* User Icon - Top Right */}
+      <button className="absolute top-1/2 -translate-y-1/2 right-6 p-2 hover:bg-accent rounded-full transition-colors">
+        <User className="w-5 h-5" />
+      </button>
     </header>
   );
 };
