@@ -119,10 +119,12 @@ export const KnowledgeGraph = ({
     if (!canvasRef.current) return;
 
     const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        setCanvasDimensions({ width, height });
-      }
+      requestAnimationFrame(() => {
+        for (const entry of entries) {
+          const { width, height } = entry.contentRect;
+          setCanvasDimensions({ width, height });
+        }
+      });
     });
 
     resizeObserver.observe(canvasRef.current);
@@ -395,7 +397,7 @@ export const KnowledgeGraph = ({
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden relative h-full">
+      <div className="flex-1 flex overflow-hidden relative h-full min-h-0">
         {/* Graph - Use calc to leave room for right panel */}
         <div ref={canvasRef} className="flex-1 relative bg-card overflow-hidden h-full">
           {/* Timeline Button - Positioned absolutely at bottom */}
