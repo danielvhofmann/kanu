@@ -101,7 +101,16 @@ export const KnowledgeGraph = ({
       const nodesWithColors = data.nodes.map((node: Node) => {
         const baseSize = 8 + (node.importanceScore || 0) / 100;
         // Make the main person 1.8x larger
-        const size = node.id === personId ? baseSize * 1.8 : baseSize;
+        const mainPersonSize = node.id === personId ? baseSize * 1.8 : baseSize;
+        
+        // Ensure no other node is bigger than the main person
+        // Find the main person's size first
+        const mainNode = data.nodes.find((n: Node) => n.id === personId);
+        const mainNodeBaseSize = mainNode ? 8 + (mainNode.importanceScore || 0) / 100 : baseSize;
+        const maxOtherNodeSize = mainNodeBaseSize * 1.8;
+        
+        const size = node.id === personId ? mainPersonSize : Math.min(baseSize, maxOtherNodeSize * 0.9);
+        
         return {
           ...node,
           color: categoryColors[node.category] || categoryColors.Other,
@@ -239,6 +248,17 @@ export const KnowledgeGraph = ({
       // Configure forces for better spacing
       fg.d3Force('charge').strength(-500);  // Increased repulsion
       fg.d3Force('link').distance(120);     // Increased link distance
+      
+      // Add collision force to prevent overlaps (nodes + label space)
+      fg.d3Force('collide', d3.forceCollide()
+        .radius((node: any) => {
+          // Add extra padding for label text below node
+          const labelHeight = 20; // Approximate height of label text
+          return node.val + labelHeight;
+        })
+        .strength(0.8)
+        .iterations(2)
+      );
       
       // Add bounding force
       fg.d3Force('bounds', () => {
