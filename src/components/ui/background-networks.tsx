@@ -252,13 +252,8 @@ function FloatingNetwork({ layer }: { layer: number }) {
 
 export function BackgroundNetworks() {
   return (
-    <>
-      <div className="absolute inset-0 text-cyan-400/40">
-        <FloatingNetwork layer={1} />
-      </div>
-      <div className="absolute inset-0 text-red-400/40">
-        <FloatingNetwork layer={2} />
-      </div>
-    </>
+    <div className="absolute inset-0 text-cyan-400/40">
+      <FloatingNetwork layer={1} />
+    </div>
   );
 }
