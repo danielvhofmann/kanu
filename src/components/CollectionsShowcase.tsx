@@ -65,8 +65,8 @@ export const CollectionsShowcase = () => {
       <div className="container mx-auto px-6">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-4xl lg:text-5xl font-light mb-6">
-            <span className="text-accent">Discover</span>{" "}
-            <span className="text-foreground">Collections</span>
+            <span className="text-foreground">Collections:</span>{" "}
+            <span className="text-accent">Discover</span>
           </h2>
           <p className="text-xl text-muted-foreground leading-relaxed">
             Discover inspiring network maps created by the community. 
