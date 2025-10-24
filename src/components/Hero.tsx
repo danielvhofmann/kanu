@@ -95,17 +95,6 @@ export const Hero = () => {
             </Button>
           </div>
           
-          {/* Trust indicators */}
-          <div className="flex items-center justify-center gap-8 pt-6 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span>No credit card required</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
-              <span>Free forever plan</span>
-            </div>
-          </div>
         </motion.div>
       </div>
     </section>
