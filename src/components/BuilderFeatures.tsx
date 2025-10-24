@@ -26,7 +26,7 @@ export const BuilderFeatures = () => {
     <section className="relative overflow-hidden bg-background">
       <div className="absolute inset-0 bg-gradient-subtle -z-10" />
       
-      <div className="container mx-auto px-6 mt-8">
+      <div className="container mx-auto px-6 pt-8">
         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {builderFeatures.map((feature, index) => (
             <div

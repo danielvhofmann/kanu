@@ -23,7 +23,7 @@ const explorerFeatures = [
 
 export const ExplorerFeatures = () => {
   return (
-    <section className="py-32 relative overflow-hidden bg-background">
+    <section className="py-32 pb-8 relative overflow-hidden bg-background">
       <div className="absolute inset-0 bg-gradient-subtle -z-10" />
       
       {/* Right side red glow */}
