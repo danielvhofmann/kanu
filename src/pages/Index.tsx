@@ -11,8 +11,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
-      <main className="pt-20">
+      <main>
         {/* Hero Section - Dual Mode */}
         <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
           {/* Subtle gradient background */}
