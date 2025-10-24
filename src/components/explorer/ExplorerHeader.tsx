@@ -75,24 +75,9 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
 
   return (
     <header className="border-b border-border bg-card sticky top-0 z-50 relative">
-      <div className="px-6 h-16 flex items-center gap-6">
-        {/* Left: Back, Menu and Branding */}
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={onBack}
-            className="p-2 hover:bg-accent rounded-lg transition-colors"
-            title="Back to search"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <button className="p-2 hover:bg-accent rounded-lg transition-colors">
-            <Menu className="w-5 h-5" />
-          </button>
-          <span className="font-semibold text-lg">corners</span>
-        </div>
-
-        {/* Center: Search Bar */}
-        <div ref={wrapperRef} className="flex-1 max-w-xl relative">
+      <div className="px-6 py-2 flex items-center gap-6">
+        {/* Search Bar - Top Priority */}
+        <div ref={wrapperRef} className="flex-1 max-w-2xl relative">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -122,24 +107,31 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
             </div>
           )}
         </div>
-      </div>
 
-      {/* Right: Import Button and User Icon - Absolutely positioned */}
-      <div className="absolute top-3 right-6 flex items-center gap-2">
-        {onImportToBuilder && (
-          <Button 
-            variant="hero" 
-            size="sm"
-            onClick={onImportToBuilder}
-            className="gap-2"
+        {/* Right: Back and Import Buttons */}
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={onBack}
+            className="p-2 hover:bg-accent rounded-lg transition-colors"
+            title="Back to search"
           >
-            <Upload className="w-4 h-4" />
-            Import to Builder
-          </Button>
-        )}
-        <button className="p-2 hover:bg-accent rounded-full transition-colors">
-          <User className="w-5 h-5" />
-        </button>
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          {onImportToBuilder && (
+            <Button 
+              variant="hero" 
+              size="sm"
+              onClick={onImportToBuilder}
+              className="gap-2"
+            >
+              <Upload className="w-4 h-4" />
+              Import to Builder
+            </Button>
+          )}
+          <button className="p-2 hover:bg-accent rounded-full transition-colors">
+            <User className="w-5 h-5" />
+          </button>
+        </div>
       </div>
     </header>
   );
