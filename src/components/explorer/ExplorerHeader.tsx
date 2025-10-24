@@ -76,19 +76,19 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
 
   return (
     <header className="border-b border-border bg-card sticky top-0 z-50">
-      <div className="px-6 py-1 flex items-center gap-4">
+      <div className="px-4 py-1 flex items-center gap-2">
         {/* Sidebar Trigger - Left */}
         <div className="flex-shrink-0">
           <SidebarTrigger />
         </div>
         
         {/* Search Bar - Center (flexible) */}
-        <div ref={wrapperRef} className="flex-1 min-w-0 max-w-2xl mx-auto relative">
+        <div ref={wrapperRef} className="flex-1 min-w-0 relative">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               type="text"
-              placeholder={`Search... (currently viewing ${currentPersonName})`}
+              placeholder="Search historical figures..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="pl-9 pr-9 h-10 bg-white border-border focus:border-border focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none w-full"
@@ -121,15 +121,14 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
               variant="hero" 
               size="sm"
               onClick={onImportToBuilder}
-              className="gap-2 h-8 text-sm"
+              className="gap-1.5 h-8 text-xs px-2.5"
             >
-              <Upload className="w-4 h-4" />
-              <span className="hidden sm:inline">Import to Builder</span>
-              <span className="sm:hidden">Import</span>
+              <Upload className="w-3.5 h-3.5" />
+              <span className="hidden lg:inline">Import</span>
             </Button>
           )}
-          <button className="p-2 hover:bg-accent rounded-full transition-colors">
-            <User className="w-5 h-5" />
+          <button className="p-1.5 hover:bg-accent rounded-full transition-colors">
+            <User className="w-4 h-4" />
           </button>
         </div>
       </div>
