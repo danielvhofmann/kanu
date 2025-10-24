@@ -17,19 +17,19 @@ const queryClient = new QueryClient();
 
 function AppHeader() {
   const location = useLocation();
-  const { currentPersonName, currentPersonId, onSearch, onImportToBuilder, clearCurrentPerson } = useExplorer();
+  const { currentPersonName, currentPersonId, searchHandler, importHandler, clearCurrentPerson } = useExplorer();
   
   const isExplorerWithPerson = location.pathname === '/explorer' && currentPersonId && currentPersonName;
 
   return (
     <header className="h-12 flex items-center border-b border-border/50 bg-background/80 backdrop-blur-lg sticky top-0 z-40 px-4">
       <SidebarTrigger />
-      {isExplorerWithPerson && onSearch && (
+      {isExplorerWithPerson && searchHandler && (
         <ExplorerSearchBar
           currentPersonName={currentPersonName}
-          onSearch={onSearch}
+          onSearch={searchHandler}
           onBack={clearCurrentPerson}
-          onImportToBuilder={onImportToBuilder}
+          onImportToBuilder={importHandler || undefined}
         />
       )}
     </header>

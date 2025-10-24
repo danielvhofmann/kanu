@@ -111,11 +111,12 @@ export const KnowledgeGraph = ({
     }
   };
 
-  // Register handlers in context
+  // Register handlers in context - only once on mount
   useEffect(() => {
     setSearchHandler(handlePersonChange);
     setImportHandler(handleImportToBuilder);
-  }, [graphData, personName, setSearchHandler, setImportHandler]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps - only set once on mount
 
   useEffect(() => {
     loadNetwork();
