@@ -1,4 +1,4 @@
-import { Home, Search, Pencil, HelpCircle, Settings, Network } from "lucide-react";
+import { Home, Search, Pencil, HelpCircle, Settings } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 import {
@@ -31,9 +31,8 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="text-black">
       <SidebarContent className="text-black">
         <SidebarGroup>
-          <SidebarGroupLabel className="flex items-center gap-2 text-black">
-            <Network className="h-4 w-4" />
-            {open && <span>corners</span>}
+          <SidebarGroupLabel className="text-black">
+            Navigation
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>

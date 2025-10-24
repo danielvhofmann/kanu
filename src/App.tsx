@@ -24,13 +24,13 @@ const App = () => (
           <div className="min-h-screen flex w-full">
             <AppSidebar />
             <main className="flex-1 flex flex-col">
-              <header className="h-12 flex items-center gap-3 border-b border-border/50 bg-background/80 backdrop-blur-lg sticky top-0 z-40 px-4">
-                <SidebarTrigger />
-                <div className="flex items-center gap-2">
+              <header className="h-12 flex items-center justify-between border-b border-border/50 bg-background/80 backdrop-blur-lg sticky top-0 z-40 px-4">
+                <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-gradient-hero flex items-center justify-center">
                     <Network className="w-4 h-4 text-white" strokeWidth={1.5} />
                   </div>
                   <span className="text-lg font-extralight tracking-tight">corners</span>
+                  <SidebarTrigger className="ml-2" />
                 </div>
               </header>
               <Routes>
