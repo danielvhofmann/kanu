@@ -19,60 +19,57 @@ interface Edge {
 
 function FloatingNetwork({ layer }: { layer: number }) {
   const { nodes, edges } = useMemo(() => {
-    // Create varied clusters with different sizes and hub counts
+    // Create varied, closer clusters for shorter edges
     const clusters = [
-      { x: 20, y: 30, nodeCount: 8, isMainHub: true },  // Large left cluster
-      { x: 50, y: 20, nodeCount: 5, isMainHub: false }, // Small top cluster
-      { x: 70, y: 35, nodeCount: 6, isMainHub: true },  // Medium right cluster
-      { x: 35, y: 60, nodeCount: 4, isMainHub: false }, // Small bottom-left
-      { x: 65, y: 70, nodeCount: 7, isMainHub: true },  // Medium bottom-right
+      { x: 22, y: 30, nodeCount: 9, hubRadius: 8 },   // Large left cluster
+      { x: 42, y: 22, nodeCount: 5, hubRadius: 6 },   // Small top-middle
+      { x: 58, y: 35, nodeCount: 7, hubRadius: 7 },   // Medium right cluster
+      { x: 30, y: 55, nodeCount: 6, hubRadius: 6 },   // Medium bottom-left
+      { x: 50, y: 65, nodeCount: 4, hubRadius: 5 },   // Small bottom-middle
+      { x: 70, y: 58, nodeCount: 6, hubRadius: 6 },   // Medium bottom-right
     ];
     
     const generatedNodes: Node[] = [];
-    const hubNodes: Node[] = []; // Track hub nodes for cross-connections
+    const hubNodes: Node[] = [];
     let nodeId = 0;
     
-    clusters.forEach((cluster, clusterIndex) => {
-      const { x: targetCenterX, y: targetCenterY, nodeCount, isMainHub } = cluster;
+    clusters.forEach((cluster) => {
+      const { x: targetCenterX, y: targetCenterY, nodeCount, hubRadius } = cluster;
       
-      // Swap diagonal positions for crossing movement
-      const initialCenterX = 100 - targetCenterX + (Math.random() - 0.5) * 20;
-      const initialCenterY = 100 - targetCenterY + (Math.random() - 0.5) * 20;
+      // Initial positions - completely random and chaotic across the whole canvas
+      const chaosSpread = 150;
       
-      // Create hub node(s)
-      const hubCount = isMainHub ? 2 : 1; // Main hubs have 2 central nodes
+      // Create 1-2 hub nodes based on cluster size
+      const hubCount = nodeCount > 6 ? 2 : 1;
       
       for (let h = 0; h < hubCount; h++) {
-        const hubInitialX = initialCenterX + (Math.random() - 0.5) * 25;
-        const hubInitialY = initialCenterY + (Math.random() - 0.5) * 25;
+        const hubInitialX = Math.random() * chaosSpread - 25;
+        const hubInitialY = Math.random() * chaosSpread - 25;
         
-        const hubOffset = h * 5; // Slight offset for second hub
+        const hubOffset = h * 3; // Small offset for second hub
         const hubNode = {
           id: nodeId++,
           x: hubInitialX,
           y: hubInitialY,
           targetX: targetCenterX + hubOffset,
           targetY: targetCenterY + hubOffset,
-          size: isMainHub ? 4 + Math.random() : 3 + Math.random(),
+          size: 3.5 + Math.random() * 1.5,
         };
         generatedNodes.push(hubNode);
         hubNodes.push(hubNode);
       }
       
-      // Create spoke nodes with organic distribution
+      // Create spoke nodes around the hub
       const spokeCount = nodeCount - hubCount;
       for (let s = 0; s < spokeCount; s++) {
-        // Create irregular angles and radii for organic look
-        const angleVariation = (Math.random() - 0.5) * Math.PI / 3;
-        const angle = (s / spokeCount) * Math.PI * 2 + angleVariation;
+        // Chaotic initial position
+        const spokeInitialX = Math.random() * chaosSpread - 25;
+        const spokeInitialY = Math.random() * chaosSpread - 25;
         
-        // Vary radius significantly for depth
-        const radiusVariation = Math.random() * 10;
-        const baseRadius = isMainHub ? 15 : 10;
-        const radius = baseRadius + radiusVariation + (s % 2) * 5;
-        
-        const spokeInitialX = initialCenterX + (Math.random() - 0.5) * 45;
-        const spokeInitialY = initialCenterY + (Math.random() - 0.5) * 45;
+        // Organized target position in tight formation
+        const angle = (s / spokeCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
+        const radiusVariation = Math.random() * 3;
+        const radius = hubRadius + radiusVariation;
         
         generatedNodes.push({
           id: nodeId++,
@@ -80,60 +77,56 @@ function FloatingNetwork({ layer }: { layer: number }) {
           y: spokeInitialY,
           targetX: targetCenterX + Math.cos(angle) * radius,
           targetY: targetCenterY + Math.sin(angle) * radius,
-          size: 1.5 + Math.random() * 2,
+          size: 1.5 + Math.random() * 1.5,
         });
       }
     });
 
-    // Generate edges with hub-spoke pattern + cross-cluster connections
+    // Generate edges with short connections only
     const generatedEdges: Edge[] = [];
     let currentNodeIndex = 0;
     
-    clusters.forEach((cluster, clusterIndex) => {
-      const { nodeCount, isMainHub } = cluster;
-      const hubCount = isMainHub ? 2 : 1;
+    clusters.forEach((cluster) => {
+      const { nodeCount } = cluster;
+      const hubCount = nodeCount > 6 ? 2 : 1;
       
-      // Get hub nodes for this cluster
       const clusterHubs = generatedNodes.slice(currentNodeIndex, currentNodeIndex + hubCount);
-      const mainHub = clusterHubs[0];
       
       // Connect hubs within cluster if there are 2
       if (hubCount === 2) {
         generatedEdges.push({ from: clusterHubs[0], to: clusterHubs[1] });
       }
       
-      // Connect spokes to hubs
+      // Connect spokes to nearest hub
       for (let s = hubCount; s < nodeCount; s++) {
         const spokeNode = generatedNodes[currentNodeIndex + s];
-        const targetHub = clusterHubs[s % hubCount]; // Distribute connections
+        const targetHub = clusterHubs[s % hubCount];
         generatedEdges.push({ from: targetHub, to: spokeNode });
         
-        // Occasionally connect spokes to each other for web effect
-        if (s > hubCount && Math.random() > 0.75) {
-          const prevSpoke = generatedNodes[currentNodeIndex + s - 1];
-          generatedEdges.push({ from: prevSpoke, to: spokeNode });
-        }
-        
-        // Some spokes connect to multiple hubs
-        if (hubCount === 2 && Math.random() > 0.7) {
-          const otherHub = clusterHubs[(s + 1) % hubCount];
-          generatedEdges.push({ from: otherHub, to: spokeNode });
+        // Connect some spokes to each other for web effect (only nearby)
+        if (s > hubCount + 1 && Math.random() > 0.7) {
+          const nearbySpoke = generatedNodes[currentNodeIndex + s - 1];
+          generatedEdges.push({ from: nearbySpoke, to: spokeNode });
         }
       }
       
       currentNodeIndex += nodeCount;
     });
     
-    // Add cross-cluster connections between hubs
+    // Add cross-cluster connections only between nearby hubs
     hubNodes.forEach((hub, i) => {
-      // Connect to 1-2 other hubs
-      const connectionCount = Math.random() > 0.6 ? 2 : 1;
-      for (let c = 0; c < connectionCount; c++) {
-        const targetIndex = (i + 1 + c * 2) % hubNodes.length;
-        if (targetIndex !== i && Math.random() > 0.3) {
-          generatedEdges.push({ from: hub, to: hubNodes[targetIndex] });
+      hubNodes.slice(i + 1).forEach((otherHub) => {
+        // Calculate distance in target positions
+        const distance = Math.sqrt(
+          Math.pow(hub.targetX - otherHub.targetX, 2) + 
+          Math.pow(hub.targetY - otherHub.targetY, 2)
+        );
+        
+        // Only connect if close enough (avoid long edges)
+        if (distance < 25 && Math.random() > 0.5) {
+          generatedEdges.push({ from: hub, to: otherHub });
         }
-      }
+      });
     });
 
     return { nodes: generatedNodes, edges: generatedEdges };
