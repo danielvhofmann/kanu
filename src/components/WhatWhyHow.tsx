@@ -1,4 +1,4 @@
-import { Network, Lightbulb, Zap } from "lucide-react";
+import { Zap } from "lucide-react";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
 import howItWorksImg from "@/assets/how-it-works.jpg";
@@ -63,11 +63,6 @@ export const WhatWhyHow = () => {
           <div className="max-w-5xl mx-auto">
             <div className="bg-card border border-border rounded-3xl p-8 md:p-12 shadow-lg">
               <div className="text-center mb-8">
-                <div className="flex justify-center mb-6">
-                  <div className="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center">
-                    <Lightbulb className="w-8 h-8 text-secondary" />
-                  </div>
-                </div>
                 <h2 className="text-4xl lg:text-5xl font-light mb-6">Why Use corners?</h2>
                 <p className="text-xl text-muted-foreground leading-relaxed mb-8">
                   Complex systems are everywhere—from organizational structures to historical events. 
