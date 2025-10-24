@@ -27,17 +27,6 @@ export const BuilderFeatures = () => {
       <div className="absolute inset-0 bg-gradient-subtle -z-10" />
       
       <div className="container mx-auto px-6">
-        <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
-          <h2 className="text-5xl font-extralight tracking-tight text-balance">
-            <span className="text-foreground">Builder Mode: </span>
-            <span className="text-secondary">Your Use Cases</span>
-          </h2>
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            Everything you need to build custom network maps—
-            with power and flexibility at your fingertips.
-          </p>
-        </div>
-        
         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {builderFeatures.map((feature, index) => (
             <div

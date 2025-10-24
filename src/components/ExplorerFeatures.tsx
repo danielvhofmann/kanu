@@ -33,7 +33,7 @@ export const ExplorerFeatures = () => {
         <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
           <h2 className="text-5xl font-extralight tracking-tight text-balance">
             <span className="text-foreground">Explore Mode: </span>
-            <span className="text-secondary">Your Use Cases</span>
+            <span className="text-primary">Your Use Cases</span>
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
             Everything you need to explore complex knowledge networks—

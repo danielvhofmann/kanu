@@ -55,7 +55,7 @@ export const UseCases = () => {
           <div className="text-center mb-20 space-y-4">
             <h2 className="text-5xl font-extralight tracking-tight text-balance">
               Builder Mode:{" "}
-              <span className="text-primary">Your Use Cases</span>
+              <span className="text-secondary">Your Use Cases</span>
             </h2>
             <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
               From strategists to researchers, NGOs to consultants—create powerful 
