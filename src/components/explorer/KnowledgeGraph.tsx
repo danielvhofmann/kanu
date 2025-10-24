@@ -67,6 +67,8 @@ export const KnowledgeGraph = ({
   const [personId, setPersonId] = useState(initialPersonId);
   const [personName, setPersonName] = useState(initialPersonName);
   const graphRef = useRef<any>();
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const [canvasDimensions, setCanvasDimensions] = useState({ width: 800, height: 600 });
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
   const [isLoading, setIsLoading] = useState(true);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -109,6 +111,21 @@ export const KnowledgeGraph = ({
       toast.error('Failed to import network');
     }
   };
+
+  // Track canvas dimensions with ResizeObserver
+  useEffect(() => {
+    if (!canvasRef.current) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        setCanvasDimensions({ width, height });
+      }
+    });
+
+    resizeObserver.observe(canvasRef.current);
+    return () => resizeObserver.disconnect();
+  }, []);
 
   useEffect(() => {
     loadNetwork();
@@ -153,11 +170,28 @@ export const KnowledgeGraph = ({
         setSelectedNode(mainNode);
         generateBioSummary(mainNode);
         
-        // Center graph after a short delay
+        // Center graph after a short delay with calculated zoom
         setTimeout(() => {
-          if (graphRef.current) {
+          if (graphRef.current && canvasDimensions.width > 0) {
+            // Calculate optimal zoom based on network spread and canvas size
+            const networkBounds = {
+              minX: Math.min(...nodesWithColors.map((n: Node) => n.x || 0)),
+              maxX: Math.max(...nodesWithColors.map((n: Node) => n.x || 0)),
+              minY: Math.min(...nodesWithColors.map((n: Node) => n.y || 0)),
+              maxY: Math.max(...nodesWithColors.map((n: Node) => n.y || 0))
+            };
+
+            const networkWidth = Math.max(networkBounds.maxX - networkBounds.minX, 100);
+            const networkHeight = Math.max(networkBounds.maxY - networkBounds.minY, 100);
+
+            const margin = 0.2; // 20% margin
+            const optimalZoomX = (canvasDimensions.width * (1 - margin)) / networkWidth;
+            const optimalZoomY = (canvasDimensions.height * (1 - margin)) / networkHeight;
+            const optimalZoom = Math.min(optimalZoomX, optimalZoomY, 3); // maxZoom = 3
+            const finalZoom = Math.max(optimalZoom, 1.5); // minZoom = 1.5
+
             graphRef.current.centerAt(0, 0, 1000);
-            graphRef.current.zoom(2, 1000);
+            graphRef.current.zoom(finalZoom, 1000);
           }
         }, 500);
       }
@@ -267,28 +301,44 @@ export const KnowledgeGraph = ({
     explainConnection(sourceName, targetName);
   };
 
+  // Configure forces based on canvas dimensions
   useEffect(() => {
-    if (graphRef.current) {
+    if (graphRef.current && canvasDimensions.width > 0) {
       const fg = graphRef.current;
       
-      // Configure forces for better spacing
-      fg.d3Force('charge').strength(-500);  // Increased repulsion
-      fg.d3Force('link').distance(120);     // Increased link distance
+      // Calculate dynamic scaling based on canvas area
+      const referenceArea = 1920 * 1080; // Reference screen
+      const canvasArea = canvasDimensions.width * canvasDimensions.height;
+      const areaScale = Math.sqrt(canvasArea / referenceArea);
+      
+      // Scale forces based on canvas size
+      const chargeStrength = -500 * areaScale;
+      const linkDistance = 120 * areaScale;
+      
+      fg.d3Force('charge').strength(chargeStrength);
+      fg.d3Force('link').distance(linkDistance);
       
       // Add collision force to prevent overlaps (nodes + label space)
       fg.d3Force('collide', d3.forceCollide()
         .radius((node: any) => {
-          // Add extra padding for label text below node
-          const labelHeight = 20; // Approximate height of label text
+          const labelHeight = 20;
           return node.val + labelHeight;
         })
         .strength(0.8)
         .iterations(2)
       );
       
-      // Add bounding force
+      // Calculate dynamic bounds (70% of canvas, centered at origin)
+      const boundsWidth = canvasDimensions.width * 0.35;
+      const boundsHeight = canvasDimensions.height * 0.35;
+      
       fg.d3Force('bounds', () => {
-        const bounds = { left: -350, right: 350, top: -300, bottom: 300 };
+        const bounds = { 
+          left: -boundsWidth, 
+          right: boundsWidth, 
+          top: -boundsHeight, 
+          bottom: boundsHeight 
+        };
         graphData.nodes.forEach((node: any) => {
           if (node.x < bounds.left) node.x = bounds.left;
           if (node.x > bounds.right) node.x = bounds.right;
@@ -297,7 +347,7 @@ export const KnowledgeGraph = ({
         });
       });
     }
-  }, [graphData]);
+  }, [graphData, canvasDimensions]);
 
   if (isLoading) {
     return (
@@ -345,7 +395,7 @@ export const KnowledgeGraph = ({
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden relative">
         {/* Graph - Use calc to leave room for right panel */}
-        <div className="flex-1 min-w-0 relative bg-card">
+        <div ref={canvasRef} className="flex-1 min-w-0 relative bg-card">
           {/* Timeline - Positioned absolutely at bottom */}
           {timelineEvents.length > 0 && (
             <div className="absolute bottom-0 left-0 right-0 z-20">
@@ -371,6 +421,8 @@ export const KnowledgeGraph = ({
           )}
           <ForceGraph2D
             ref={graphRef}
+            width={canvasDimensions.width}
+            height={canvasDimensions.height}
             graphData={graphData}
             nodeLabel="name"
             nodeColor="color"
