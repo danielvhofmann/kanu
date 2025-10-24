@@ -24,7 +24,7 @@ export const Hero = () => {
         >
           {/* Main headline */}
           <h1 className="text-7xl lg:text-8xl xl:text-9xl font-light leading-[0.95] text-balance">
-            {"Turn complexity into clarity.".split("").map((letter, i) => (
+            {"Turn complexity into ".split("").map((letter, i) => (
               <motion.span
                 key={i}
                 initial={{ y: 50, opacity: 0 }}
@@ -35,11 +35,30 @@ export const Hero = () => {
                   stiffness: 150,
                   damping: 25,
                 }}
-                className="inline-block"
+                className={letter === " " ? "inline-block w-[0.25em]" : "inline-block"}
               >
-                {letter}
+                {letter === " " ? "\u00A0" : letter}
               </motion.span>
             ))}
+            <span className="italic">
+              {"clarity".split("").map((letter, i) => (
+                <motion.span
+                  key={i + 100}
+                  initial={{ y: 50, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{
+                    delay: (i + 20) * 0.02,
+                    type: "spring",
+                    stiffness: 150,
+                    damping: 25,
+                  }}
+                  className="inline-block"
+                >
+                  {letter}
+                </motion.span>
+              ))}
+            </span>
+            .
           </h1>
           
           {/* Subheadline with inline badges */}
