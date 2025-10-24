@@ -75,15 +75,15 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
   };
 
   return (
-    <header className="border-b border-border bg-card sticky top-0 z-50 relative">
-      <div className="px-6 py-1 flex items-center justify-center">
+    <header className="border-b border-border bg-card sticky top-0 z-50">
+      <div className="px-6 py-1 flex items-center gap-4">
         {/* Sidebar Trigger - Left */}
-        <div className="absolute left-6">
+        <div className="flex-shrink-0">
           <SidebarTrigger />
         </div>
         
-        {/* Search Bar - Center */}
-        <div ref={wrapperRef} className="w-full max-w-2xl relative">
+        {/* Search Bar - Center (flexible) */}
+        <div ref={wrapperRef} className="flex-1 min-w-0 max-w-2xl mx-auto relative">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -91,7 +91,7 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
               placeholder={`Search... (currently viewing ${currentPersonName})`}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="pl-9 pr-9 h-10 bg-white border-border focus:border-border focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none"
+              className="pl-9 pr-9 h-10 bg-white border-border focus:border-border focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none w-full"
             />
             {isLoading && (
               <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground animate-spin" />
@@ -99,7 +99,7 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
           </div>
 
           {isOpen && results.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-lg max-h-80 overflow-y-auto">
+            <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-lg max-h-80 overflow-y-auto z-50">
               {results.map((result) => (
                 <button
                   key={result.id}
@@ -114,17 +114,18 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
           )}
         </div>
 
-        {/* Import Button and User Icon - Top Right */}
-        <div className="absolute right-2 top-1 flex items-center gap-1">
+        {/* Import Button and User Icon - Right */}
+        <div className="flex-shrink-0 flex items-center gap-1">
           {onImportToBuilder && (
             <Button 
               variant="hero" 
               size="sm"
               onClick={onImportToBuilder}
-              className="gap-2 h-8"
+              className="gap-2 h-8 text-sm"
             >
               <Upload className="w-4 h-4" />
-              Import to Builder
+              <span className="hidden sm:inline">Import to Builder</span>
+              <span className="sm:hidden">Import</span>
             </Button>
           )}
           <button className="p-2 hover:bg-accent rounded-full transition-colors">
