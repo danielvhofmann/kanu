@@ -390,7 +390,7 @@ export const KnowledgeGraph = ({
   };
 
   return (
-    <div className="w-full flex-1 flex flex-col overflow-hidden bg-background">
+    <div className="w-full flex-1 flex flex-col overflow-hidden bg-background !max-h-screen">
       {/* Header */}
       <ExplorerHeader 
         currentPersonName={personName}
@@ -402,7 +402,7 @@ export const KnowledgeGraph = ({
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden relative min-h-0">
         {/* Graph - Use calc to leave room for right panel */}
-        <div ref={canvasRef} className="flex-1 relative bg-card overflow-hidden min-h-0">
+        <div ref={canvasRef} className="!flex-1 relative bg-card overflow-hidden !min-h-0">
           {/* Timeline Button - Positioned absolutely at bottom */}
           {timelineEvents.length > 0 && (
             <Dialog>
@@ -487,7 +487,7 @@ export const KnowledgeGraph = ({
         </div>
 
         {/* Info Panel - Always visible with fixed width */}
-        <div className="w-96 max-w-[384px] h-full flex-shrink-0 border-l border-border bg-card overflow-y-auto z-10">
+        <div className="w-96 max-w-[384px] flex-shrink-0 self-stretch border-l border-border bg-card overflow-y-auto z-10">
           <div className="p-6 space-y-6">
             {selectedNode ? (
               <>
