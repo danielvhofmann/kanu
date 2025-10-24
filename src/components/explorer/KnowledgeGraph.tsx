@@ -518,8 +518,8 @@ export const KnowledgeGraph = ({
         </div>
 
         {/* Info Panel - Always visible with fixed width */}
-        <div className="w-96 max-w-[384px] flex-shrink-0 self-stretch border-l border-border bg-card overflow-y-auto z-10">
-          <div className="p-6 space-y-6">
+        <div className="w-96 max-w-[384px] flex-shrink-0 self-stretch border-l border-border bg-card z-10 overflow-hidden">
+          <div className="h-full overflow-y-auto p-6 space-y-6">
             {selectedNode ? (
               <>
                 {/* Portrait */}
