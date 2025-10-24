@@ -222,9 +222,9 @@ function FloatingNetwork({ layer }: { layer: number }) {
       <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
         <defs>
           <linearGradient id={`fade-gradient-${layer}`} x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopOpacity="1" />
-            <stop offset="70%" stopOpacity="1" />
-            <stop offset="100%" stopOpacity="0" />
+            <stop offset="0%" stopColor="white" stopOpacity="1" />
+            <stop offset="70%" stopColor="white" stopOpacity="1" />
+            <stop offset="100%" stopColor="white" stopOpacity="0" />
           </linearGradient>
           <mask id={`fade-mask-${layer}`}>
             <rect x="0" y="0" width="100" height="100" fill={`url(#fade-gradient-${layer})`} />

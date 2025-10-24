@@ -47,6 +47,9 @@ export const Features = () => {
     <section className="py-32 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-subtle -z-10" />
       
+      {/* Right side glow at "Beautiful by design" section */}
+      <div className="absolute top-20 -right-32 w-96 h-96 rounded-full bg-accent/25 blur-[100px]" />
+      
       <div className="container mx-auto px-6">
         <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
           <h2 className="text-5xl font-extralight tracking-tight text-balance">

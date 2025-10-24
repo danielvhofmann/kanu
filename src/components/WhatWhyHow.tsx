@@ -2,8 +2,11 @@ import { Network, Lightbulb, Zap } from "lucide-react";
 
 export const WhatWhyHow = () => {
   return (
-    <div className="py-32 bg-background">
-      <div className="container mx-auto px-6">
+    <div className="py-32 bg-background relative overflow-hidden">
+      {/* Left side glow */}
+      <div className="absolute top-1/3 -left-32 w-96 h-96 rounded-full bg-secondary/25 blur-[100px]" />
+      
+      <div className="container mx-auto px-6 relative z-10">
         {/* What Section */}
         <section id="what" className="mb-32 scroll-mt-24">
           <div className="max-w-4xl mx-auto text-center">
