@@ -10,11 +10,13 @@ interface Node {
   targetX: number;
   targetY: number;
   size: number;
+  color: 'cyan' | 'red';
 }
 
 interface Edge {
   from: Node;
   to: Node;
+  color: 'cyan' | 'red';
 }
 
 function FloatingNetwork({ layer }: { layer: number }) {
@@ -73,6 +75,7 @@ function FloatingNetwork({ layer }: { layer: number }) {
           targetX: targetCenterX + hubOffset,
           targetY: targetCenterY + hubOffset,
           size: 5 + Math.random() * 2, // Bigger hubs
+          color: Math.random() > 0.5 ? 'cyan' : 'red' as 'cyan' | 'red',
         };
         generatedNodes.push(hubNode);
         hubNodes.push(hubNode);
@@ -98,6 +101,7 @@ function FloatingNetwork({ layer }: { layer: number }) {
           targetX: targetCenterX + Math.cos(angle) * radius,
           targetY: targetCenterY + Math.sin(angle) * radius,
           size: 2 + Math.random() * 2,
+          color: Math.random() > 0.5 ? 'cyan' : 'red' as 'cyan' | 'red',
         });
       }
     });
@@ -114,14 +118,22 @@ function FloatingNetwork({ layer }: { layer: number }) {
       
       // Connect hubs if there are multiple
       if (hubCount === 2) {
-        generatedEdges.push({ from: clusterHubs[0], to: clusterHubs[1] });
+        generatedEdges.push({ 
+          from: clusterHubs[0], 
+          to: clusterHubs[1],
+          color: Math.random() > 0.5 ? 'cyan' : 'red' as 'cyan' | 'red'
+        });
       }
       
       // Connect spokes to hubs
       for (let s = hubCount; s < nodeCount; s++) {
         const spokeNode = generatedNodes[currentNodeIndex + s];
         const targetHub = clusterHubs[s % hubCount];
-        generatedEdges.push({ from: targetHub, to: spokeNode });
+        generatedEdges.push({ 
+          from: targetHub, 
+          to: spokeNode,
+          color: Math.random() > 0.5 ? 'cyan' : 'red' as 'cyan' | 'red'
+        });
         
         // Dense intra-cluster connections based on density
         for (let t = hubCount; t < s; t++) {
@@ -133,7 +145,11 @@ function FloatingNetwork({ layer }: { layer: number }) {
           
           // Connect nearby nodes within cluster
           if (distance < 12 && Math.random() < density) {
-            generatedEdges.push({ from: spokeNode, to: otherSpoke });
+            generatedEdges.push({ 
+              from: spokeNode, 
+              to: otherSpoke,
+              color: Math.random() > 0.5 ? 'cyan' : 'red' as 'cyan' | 'red'
+            });
           }
         }
       }
@@ -151,7 +167,11 @@ function FloatingNetwork({ layer }: { layer: number }) {
         
         // Connect hubs that are reasonably close
         if (distance < 40 && Math.random() > 0.4) {
-          generatedEdges.push({ from: hub, to: otherHub });
+          generatedEdges.push({ 
+            from: hub, 
+            to: otherHub,
+            color: Math.random() > 0.5 ? 'cyan' : 'red' as 'cyan' | 'red'
+          });
         }
       });
     });
@@ -180,7 +200,11 @@ function FloatingNetwork({ layer }: { layer: number }) {
         // Create 1-2 connections between cluster spokes
         clusterSpokes.slice(0, 2).forEach((spoke, idx) => {
           if (nextSpokes[idx] && Math.random() > 0.6) {
-            generatedEdges.push({ from: spoke, to: nextSpokes[idx] });
+            generatedEdges.push({ 
+              from: spoke, 
+              to: nextSpokes[idx],
+              color: Math.random() > 0.5 ? 'cyan' : 'red' as 'cyan' | 'red'
+            });
           }
         });
       }
@@ -204,7 +228,7 @@ function FloatingNetwork({ layer }: { layer: number }) {
             y1={edge.from.y}
             x2={edge.to.x}
             y2={edge.to.y}
-            stroke="currentColor"
+            stroke={edge.color === 'cyan' ? '#22d3ee' : '#ef4444'}
             strokeWidth={0.2}
             strokeOpacity={0.5}
             animate={{
@@ -230,7 +254,7 @@ function FloatingNetwork({ layer }: { layer: number }) {
             cx={node.x}
             cy={node.y}
             r={node.size / 6} // Bigger nodes (divided by 6 instead of 8)
-            fill="currentColor"
+            fill={node.color === 'cyan' ? '#22d3ee' : '#ef4444'}
             fillOpacity={0.7}
             animate={{
               cx: [node.x, node.targetX, node.targetX, node.targetX, node.x],
@@ -252,13 +276,8 @@ function FloatingNetwork({ layer }: { layer: number }) {
 
 export function BackgroundNetworks() {
   return (
-    <>
-      <div className="absolute inset-0 text-cyan-400/40">
-        <FloatingNetwork layer={1} />
-      </div>
-      <div className="absolute inset-0 text-red-500/35">
-        <FloatingNetwork layer={2} />
-      </div>
-    </>
+    <div className="absolute inset-0">
+      <FloatingNetwork layer={1} />
+    </div>
   );
 }
