@@ -4,7 +4,7 @@ export const WhatWhyHow = () => {
   return (
     <div className="py-32 bg-background relative overflow-hidden">
       {/* Left side glow */}
-      <div className="absolute top-1/3 -left-32 w-96 h-96 rounded-full bg-secondary/25 blur-[100px]" />
+      <div className="absolute top-1/3 -left-32 w-96 h-96 rounded-full bg-secondary/12 blur-[100px]" />
       
       <div className="container mx-auto px-6 relative z-10">
         {/* What Section */}
