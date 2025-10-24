@@ -12,7 +12,7 @@ export interface Template {
 
 // Muted, sophisticated color palette
 const nodeColors = {
-  sage: { bg: 'hsl(150, 25%, 50%)', border: 'hsl(150, 30%, 65%)' },
+  sage: { bg: 'hsl(168, 38%, 52%)', border: 'hsl(168, 35%, 65%)' },
   yellow: { bg: 'hsl(45, 95%, 60%)', border: 'hsl(45, 95%, 70%)' },
   orange: { bg: 'hsl(16, 85%, 60%)', border: 'hsl(16, 90%, 70%)' },
   teal: { bg: 'hsl(195, 45%, 52%)', border: 'hsl(195, 50%, 68%)' },
