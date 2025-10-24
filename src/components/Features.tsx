@@ -48,7 +48,7 @@ export const Features = () => {
       <div className="absolute inset-0 bg-gradient-subtle -z-10" />
       
       {/* Right side red glow at "Beautiful by design" section */}
-      <div className="absolute top-20 -right-32 w-96 h-96 rounded-full bg-red-500/30 blur-[100px]" />
+      <div className="absolute top-20 -right-32 w-96 h-96 rounded-full bg-red-500/15 blur-[100px]" />
       
       <div className="container mx-auto px-6">
         <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
