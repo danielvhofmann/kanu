@@ -20,19 +20,30 @@ interface Edge {
 function FloatingNetwork({ layer }: { layer: number }) {
   const { nodes, edges } = useMemo(() => {
     // Generate random nodes with initial and target positions
-    const nodeCount = 12 + layer * 3; // Reduced node count
+    const nodeCount = 12 + layer * 3;
     const generatedNodes: Node[] = Array.from({ length: nodeCount }, (_, i) => {
       // Initial random position - spread far apart
-      const initialX = Math.random() * 150 - 25; // -25 to 125 (wider spread)
+      const initialX = Math.random() * 150 - 25;
       const initialY = Math.random() * 150 - 25;
       
-      // Target position - more structured (grid-like with some randomness)
-      const cols = Math.ceil(Math.sqrt(nodeCount));
-      const row = Math.floor(i / cols);
-      const col = i % cols;
-      const spacing = 100 / cols;
-      const targetX = col * spacing + spacing / 2 + (Math.random() - 0.5) * spacing * 0.3;
-      const targetY = row * spacing + spacing / 2 + (Math.random() - 0.5) * spacing * 0.3;
+      // Target position - create distinct clusters
+      const clusterCount = 3;
+      const cluster = i % clusterCount;
+      const nodesPerCluster = Math.ceil(nodeCount / clusterCount);
+      const indexInCluster = Math.floor(i / clusterCount);
+      
+      // Cluster centers
+      const clusterCenters = [
+        { x: 30, y: 40 },
+        { x: 70, y: 35 },
+        { x: 50, y: 70 }
+      ];
+      
+      const center = clusterCenters[cluster];
+      const angle = (indexInCluster / nodesPerCluster) * Math.PI * 2;
+      const radius = 8 + Math.random() * 8;
+      const targetX = center.x + Math.cos(angle) * radius;
+      const targetY = center.y + Math.sin(angle) * radius;
       
       return {
         id: i,
@@ -44,14 +55,14 @@ function FloatingNetwork({ layer }: { layer: number }) {
       };
     });
 
-    // Generate fewer edges between nearby nodes in the target formation
+    // Generate edges within and between clusters
     const generatedEdges: Edge[] = [];
     generatedNodes.forEach((node, i) => {
       generatedNodes.slice(i + 1).forEach((otherNode) => {
         const distance = Math.sqrt(
           Math.pow(node.targetX - otherNode.targetX, 2) + Math.pow(node.targetY - otherNode.targetY, 2)
         );
-        if (distance < 35 && Math.random() > 0.6) { // Fewer edges
+        if (distance < 20 && Math.random() > 0.5) {
           generatedEdges.push({ from: node, to: otherNode });
         }
       });
@@ -75,18 +86,17 @@ function FloatingNetwork({ layer }: { layer: number }) {
             y2={edge.to.y}
             stroke="currentColor"
             strokeWidth={0.2}
-            strokeOpacity={0.4}
+            strokeOpacity={0.5}
             animate={{
-              x1: [edge.from.x, edge.from.x, edge.from.targetX, edge.from.targetX, edge.from.targetX, edge.from.x],
-              y1: [edge.from.y, edge.from.y, edge.from.targetY, edge.from.targetY, edge.from.targetY, edge.from.y],
-              x2: [edge.to.x, edge.to.x, edge.to.targetX, edge.to.targetX, edge.to.targetX, edge.to.x],
-              y2: [edge.to.y, edge.to.y, edge.to.targetY, edge.to.targetY, edge.to.targetY, edge.to.y],
-              opacity: [0, 0, 0.6, 0.6, 0.6, 0],
+              x1: [edge.from.x, edge.from.targetX, edge.from.targetX, edge.from.targetX, edge.from.x],
+              y1: [edge.from.y, edge.from.targetY, edge.from.targetY, edge.from.targetY, edge.from.y],
+              x2: [edge.to.x, edge.to.targetX, edge.to.targetX, edge.to.targetX, edge.to.x],
+              y2: [edge.to.y, edge.to.targetY, edge.to.targetY, edge.to.targetY, edge.to.y],
             }}
             transition={{
-              duration: 60,
-              times: [0, 0.2, 0.4, 0.6, 0.7, 1],
-              ease: "linear",
+              duration: 80,
+              times: [0, 0.3, 0.5, 0.7, 1],
+              ease: "easeInOut",
               repeat: Infinity,
               delay: i * 0.02,
             }}
@@ -101,17 +111,15 @@ function FloatingNetwork({ layer }: { layer: number }) {
             cy={node.y}
             r={node.size / 8}
             fill="currentColor"
-            fillOpacity={0.6}
+            fillOpacity={0.7}
             animate={{
-              cx: [node.x, node.x, node.targetX, node.targetX, node.targetX, node.x],
-              cy: [node.y, node.y, node.targetY, node.targetY, node.targetY, node.y],
-              scale: [0.7, 0.7, 1.3, 1.3, 1.3, 0.7],
-              opacity: [0.4, 0.4, 0.8, 0.8, 0.8, 0.4],
+              cx: [node.x, node.targetX, node.targetX, node.targetX, node.x],
+              cy: [node.y, node.targetY, node.targetY, node.targetY, node.y],
             }}
             transition={{
-              duration: 60,
-              times: [0, 0.2, 0.4, 0.6, 0.7, 1],
-              ease: "linear",
+              duration: 80,
+              times: [0, 0.3, 0.5, 0.7, 1],
+              ease: "easeInOut",
               repeat: Infinity,
               delay: node.id * 0.05,
             }}
