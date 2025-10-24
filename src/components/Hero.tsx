@@ -15,6 +15,9 @@ export const Hero = () => {
       {/* Animated network background */}
       <BackgroundNetworks />
       
+      {/* Gradient fade to white at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-b from-transparent to-background pointer-events-none z-10" />
+      
       <div className="container mx-auto px-6 relative z-10">
         <motion.div
           initial={{ opacity: 0 }}

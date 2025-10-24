@@ -76,18 +76,17 @@ function FloatingNetwork({ layer }: { layer: number }) {
             stroke="currentColor"
             strokeWidth={0.2}
             strokeOpacity={0.4}
-            initial={{ pathLength: 0, opacity: 0 }}
             animate={{
-              pathLength: 1,
-              opacity: 0.4,
-              x1: edge.from.targetX,
-              y1: edge.from.targetY,
-              x2: edge.to.targetX,
-              y2: edge.to.targetY,
+              x1: [edge.from.x, edge.from.targetX, edge.from.x],
+              y1: [edge.from.y, edge.from.targetY, edge.from.y],
+              x2: [edge.to.x, edge.to.targetX, edge.to.x],
+              y2: [edge.to.y, edge.to.targetY, edge.to.y],
+              opacity: [0, 0.4, 0],
             }}
             transition={{
-              duration: 8,
+              duration: 12,
               ease: "easeInOut",
+              repeat: Infinity,
               delay: i * 0.02,
             }}
           />
@@ -102,16 +101,16 @@ function FloatingNetwork({ layer }: { layer: number }) {
             r={node.size / 8}
             fill="currentColor"
             fillOpacity={0.6}
-            initial={{ scale: 0, opacity: 0 }}
             animate={{
-              scale: 1,
-              opacity: 0.6,
-              cx: node.targetX,
-              cy: node.targetY,
+              cx: [node.x, node.targetX, node.x],
+              cy: [node.y, node.targetY, node.y],
+              scale: [0.8, 1, 0.8],
+              opacity: [0.3, 0.6, 0.3],
             }}
             transition={{
-              duration: 8,
+              duration: 12,
               ease: "easeInOut",
+              repeat: Infinity,
               delay: node.id * 0.05,
             }}
           />
