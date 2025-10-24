@@ -18,11 +18,12 @@ const queryClient = new QueryClient();
 function AppContent() {
   const location = useLocation();
   const isLandingPage = location.pathname === '/';
+  const isAuthPage = location.pathname === '/auth';
   const isExplorerOrEditor = location.pathname === '/explorer' || location.pathname === '/editor';
   
   return (
     <>
-      {!isExplorerOrEditor && !isLandingPage && (
+      {!isExplorerOrEditor && !isLandingPage && !isAuthPage && (
         <header className="h-12 flex items-center border-b border-border/50 bg-background/80 backdrop-blur-lg sticky top-0 z-40 px-4">
           <SidebarTrigger />
         </header>
@@ -43,11 +44,12 @@ function AppContent() {
 function AppLayout() {
   const location = useLocation();
   const isLandingPage = location.pathname === '/';
+  const isAuthPage = location.pathname === '/auth';
   
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
-        {!isLandingPage && <AppSidebar />}
+        {!isLandingPage && !isAuthPage && <AppSidebar />}
         <main className="flex-1 flex flex-col">
           <AppContent />
         </main>

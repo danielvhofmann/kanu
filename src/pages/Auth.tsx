@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
+import { Navigation } from '@/components/Navigation';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ArrowLeft } from 'lucide-react';
 
 export const Auth = () => {
   const navigate = useNavigate();
@@ -61,19 +61,11 @@ export const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-subtle p-4">
-      <div className="w-full max-w-md">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/')}
-          className="mb-6 gap-2"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Home
-        </Button>
-
-        <Card className="p-8 backdrop-blur-lg bg-card/80 border-border/50">
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      <div className="flex items-center justify-center bg-gradient-subtle p-4 pt-32">
+        <div className="w-full max-w-md">
+          <Card className="p-8 backdrop-blur-lg bg-card/80 border-border/50">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-light mb-2">
               {isLogin ? 'Welcome Back' : 'Create Account'}
@@ -170,6 +162,7 @@ export const Auth = () => {
             </button>
           </div>
         </Card>
+      </div>
       </div>
     </div>
   );
