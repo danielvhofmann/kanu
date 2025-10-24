@@ -1,5 +1,6 @@
-import { Home, Search, Pencil, HelpCircle, Settings, Network } from "lucide-react";
+import { Home, Search, Pencil, HelpCircle, Settings } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
+import logo from "/favicon.png";
 
 import {
   Sidebar,
@@ -36,9 +37,7 @@ export function AppSidebar() {
             className="flex items-center gap-3 text-black py-4 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={() => navigate("/")}
           >
-            <div className="w-8 h-8 rounded-lg bg-gradient-hero flex items-center justify-center shrink-0">
-              <Network className="w-4 h-4 text-white" strokeWidth={1.5} />
-            </div>
+            <img src={logo} alt="Corners logo" className="w-8 h-8 shrink-0" />
             {open && <span className="text-lg font-extralight tracking-tight">corners</span>}
           </SidebarGroupLabel>
           <SidebarGroupContent>
