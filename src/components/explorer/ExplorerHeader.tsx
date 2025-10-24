@@ -76,12 +76,14 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
 
   return (
     <header className="border-b border-border bg-card sticky top-0 z-50 relative">
-      <div className="px-6 py-1 flex items-center gap-4">
-        {/* Sidebar Trigger */}
-        <SidebarTrigger />
+      <div className="px-6 py-1 flex items-center justify-center">
+        {/* Sidebar Trigger - Left */}
+        <div className="absolute left-6">
+          <SidebarTrigger />
+        </div>
         
-        {/* Search Bar */}
-        <div ref={wrapperRef} className="flex-1 max-w-2xl relative">
+        {/* Search Bar - Center */}
+        <div ref={wrapperRef} className="w-full max-w-2xl relative">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -112,24 +114,24 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
           )}
         </div>
 
-        {/* Import Button */}
-        {onImportToBuilder && (
-          <Button 
-            variant="hero" 
-            size="sm"
-            onClick={onImportToBuilder}
-            className="gap-2"
-          >
-            <Upload className="w-4 h-4" />
-            Import to Builder
-          </Button>
-        )}
+        {/* Import Button and User Icon - Right */}
+        <div className="absolute right-6 flex items-center gap-2">
+          {onImportToBuilder && (
+            <Button 
+              variant="hero" 
+              size="sm"
+              onClick={onImportToBuilder}
+              className="gap-2"
+            >
+              <Upload className="w-4 h-4" />
+              Import to Builder
+            </Button>
+          )}
+          <button className="p-2 hover:bg-accent rounded-full transition-colors">
+            <User className="w-5 h-5" />
+          </button>
+        </div>
       </div>
-
-      {/* User Icon - Top Right */}
-      <button className="absolute top-1/2 -translate-y-1/2 right-6 p-2 hover:bg-accent rounded-full transition-colors">
-        <User className="w-5 h-5" />
-      </button>
     </header>
   );
 };
