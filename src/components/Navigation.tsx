@@ -14,7 +14,7 @@ export const Navigation = () => {
             <div className="w-10 h-10 rounded-xl bg-gradient-hero flex items-center justify-center shadow-md">
               <Network className="w-6 h-6 text-white" strokeWidth={1.5} />
             </div>
-            <span className="text-2xl font-extralight tracking-tight">Corners</span>
+            <span className="text-2xl font-extralight tracking-tight">corners</span>
           </div>
           
           {/* Navigation links */}

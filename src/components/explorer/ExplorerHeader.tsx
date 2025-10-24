@@ -88,7 +88,7 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
           <button className="p-2 hover:bg-accent rounded-lg transition-colors">
             <Menu className="w-5 h-5" />
           </button>
-          <span className="font-semibold text-lg">Corners</span>
+          <span className="font-semibold text-lg">corners</span>
         </div>
 
         {/* Center: Search Bar */}

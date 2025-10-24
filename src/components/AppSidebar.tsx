@@ -1,4 +1,4 @@
-import { Home, Search, Pencil, HelpCircle, Settings } from "lucide-react";
+import { Home, Search, Pencil, HelpCircle, Settings, Network } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 import {
@@ -25,13 +25,16 @@ export function AppSidebar() {
   const { open } = useSidebar();
 
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
-    isActive ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted/50";
+    isActive ? "bg-primary/10 text-primary font-medium" : "text-black hover:bg-muted/50";
 
   return (
-    <Sidebar collapsible="icon">
-      <SidebarContent>
+    <Sidebar collapsible="icon" className="text-black">
+      <SidebarContent className="text-black">
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel className="flex items-center gap-2 text-black">
+            <Network className="h-4 w-4" />
+            {open && <span>corners</span>}
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
