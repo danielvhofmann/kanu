@@ -47,10 +47,10 @@ All colors MUST be HSL.
     --secondary-foreground: 0 0% 100%;
     --secondary-light: 355 50% 65%;
 
-    /* Accent: Earthy brown/tan (like Kumu's browns) */
-    --accent: 30 35% 55%;
-    --accent-foreground: 0 0% 100%;
-    --accent-light: 30 40% 68%;
+    /* Accent: Curry yellow */
+    --accent: 45 90% 60%;
+    --accent-foreground: 215 20% 25%;
+    --accent-light: 45 85% 70%;
     
     /* Additional colors for variety */
     --tertiary: 85 35% 58%;

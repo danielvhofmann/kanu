@@ -24,7 +24,7 @@ export const WhatWhyHow = () => {
                 </p>
               </div>
               <div className="grid md:grid-cols-3 gap-6">
-                <div className="p-6 rounded-lg bg-muted/50 flex flex-col">
+                <div className="p-6 rounded-lg bg-primary/20 flex flex-col">
                   <h3 className="font-semibold mb-2">Explorer Mode</h3>
                   <p className="text-sm text-muted-foreground mb-4 flex-grow">
                     Discover and navigate through existing knowledge networks from history and culture
@@ -33,7 +33,7 @@ export const WhatWhyHow = () => {
                     Explore Knowledge
                   </Button>
                 </div>
-                <div className="p-6 rounded-lg bg-muted/50 flex flex-col">
+                <div className="p-6 rounded-lg bg-secondary/20 flex flex-col">
                   <h3 className="font-semibold mb-2">Builder Mode</h3>
                   <p className="text-sm text-muted-foreground mb-4 flex-grow">
                     Create custom network maps for stakeholders, systems, and strategic planning
@@ -42,7 +42,7 @@ export const WhatWhyHow = () => {
                     Build Networks
                   </Button>
                 </div>
-                <div className="p-6 rounded-lg bg-muted/50 flex flex-col">
+                <div className="p-6 rounded-lg bg-accent/30 flex flex-col">
                   <h3 className="font-semibold mb-2">Collections</h3>
                   <p className="text-sm text-muted-foreground mb-4 flex-grow">
                     Browse and discover networks shared by the community

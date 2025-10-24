@@ -2,6 +2,18 @@ import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
 import { Network, Users, BookOpen, Briefcase } from "lucide-react";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog";
+import renaissanceImage from "@/assets/collection-renaissance.jpg";
+import techImage from "@/assets/collection-tech.jpg";
+import scienceImage from "@/assets/collection-science.jpg";
+import politicsImage from "@/assets/collection-politics.jpg";
 
 const collectionExamples = [
   {
@@ -10,7 +22,8 @@ const collectionExamples = [
     icon: BookOpen,
     nodes: 45,
     connections: 128,
-    category: "History & Culture"
+    category: "History & Culture",
+    image: renaissanceImage,
   },
   {
     title: "Tech Startup Ecosystem",
@@ -18,7 +31,8 @@ const collectionExamples = [
     icon: Briefcase,
     nodes: 87,
     connections: 234,
-    category: "Business"
+    category: "Business",
+    image: techImage,
   },
   {
     title: "Scientific Collaborations",
@@ -26,7 +40,8 @@ const collectionExamples = [
     icon: Users,
     nodes: 62,
     connections: 156,
-    category: "Science"
+    category: "Science",
+    image: scienceImage,
   },
   {
     title: "Political Influence Map",
@@ -34,12 +49,14 @@ const collectionExamples = [
     icon: Network,
     nodes: 53,
     connections: 189,
-    category: "Politics"
+    category: "Politics",
+    image: politicsImage,
   }
 ];
 
 export const CollectionsShowcase = () => {
   const navigate = useNavigate();
+  const [selectedCollection, setSelectedCollection] = useState<typeof collectionExamples[0] | null>(null);
 
   return (
     <section className="py-32 relative overflow-hidden">
@@ -48,7 +65,8 @@ export const CollectionsShowcase = () => {
       <div className="container mx-auto px-6">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-4xl lg:text-5xl font-light mb-6">
-            Explore Collections
+            <span className="text-accent">Discover</span>{" "}
+            <span className="text-foreground">Collections</span>
           </h2>
           <p className="text-xl text-muted-foreground leading-relaxed">
             Discover inspiring network maps created by the community. 
@@ -60,10 +78,18 @@ export const CollectionsShowcase = () => {
           {collectionExamples.map((collection, index) => (
             <Card
               key={collection.title}
-              className="p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-fade-in bg-card border-border/50"
+              className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-fade-in bg-card border-border/50 cursor-pointer"
               style={{ animationDelay: `${index * 0.1}s` }}
+              onClick={() => setSelectedCollection(collection)}
             >
-              <div className="space-y-4">
+              <div className="aspect-video relative overflow-hidden">
+                <img 
+                  src={collection.image} 
+                  alt={collection.title}
+                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+                />
+              </div>
+              <div className="p-6 space-y-4">
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
                   <collection.icon className="w-6 h-6 text-primary" strokeWidth={1.5} />
                 </div>
@@ -104,6 +130,40 @@ export const CollectionsShowcase = () => {
           </Button>
         </div>
       </div>
+
+      <Dialog open={!!selectedCollection} onOpenChange={() => setSelectedCollection(null)}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">{selectedCollection?.title}</DialogTitle>
+            <DialogDescription>
+              {selectedCollection?.description}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <img 
+              src={selectedCollection?.image} 
+              alt={selectedCollection?.title}
+              className="w-full rounded-lg"
+            />
+            <div className="flex gap-6 text-sm">
+              <div>
+                <span className="font-semibold">{selectedCollection?.nodes}</span> nodes
+              </div>
+              <div>
+                <span className="font-semibold">{selectedCollection?.connections}</span> connections
+              </div>
+              <div>
+                <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs">
+                  {selectedCollection?.category}
+                </span>
+              </div>
+            </div>
+            <p className="text-muted-foreground">
+              Click "View All Collections" to explore this network in detail and discover more collections.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };

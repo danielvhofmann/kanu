@@ -53,7 +53,8 @@ export const Features = () => {
       <div className="container mx-auto px-6">
         <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
           <h2 className="text-5xl font-extralight tracking-tight text-balance">
-            Beautiful by design.{" "}
+            <span className="text-foreground">Explorer Mode</span>{" "}
+            <span className="text-muted-foreground">Beautiful by design.</span>{" "}
             <span className="text-muted-foreground">Powerful by nature.</span>
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
@@ -64,7 +65,7 @@ export const Features = () => {
         
         {/* Explorer Mode Features */}
         <div className="mb-20">
-          <h3 className="text-3xl font-extralight text-center mb-10 text-primary">
+          <h3 className="text-3xl font-extralight text-center mb-10 text-foreground">
             Explorer Mode Features
           </h3>
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -96,8 +97,8 @@ export const Features = () => {
 
         {/* Builder Mode Features */}
         <div>
-          <h3 className="text-3xl font-extralight text-center mb-10 text-secondary">
-            Builder Mode Features
+          <h3 className="text-3xl font-extralight text-center mb-10">
+            <span className="text-secondary">Your Use Cases</span>
           </h3>
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {builderFeatures.map((feature, index) => (
