@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
-import { User, Settings, LogOut } from "lucide-react";
+import { User, Settings, LogOut, Menu, Search, Pencil, Grid } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,6 +9,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
@@ -20,6 +25,7 @@ export const Navigation = () => {
   const location = useLocation();
   const isAuthPage = location.pathname === '/auth';
   const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     // Check current session
@@ -49,13 +55,60 @@ export const Navigation = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-transparent backdrop-blur-sm border-b border-border/20">
       <div className="container mx-auto px-6">
         <div className="flex items-center justify-between h-20">
-          {/* Logo */}
-          <div 
-            className="flex items-center gap-3 cursor-pointer" 
-            onClick={() => navigate('/')}
-          >
-            <img src={logo} alt="Corners logo" className="w-10 h-10" />
-            <span className="text-2xl font-extralight tracking-tight">corners</span>
+          {/* Menu Button and Logo */}
+          <div className="flex items-center gap-3">
+            <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-10 w-10">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-2" align="start">
+                <div className="space-y-1">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start gap-3"
+                    onClick={() => {
+                      navigate('/explorer');
+                      setMenuOpen(false);
+                    }}
+                  >
+                    <Search className="h-4 w-4" />
+                    Explorer Mode
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start gap-3"
+                    onClick={() => {
+                      navigate('/editor');
+                      setMenuOpen(false);
+                    }}
+                  >
+                    <Pencil className="h-4 w-4" />
+                    Builder Mode
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start gap-3"
+                    onClick={() => {
+                      navigate('/collections');
+                      setMenuOpen(false);
+                    }}
+                  >
+                    <Grid className="h-4 w-4" />
+                    Collections
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+            
+            <div 
+              className="flex items-center gap-3 cursor-pointer" 
+              onClick={() => navigate('/')}
+            >
+              <img src={logo} alt="Corners logo" className="w-10 h-10" />
+              <span className="text-2xl font-extralight tracking-tight">corners</span>
+            </div>
           </div>
           
           {/* Navigation links */}
