@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { Network } from "lucide-react";
 import Index from "./pages/Index";
 import Editor from "./pages/Editor";
 import Auth from "./pages/Auth";
@@ -24,14 +23,8 @@ const App = () => (
           <div className="min-h-screen flex w-full">
             <AppSidebar />
             <main className="flex-1 flex flex-col">
-              <header className="h-12 flex items-center justify-between border-b border-border/50 bg-background/80 backdrop-blur-lg sticky top-0 z-40 px-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-hero flex items-center justify-center">
-                    <Network className="w-4 h-4 text-white" strokeWidth={1.5} />
-                  </div>
-                  <span className="text-lg font-extralight tracking-tight">corners</span>
-                  <SidebarTrigger className="ml-2" />
-                </div>
+              <header className="h-12 flex items-center border-b border-border/50 bg-background/80 backdrop-blur-lg sticky top-0 z-40 px-4">
+                <SidebarTrigger />
               </header>
               <Routes>
                 <Route path="/" element={<Index />} />
