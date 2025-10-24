@@ -23,7 +23,7 @@ const builderFeatures = [
 
 export const BuilderFeatures = () => {
   return (
-    <section className="pb-32 relative overflow-hidden bg-background">
+    <section className="pb-16 relative overflow-hidden bg-background">
       <div className="absolute inset-0 bg-gradient-subtle -z-10" />
       
       <div className="container mx-auto px-6">
