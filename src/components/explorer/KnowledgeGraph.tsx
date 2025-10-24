@@ -7,6 +7,8 @@ import { Loader2, ExternalLink, ChevronDown, ChevronRight } from "lucide-react";
 import { Timeline } from "./Timeline";
 import { ExplorerHeader } from "./ExplorerHeader";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useNavigate } from "react-router-dom";
+import { convertExplorerToBuilder } from "@/utils/graphConverter";
 
 interface Node {
   id: string;
@@ -61,6 +63,7 @@ export const KnowledgeGraph = ({
   onBack: () => void;
   onPersonChange?: (personId: string, personName: string) => void;
 }) => {
+  const navigate = useNavigate();
   const [personId, setPersonId] = useState(initialPersonId);
   const [personName, setPersonName] = useState(initialPersonName);
   const graphRef = useRef<any>();
@@ -81,6 +84,29 @@ export const KnowledgeGraph = ({
     setPersonName(newPersonName);
     if (onPersonChange) {
       onPersonChange(newPersonId, newPersonName);
+    }
+  };
+
+  const handleImportToBuilder = () => {
+    try {
+      const { nodes, edges } = convertExplorerToBuilder({
+        nodes: graphData.nodes,
+        links: graphData.links,
+      });
+
+      navigate('/editor', {
+        state: {
+          importedFrom: 'explorer',
+          sourcePersonName: personName,
+          nodes,
+          edges,
+        },
+      });
+
+      toast.success('Network imported to Builder Mode');
+    } catch (error) {
+      console.error('Failed to import to builder:', error);
+      toast.error('Failed to import network');
     }
   };
 
@@ -313,6 +339,7 @@ export const KnowledgeGraph = ({
         currentPersonName={personName}
         onSearch={handlePersonChange}
         onBack={onBack}
+        onImportToBuilder={handleImportToBuilder}
       />
 
       {/* Main Content */}

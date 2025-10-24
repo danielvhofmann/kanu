@@ -54,12 +54,12 @@ export const UseCases = () => {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-20 space-y-4">
             <h2 className="text-5xl font-extralight tracking-tight text-balance">
-              Built for those who work with{" "}
-              <span className="text-primary">complexity</span>
+              Builder Mode:{" "}
+              <span className="text-primary">Your Use Cases</span>
             </h2>
             <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-              From strategists to researchers, NGOs to consultants—Kumu helps you 
-              see what others miss.
+              From strategists to researchers, NGOs to consultants—create powerful 
+              network maps tailored to your needs.
             </p>
           </div>
           
@@ -84,7 +84,7 @@ export const UseCases = () => {
                 </p>
                 
                 <div className="mt-4 text-sm text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                  Click to start with this template →
+                  Try in Builder Mode →
                 </div>
               </div>
             ))}

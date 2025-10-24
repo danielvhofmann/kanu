@@ -6,13 +6,15 @@ import { TemplateSelector } from '@/components/editor/TemplateSelector';
 import { NetworkCanvas } from '@/components/editor/NetworkCanvas';
 import { ColorControls } from '@/components/editor/ColorControls';
 import { AIChat } from '@/components/editor/AIChat';
+import { NodeEditorOverlay } from '@/components/editor/NodeEditorOverlay';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Pencil, Undo, Redo, MessageSquare } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Pencil, Undo, Redo, MessageSquare, Badge as BadgeIcon } from 'lucide-react';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { getTemplate, type TemplateType } from '@/lib/templates';
 import { toast } from 'sonner';
 import * as d3 from 'd3';
+import { Badge } from '@/components/ui/badge';
 
 const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
@@ -24,6 +26,7 @@ interface HistoryState {
 
 const Editor = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const [nodes, setNodes] = useState<Node[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
@@ -37,6 +40,14 @@ const Editor = () => {
   const [mapTitle, setMapTitle] = useState('Untitled Map');
   const [showAIChat, setShowAIChat] = useState(false);
   const templateType = searchParams.get('template') as TemplateType;
+  
+  // Handle imported data from Explorer Mode
+  const importedData = location.state as {
+    importedFrom?: string;
+    sourcePersonName?: string;
+    nodes?: Node[];
+    edges?: Edge[];
+  } | null;
   
   // History management for undo/redo - consolidated state
   const [historyState, setHistoryState] = useState({
@@ -89,9 +100,23 @@ const Editor = () => {
     ],
   };
 
+  // Handle imported data from Explorer Mode
+  useEffect(() => {
+    if (importedData?.nodes && importedData?.edges && !templateLoadedRef.current) {
+      console.log('[IMPORT] Loading imported data from Explorer Mode');
+      setNodes(importedData.nodes);
+      setEdges(importedData.edges);
+      setMapTitle(`${importedData.sourcePersonName} Network`);
+      templateLoadedRef.current = true;
+      toast.success('Network imported from Explorer Mode');
+      // Clear location state
+      window.history.replaceState({}, document.title);
+    }
+  }, [importedData]);
+
   // Load template if specified in URL, otherwise show import dialog
   useEffect(() => {
-    if (templateType && !templateLoadedRef.current) {
+    if (templateType && !templateLoadedRef.current && !importedData) {
       const template = getTemplate(templateType);
       if (template) {
         console.log('[TEMPLATE] Loading template once:', templateType);

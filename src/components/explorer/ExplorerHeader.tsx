@@ -1,6 +1,7 @@
-import { Menu, User, Search, Loader2, ArrowLeft } from "lucide-react";
+import { Menu, User, Search, Loader2, ArrowLeft, Upload } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -14,9 +15,10 @@ interface ExplorerHeaderProps {
   currentPersonName: string;
   onSearch: (personId: string, personName: string) => void;
   onBack: () => void;
+  onImportToBuilder?: () => void;
 }
 
-export const ExplorerHeader = ({ currentPersonName, onSearch, onBack }: ExplorerHeaderProps) => {
+export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportToBuilder }: ExplorerHeaderProps) => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -122,10 +124,23 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack }: Explorer
         </div>
       </div>
 
-      {/* Right: User Icon - Absolutely positioned */}
-      <button className="absolute top-4 right-6 p-2 hover:bg-accent rounded-full transition-colors">
-        <User className="w-5 h-5" />
-      </button>
+      {/* Right: Import Button and User Icon - Absolutely positioned */}
+      <div className="absolute top-3 right-6 flex items-center gap-2">
+        {onImportToBuilder && (
+          <Button 
+            variant="hero" 
+            size="sm"
+            onClick={onImportToBuilder}
+            className="gap-2"
+          >
+            <Upload className="w-4 h-4" />
+            Import to Builder
+          </Button>
+        )}
+        <button className="p-2 hover:bg-accent rounded-full transition-colors">
+          <User className="w-5 h-5" />
+        </button>
+      </div>
     </header>
   );
 };
