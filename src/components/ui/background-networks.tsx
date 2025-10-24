@@ -19,14 +19,17 @@ interface Edge {
 
 function FloatingNetwork({ layer }: { layer: number }) {
   const { nodes, edges } = useMemo(() => {
-    // Create varied, closer clusters for shorter edges
+    // Offset clusters based on layer to avoid overlap
+    const layerOffset = (layer - 1) * 8;
+    
+    // Create varied, closer clusters with safer positioning (away from edges)
     const clusters = [
-      { x: 22, y: 30, nodeCount: 9, hubRadius: 8 },   // Large left cluster
-      { x: 42, y: 22, nodeCount: 5, hubRadius: 6 },   // Small top-middle
-      { x: 58, y: 35, nodeCount: 7, hubRadius: 7 },   // Medium right cluster
-      { x: 30, y: 55, nodeCount: 6, hubRadius: 6 },   // Medium bottom-left
-      { x: 50, y: 65, nodeCount: 4, hubRadius: 5 },   // Small bottom-middle
-      { x: 70, y: 58, nodeCount: 6, hubRadius: 6 },   // Medium bottom-right
+      { x: 25 + layerOffset, y: 35, nodeCount: 9, hubRadius: 6 },   // Large left cluster
+      { x: 45 + layerOffset, y: 28, nodeCount: 5, hubRadius: 5 },   // Small top-middle
+      { x: 60 + layerOffset, y: 40, nodeCount: 7, hubRadius: 5.5 }, // Medium right cluster
+      { x: 32 + layerOffset, y: 58, nodeCount: 6, hubRadius: 5 },   // Medium bottom-left
+      { x: 52 + layerOffset, y: 68, nodeCount: 4, hubRadius: 4.5 }, // Small bottom-middle
+      { x: 72 + layerOffset, y: 60, nodeCount: 6, hubRadius: 5 },   // Medium bottom-right
     ];
     
     const generatedNodes: Node[] = [];
@@ -53,7 +56,7 @@ function FloatingNetwork({ layer }: { layer: number }) {
           y: hubInitialY,
           targetX: targetCenterX + hubOffset,
           targetY: targetCenterY + hubOffset,
-          size: 3.5 + Math.random() * 1.5,
+          size: 4.5 + Math.random() * 2, // Bigger hubs
         };
         generatedNodes.push(hubNode);
         hubNodes.push(hubNode);
@@ -66,9 +69,9 @@ function FloatingNetwork({ layer }: { layer: number }) {
         const spokeInitialX = Math.random() * chaosSpread - 25;
         const spokeInitialY = Math.random() * chaosSpread - 25;
         
-        // Organized target position in tight formation
+        // Organized target position in tighter formation
         const angle = (s / spokeCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
-        const radiusVariation = Math.random() * 3;
+        const radiusVariation = Math.random() * 2; // Less variation for tighter clusters
         const radius = hubRadius + radiusVariation;
         
         generatedNodes.push({
@@ -77,7 +80,7 @@ function FloatingNetwork({ layer }: { layer: number }) {
           y: spokeInitialY,
           targetX: targetCenterX + Math.cos(angle) * radius,
           targetY: targetCenterY + Math.sin(angle) * radius,
-          size: 1.5 + Math.random() * 1.5,
+          size: 2 + Math.random() * 2, // Bigger spokes
         });
       }
     });
@@ -122,8 +125,8 @@ function FloatingNetwork({ layer }: { layer: number }) {
           Math.pow(hub.targetY - otherHub.targetY, 2)
         );
         
-        // Only connect if close enough (avoid long edges)
-        if (distance < 25 && Math.random() > 0.5) {
+        // Only connect if close enough (shorter edges)
+        if (distance < 20 && Math.random() > 0.6) {
           generatedEdges.push({ from: hub, to: otherHub });
         }
       });
@@ -170,7 +173,7 @@ function FloatingNetwork({ layer }: { layer: number }) {
             key={`node-${layer}-${node.id}`}
             cx={node.x}
             cy={node.y}
-            r={node.size / 8}
+            r={node.size / 6} // Bigger nodes (divided by 6 instead of 8)
             fill="currentColor"
             fillOpacity={0.7}
             animate={{
