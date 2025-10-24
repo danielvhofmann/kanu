@@ -38,13 +38,13 @@ export function AppSidebar() {
             {open && <span className="text-lg font-extralight tracking-tight">corners</span>}
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="mt-6">
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} end className={getNavCls}>
-                      <item.icon className="h-4 w-4" />
-                      {open && <span>{item.title}</span>}
+                      <item.icon className="h-4 w-4 text-black" />
+                      {open && <span className="text-black">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
