@@ -75,8 +75,8 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
   };
 
   return (
-    <header className="border-b border-border bg-card sticky top-0 z-50 w-full">
-      <div className="px-4 py-2 flex items-center gap-3 w-full">
+    <header className="h-14 border-b border-border bg-card sticky top-0 z-50 w-full flex-shrink-0">
+      <div className="px-4 h-full flex items-center gap-3 w-full">
         {/* Sidebar Trigger - Left */}
         <div className="flex-shrink-0">
           <SidebarTrigger />
