@@ -26,28 +26,29 @@ function FloatingNetwork({ layer }: { layer: number }) {
     const layerOffsetY = (layer - 1) * 8;
     
     // Create varied clusters matching the reference image structure
+    // Each cluster gets assigned a color
     const clusters = [
       // Small left clusters
-      { x: 15 + layerOffsetX, y: 30 + layerOffsetY, nodeCount: 4, hubRadius: 4, density: 0.7 },
-      { x: 22 + layerOffsetX, y: 42 + layerOffsetY, nodeCount: 6, hubRadius: 5, density: 0.8 },
+      { x: 15 + layerOffsetX, y: 30 + layerOffsetY, nodeCount: 4, hubRadius: 4, density: 0.7, color: 'cyan' as 'cyan' | 'red' },
+      { x: 22 + layerOffsetX, y: 42 + layerOffsetY, nodeCount: 6, hubRadius: 5, density: 0.8, color: 'cyan' as 'cyan' | 'red' },
       
       // Medium teal-like cluster left
-      { x: 28 + layerOffsetX, y: 52 + layerOffsetY, nodeCount: 8, hubRadius: 7, density: 0.75 },
+      { x: 28 + layerOffsetX, y: 52 + layerOffsetY, nodeCount: 8, hubRadius: 7, density: 0.75, color: 'cyan' as 'cyan' | 'red' },
       
       // Large bottom-left cluster
-      { x: 20 + layerOffsetX, y: 68 + layerOffsetY, nodeCount: 12, hubRadius: 8, density: 0.8 },
+      { x: 20 + layerOffsetX, y: 68 + layerOffsetY, nodeCount: 12, hubRadius: 8, density: 0.8, color: 'red' as 'cyan' | 'red' },
       
       // Top-center orange-like cluster
-      { x: 48 + layerOffsetX, y: 25 + layerOffsetY, nodeCount: 9, hubRadius: 7, density: 0.75 },
+      { x: 48 + layerOffsetX, y: 25 + layerOffsetY, nodeCount: 9, hubRadius: 7, density: 0.75, color: 'red' as 'cyan' | 'red' },
       
       // Large central-right blue-like cluster (biggest)
-      { x: 62 + layerOffsetX, y: 48 + layerOffsetY, nodeCount: 20, hubRadius: 12, density: 0.85 },
+      { x: 62 + layerOffsetX, y: 48 + layerOffsetY, nodeCount: 20, hubRadius: 12, density: 0.85, color: 'cyan' as 'cyan' | 'red' },
       
       // Small pink-like center cluster
-      { x: 50 + layerOffsetX, y: 62 + layerOffsetY, nodeCount: 6, hubRadius: 6, density: 0.7 },
+      { x: 50 + layerOffsetX, y: 62 + layerOffsetY, nodeCount: 6, hubRadius: 6, density: 0.7, color: 'red' as 'cyan' | 'red' },
       
       // Bottom-right yellow-like cluster
-      { x: 78 + layerOffsetX, y: 68 + layerOffsetY, nodeCount: 10, hubRadius: 8, density: 0.75 },
+      { x: 78 + layerOffsetX, y: 68 + layerOffsetY, nodeCount: 10, hubRadius: 8, density: 0.75, color: 'red' as 'cyan' | 'red' },
     ];
     
     const generatedNodes: Node[] = [];
@@ -55,7 +56,7 @@ function FloatingNetwork({ layer }: { layer: number }) {
     let nodeId = 0;
     
     clusters.forEach((cluster) => {
-      const { x: targetCenterX, y: targetCenterY, nodeCount, hubRadius, density } = cluster;
+      const { x: targetCenterX, y: targetCenterY, nodeCount, hubRadius, density, color } = cluster;
       
       // Initial positions - completely random and chaotic across the whole canvas
       const chaosSpread = 150;
@@ -75,7 +76,7 @@ function FloatingNetwork({ layer }: { layer: number }) {
           targetX: targetCenterX + hubOffset,
           targetY: targetCenterY + hubOffset,
           size: 5 + Math.random() * 2, // Bigger hubs
-          color: Math.random() > 0.5 ? 'cyan' : 'red' as 'cyan' | 'red',
+          color: color, // Use cluster color
         };
         generatedNodes.push(hubNode);
         hubNodes.push(hubNode);
@@ -101,7 +102,7 @@ function FloatingNetwork({ layer }: { layer: number }) {
           targetX: targetCenterX + Math.cos(angle) * radius,
           targetY: targetCenterY + Math.sin(angle) * radius,
           size: 2 + Math.random() * 2,
-          color: Math.random() > 0.5 ? 'cyan' : 'red' as 'cyan' | 'red',
+          color: color, // Use cluster color
         });
       }
     });
@@ -111,7 +112,7 @@ function FloatingNetwork({ layer }: { layer: number }) {
     let currentNodeIndex = 0;
     
     clusters.forEach((cluster) => {
-      const { nodeCount, density } = cluster;
+      const { nodeCount, density, color } = cluster;
       const hubCount = nodeCount > 10 ? 2 : 1;
       
       const clusterHubs = generatedNodes.slice(currentNodeIndex, currentNodeIndex + hubCount);
@@ -121,7 +122,7 @@ function FloatingNetwork({ layer }: { layer: number }) {
         generatedEdges.push({ 
           from: clusterHubs[0], 
           to: clusterHubs[1],
-          color: Math.random() > 0.5 ? 'cyan' : 'red' as 'cyan' | 'red'
+          color: color // Use cluster color
         });
       }
       
@@ -132,7 +133,7 @@ function FloatingNetwork({ layer }: { layer: number }) {
         generatedEdges.push({ 
           from: targetHub, 
           to: spokeNode,
-          color: Math.random() > 0.5 ? 'cyan' : 'red' as 'cyan' | 'red'
+          color: color // Use cluster color
         });
         
         // Dense intra-cluster connections based on density
@@ -148,7 +149,7 @@ function FloatingNetwork({ layer }: { layer: number }) {
             generatedEdges.push({ 
               from: spokeNode, 
               to: otherSpoke,
-              color: Math.random() > 0.5 ? 'cyan' : 'red' as 'cyan' | 'red'
+              color: color // Use cluster color
             });
           }
         }
@@ -167,10 +168,11 @@ function FloatingNetwork({ layer }: { layer: number }) {
         
         // Connect hubs that are reasonably close
         if (distance < 40 && Math.random() > 0.4) {
+          // Use color from the first hub node
           generatedEdges.push({ 
             from: hub, 
             to: otherHub,
-            color: Math.random() > 0.5 ? 'cyan' : 'red' as 'cyan' | 'red'
+            color: hub.color
           });
         }
       });
@@ -203,7 +205,7 @@ function FloatingNetwork({ layer }: { layer: number }) {
             generatedEdges.push({ 
               from: spoke, 
               to: nextSpokes[idx],
-              color: Math.random() > 0.5 ? 'cyan' : 'red' as 'cyan' | 'red'
+              color: spoke.color // Use color from the source node
             });
           }
         });
@@ -218,6 +220,18 @@ function FloatingNetwork({ layer }: { layer: number }) {
   return (
     <div className="absolute inset-0 pointer-events-none opacity-50">
       <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id={`fade-gradient-${layer}`} x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopOpacity="1" />
+            <stop offset="70%" stopOpacity="1" />
+            <stop offset="100%" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <g mask={`url(#fade-mask-${layer})`}>
+          <mask id={`fade-mask-${layer}`}>
+            <rect x="0" y="0" width="100" height="100" fill={`url(#fade-gradient-${layer})`} />
+          </mask>
+        
         <title>Network Background Layer {layer}</title>
         
         {/* Render edges */}
@@ -269,6 +283,7 @@ function FloatingNetwork({ layer }: { layer: number }) {
             }}
           />
         ))}
+        </g>
       </svg>
     </div>
   );
