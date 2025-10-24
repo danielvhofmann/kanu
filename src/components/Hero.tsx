@@ -23,7 +23,7 @@ export const Hero = () => {
           className="text-center max-w-5xl mx-auto space-y-12"
         >
           {/* Main headline */}
-          <h1 className="text-7xl lg:text-8xl xl:text-9xl font-light leading-[0.95] text-balance">
+          <h1 className="text-5xl lg:text-6xl xl:text-7xl font-light leading-[0.95] text-balance">
             {"Turn complexity into ".split("").map((letter, i) => (
               <motion.span
                 key={i}
