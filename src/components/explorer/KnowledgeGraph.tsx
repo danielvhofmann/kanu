@@ -122,6 +122,9 @@ export const KnowledgeGraph = ({
       requestAnimationFrame(() => {
         for (const entry of entries) {
           const { width, height } = entry.contentRect;
+          console.log('🎨 Canvas dimensions:', { width, height });
+          console.log('📏 Viewport height:', window.innerHeight);
+          console.log('📐 Expected height:', window.innerHeight - 56); // minus header
           setCanvasDimensions({ width, height });
         }
       });
@@ -387,7 +390,7 @@ export const KnowledgeGraph = ({
   };
 
   return (
-    <div className="w-full h-full flex flex-col overflow-hidden bg-background">
+    <div className="w-full flex-1 flex flex-col overflow-hidden bg-background">
       {/* Header */}
       <ExplorerHeader 
         currentPersonName={personName}
@@ -397,9 +400,9 @@ export const KnowledgeGraph = ({
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden relative h-full min-h-0">
+      <div className="flex-1 flex overflow-hidden relative min-h-0">
         {/* Graph - Use calc to leave room for right panel */}
-        <div ref={canvasRef} className="flex-1 relative bg-card overflow-hidden h-full min-h-0">
+        <div ref={canvasRef} className="flex-1 relative bg-card overflow-hidden min-h-0">
           {/* Timeline Button - Positioned absolutely at bottom */}
           {timelineEvents.length > 0 && (
             <Dialog>

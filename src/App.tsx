@@ -52,7 +52,7 @@ function AppLayout() {
     <SidebarProvider>
       <div className={`${isExplorerOrEditor ? 'h-screen' : 'min-h-screen'} flex w-full overflow-hidden`}>
         {!isLandingPage && !isAuthPage && <AppSidebar />}
-        <main className="flex-1 flex flex-col min-w-0 overflow-hidden h-full">
+        <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
           <AppContent />
         </main>
       </div>
