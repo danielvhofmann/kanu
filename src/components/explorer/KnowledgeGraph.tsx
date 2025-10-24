@@ -5,10 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, ExternalLink, ChevronDown, ChevronRight } from "lucide-react";
 import { Timeline } from "./Timeline";
-import { ExplorerHeader } from "./ExplorerHeader";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useNavigate } from "react-router-dom";
 import { convertExplorerToBuilder } from "@/utils/graphConverter";
+import { useExplorer } from "@/contexts/ExplorerContext";
 
 interface Node {
   id: string;
@@ -64,6 +64,7 @@ export const KnowledgeGraph = ({
   onPersonChange?: (personId: string, personName: string) => void;
 }) => {
   const navigate = useNavigate();
+  const { setSearchHandler, setImportHandler } = useExplorer();
   const [personId, setPersonId] = useState(initialPersonId);
   const [personName, setPersonName] = useState(initialPersonName);
   const graphRef = useRef<any>();
@@ -109,6 +110,12 @@ export const KnowledgeGraph = ({
       toast.error('Failed to import network');
     }
   };
+
+  // Register handlers in context
+  useEffect(() => {
+    setSearchHandler(handlePersonChange);
+    setImportHandler(handleImportToBuilder);
+  }, [graphData, personName, setSearchHandler, setImportHandler]);
 
   useEffect(() => {
     loadNetwork();
@@ -334,14 +341,6 @@ export const KnowledgeGraph = ({
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-background">
-      {/* Header */}
-      <ExplorerHeader 
-        currentPersonName={personName}
-        onSearch={handlePersonChange}
-        onBack={onBack}
-        onImportToBuilder={handleImportToBuilder}
-      />
-
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden relative">
         {/* Graph - Use calc to leave room for right panel */}
