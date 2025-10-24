@@ -22,7 +22,7 @@ const Index = () => {
         <WhatWhyHow />
 
         {/* Three Mode Cards Section */}
-        <section className="relative py-20">
+        <section id="modes" className="relative py-20 scroll-mt-20">
           <div className="container mx-auto px-6">
             <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
               <ModeCard

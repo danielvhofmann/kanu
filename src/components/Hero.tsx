@@ -85,7 +85,10 @@ export const Hero = () => {
             <Button 
               size="lg" 
               className="text-lg px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all"
-              onClick={() => navigate('/editor?template=stakeholder')}
+              onClick={() => {
+                const modesSection = document.querySelector('section.relative.py-20');
+                modesSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
             >
               Get Started
               <ArrowRight className="w-5 h-5 ml-2" />
