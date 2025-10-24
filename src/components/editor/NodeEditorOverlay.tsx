@@ -17,7 +17,7 @@ interface NodeEditorOverlayProps {
 }
 
 const quickColors = [
-  { name: 'Yellow', value: 'hsl(45, 95%, 60%)' },
+  { name: 'Sage', value: 'hsl(150, 25%, 50%)' },
   { name: 'Teal', value: 'hsl(195, 45%, 52%)' },
   { name: 'Burgundy', value: 'hsl(355, 45%, 50%)' },
   { name: 'Green', value: 'hsl(140, 45%, 45%)' },

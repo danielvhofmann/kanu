@@ -36,11 +36,11 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 215 20% 25%;
 
-    /* Primary: Bright vibrant yellow */
-    --primary: 45 95% 60%;
-    --primary-foreground: 0 0% 10%;
-    --primary-light: 45 95% 70%;
-    --primary-glow: 45 100% 75%;
+    /* Primary: Muted sage green */
+    --primary: 150 25% 50%;
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 150 30% 65%;
+    --primary-glow: 150 35% 70%;
 
     /* Secondary: Deep burgundy/red (like Kumu's reds) */
     --secondary: 355 45% 50%;
@@ -71,10 +71,10 @@ All colors MUST be HSL.
 
     --radius: 0.75rem;
 
-    /* Gradients: Subtle, calming transitions with yellow accent */
-    --gradient-hero: linear-gradient(135deg, hsl(45 95% 60%) 0%, hsl(35 90% 65%) 100%);
+    /* Gradients: Subtle, calming transitions with sage accent */
+    --gradient-hero: linear-gradient(135deg, hsl(150 25% 50%) 0%, hsl(160 30% 60%) 100%);
     --gradient-subtle: linear-gradient(180deg, hsl(0 0% 99%) 0%, hsl(210 20% 97%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(45 95% 70%) 0%, hsl(40 90% 65%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(150 30% 65%) 0%, hsl(140 35% 60%) 100%);
 
     /* Shadows: Soft, elegant depth */
     --shadow-sm: 0 2px 8px -2px hsl(215 20% 25% / 0.06);

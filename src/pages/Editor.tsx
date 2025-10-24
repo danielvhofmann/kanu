@@ -64,7 +64,7 @@ const Editor = () => {
   // Color palettes
   const paletteColors: Record<string, string[]> = {
     default: [
-      'hsl(45, 95%, 60%)',
+      'hsl(150, 25%, 50%)',
       'hsl(195, 45%, 52%)',
       'hsl(355, 45%, 50%)',
       'hsl(30, 35%, 55%)',
@@ -154,7 +154,7 @@ const Editor = () => {
     
     setNodes(currentNodes => {
       const colors = [
-        { bg: 'hsl(45, 95%, 60%)', border: 'hsl(45, 95%, 70%)' },
+        { bg: 'hsl(150, 25%, 50%)', border: 'hsl(150, 30%, 65%)' },
         { bg: 'hsl(195, 45%, 52%)', border: 'hsl(195, 50%, 68%)' },
         { bg: 'hsl(355, 45%, 50%)', border: 'hsl(355, 50%, 65%)' },
         { bg: 'hsl(30, 35%, 55%)', border: 'hsl(30, 40%, 68%)' },
