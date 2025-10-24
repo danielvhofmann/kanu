@@ -97,9 +97,9 @@ export const KnowledgeGraph = ({
 
       // Add colors and scale node sizes
       const nodesWithColors = data.nodes.map((node: Node) => {
-        const baseSize = 25 + (node.importanceScore || 0) / 40;
-        // Make the main person 1.5x larger
-        const size = node.id === personId ? baseSize * 1.5 : baseSize;
+        const baseSize = 8 + (node.importanceScore || 0) / 100;
+        // Make the main person 1.8x larger
+        const size = node.id === personId ? baseSize * 1.8 : baseSize;
         return {
           ...node,
           color: categoryColors[node.category] || categoryColors.Other,
@@ -109,12 +109,15 @@ export const KnowledgeGraph = ({
 
       setGraphData({ nodes: nodesWithColors, links: data.links });
       
-      // Auto-select main person
+      // Auto-select main person and generate bio
       const mainNode = nodesWithColors.find((n: Node) => n.id === personId);
       if (mainNode) {
+        // Set selected node immediately
+        setSelectedNode(mainNode);
+        generateBioSummary(mainNode);
+        
+        // Center graph after a short delay
         setTimeout(() => {
-          setSelectedNode(mainNode);
-          generateBioSummary(mainNode);
           if (graphRef.current) {
             graphRef.current.centerAt(0, 0, 1000);
             graphRef.current.zoom(2, 1000);
@@ -230,9 +233,9 @@ export const KnowledgeGraph = ({
     if (graphRef.current) {
       const fg = graphRef.current;
       
-      // Configure forces
-      fg.d3Force('charge').strength(-300);
-      fg.d3Force('link').distance(80);
+      // Configure forces for better spacing
+      fg.d3Force('charge').strength(-500);  // Increased repulsion
+      fg.d3Force('link').distance(120);     // Increased link distance
       
       // Add bounding force
       fg.d3Force('bounds', () => {
