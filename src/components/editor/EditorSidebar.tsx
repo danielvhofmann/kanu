@@ -27,7 +27,7 @@ interface EditorSidebarProps {
 
 const colorPalettes = {
   'Default': [
-    { name: 'Orange', value: 'hsl(16, 85%, 60%)' },
+    { name: 'Yellow', value: 'hsl(45, 95%, 60%)' },
     { name: 'Teal', value: 'hsl(195, 45%, 52%)' },
     { name: 'Burgundy', value: 'hsl(355, 45%, 50%)' },
     { name: 'Brown', value: 'hsl(30, 35%, 55%)' },
