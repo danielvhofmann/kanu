@@ -1,36 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { SearchAutocomplete } from "@/components/explorer/SearchAutocomplete";
 import { KnowledgeGraph } from "@/components/explorer/KnowledgeGraph";
 import { Network } from "lucide-react";
-import { useExplorer } from "@/contexts/ExplorerContext";
 
 const Explorer = () => {
   const [selectedPerson, setSelectedPerson] = useState<{ id: string; name: string } | null>(null);
-  const { setCurrentPerson, clearCurrentPerson } = useExplorer();
 
   const handlePersonSelect = (personId: string, personName: string) => {
     setSelectedPerson({ id: personId, name: personName });
-    setCurrentPerson(personId, personName);
   };
 
   const handleBack = () => {
     setSelectedPerson(null);
-    clearCurrentPerson();
   };
 
   const handlePersonChange = (personId: string, personName: string) => {
     setSelectedPerson({ id: personId, name: personName });
-    setCurrentPerson(personId, personName);
   };
-
-  useEffect(() => {
-    // Clear context when component unmounts or person is deselected
-    return () => {
-      if (!selectedPerson) {
-        clearCurrentPerson();
-      }
-    };
-  }, [selectedPerson, clearCurrentPerson]);
 
   if (selectedPerson) {
     return (
