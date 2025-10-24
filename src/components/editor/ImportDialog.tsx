@@ -377,11 +377,112 @@ export const ImportDialog = ({ open, onOpenChange, onImport }: ImportDialogProps
               </TabsList>
 
               <TabsContent value="upload" className="space-y-4 mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Option 1: Network Analysis from Raw Data */}
+                  <div className="border-2 border-dashed rounded-xl p-6 hover:border-primary/50 transition-colors">
+                    <div className="text-center mb-4">
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                        <FileSpreadsheet className="w-6 h-6 text-primary" />
+                      </div>
+                      <h3 className="text-base font-medium mb-2">Network Analysis</h3>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Upload raw data to calculate correlation matrix
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Button asChild variant="outline" size="sm" className="w-full">
+                        <label className="cursor-pointer">
+                          Upload Data
+                          <input
+                            type="file"
+                            accept=".csv,.xlsx"
+                            className="hidden"
+                            onChange={handleFileInput}
+                          />
+                        </label>
+                      </Button>
+                      
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full text-xs"
+                        onClick={() => {
+                          const template = "Variable1,Variable2,Variable3,Variable4\n1,2,3,4\n2,3,NA,5\n3,4,5,6\n4,NA,6,7\n5,6,7,8";
+                          const blob = new Blob([template], { type: 'text/csv' });
+                          const url = window.URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = 'network_analysis_template.csv';
+                          a.click();
+                        }}
+                      >
+                        Download Template
+                      </Button>
+                    </div>
+                    
+                    <div className="mt-4 p-3 bg-muted/30 rounded text-xs">
+                      <p className="font-medium mb-1">Format:</p>
+                      <p className="text-muted-foreground">Variables as columns, observations as rows. Missing data as "NA"</p>
+                    </div>
+                  </div>
+
+                  {/* Option 2: Edge List */}
+                  <div className="border-2 border-dashed rounded-xl p-6 hover:border-primary/50 transition-colors">
+                    <div className="text-center mb-4">
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                        <Link2 className="w-6 h-6 text-primary" />
+                      </div>
+                      <h3 className="text-base font-medium mb-2">Edge List</h3>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Upload predefined connections between nodes
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Button asChild variant="outline" size="sm" className="w-full">
+                        <label className="cursor-pointer">
+                          Upload Connections
+                          <input
+                            type="file"
+                            accept=".csv,.xlsx"
+                            className="hidden"
+                            onChange={handleFileInput}
+                          />
+                        </label>
+                      </Button>
+                      
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full text-xs"
+                        onClick={() => {
+                          const template = "source,target,label\nNode A,Node B,Connected to\nNode B,Node C,Influences\nNode A,Node C,Related to\nNode C,Node D,Causes";
+                          const blob = new Blob([template], { type: 'text/csv' });
+                          const url = window.URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = 'edge_list_template.csv';
+                          a.click();
+                        }}
+                      >
+                        Download Template
+                      </Button>
+                    </div>
+                    
+                    <div className="mt-4 p-3 bg-muted/30 rounded text-xs">
+                      <p className="font-medium mb-1">Format:</p>
+                      <p className="text-muted-foreground">source, target, label columns defining connections</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Drag and drop area */}
                 <div
-                  className={`border-2 border-dashed rounded-xl p-12 text-center transition-colors ${
+                  className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
                     isDragging
                       ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary/50'
+                      : 'border-border/50'
                   }`}
                   onDragOver={(e) => {
                     e.preventDefault();
@@ -390,30 +491,9 @@ export const ImportDialog = ({ open, onOpenChange, onImport }: ImportDialogProps
                   onDragLeave={() => setIsDragging(false)}
                   onDrop={handleDrop}
                 >
-                  <FileSpreadsheet className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-light mb-2">Drop your file here</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    CSV or XLSX files accepted
+                  <p className="text-sm text-muted-foreground">
+                    Or drag and drop your CSV file here
                   </p>
-                  <Button asChild variant="outline">
-                    <label className="cursor-pointer">
-                      Browse Files
-                      <input
-                        type="file"
-                        accept=".csv,.xlsx"
-                        className="hidden"
-                        onChange={handleFileInput}
-                      />
-                    </label>
-                  </Button>
-                </div>
-
-                <div className="bg-muted/50 rounded-lg p-4 text-sm">
-                  <p className="font-medium mb-2">Expected Format:</p>
-                  <div className="space-y-2 text-muted-foreground">
-                    <p><strong>Edge list:</strong> source,target,label</p>
-                    <p><strong>Node list:</strong> id,label,type</p>
-                  </div>
                 </div>
               </TabsContent>
 
