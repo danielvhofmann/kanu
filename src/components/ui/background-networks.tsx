@@ -22,9 +22,9 @@ function FloatingNetwork({ layer }: { layer: number }) {
     // Generate random nodes with initial and target positions
     const nodeCount = 20 + layer * 5;
     const generatedNodes: Node[] = Array.from({ length: nodeCount }, (_, i) => {
-      // Initial random position
-      const initialX = Math.random() * 100;
-      const initialY = Math.random() * 100;
+      // Initial random position - spread far apart
+      const initialX = Math.random() * 150 - 25; // -25 to 125 (wider spread)
+      const initialY = Math.random() * 150 - 25;
       
       // Target position - more structured (grid-like with some randomness)
       const cols = Math.ceil(Math.sqrt(nodeCount));
@@ -81,10 +81,10 @@ function FloatingNetwork({ layer }: { layer: number }) {
               y1: [edge.from.y, edge.from.targetY, edge.from.y],
               x2: [edge.to.x, edge.to.targetX, edge.to.x],
               y2: [edge.to.y, edge.to.targetY, edge.to.y],
-              opacity: [0, 0.4, 0],
+              opacity: [0.1, 0.5, 0.1],
             }}
             transition={{
-              duration: 12,
+              duration: 20,
               ease: "easeInOut",
               repeat: Infinity,
               delay: i * 0.02,
@@ -104,11 +104,11 @@ function FloatingNetwork({ layer }: { layer: number }) {
             animate={{
               cx: [node.x, node.targetX, node.x],
               cy: [node.y, node.targetY, node.y],
-              scale: [0.8, 1, 0.8],
-              opacity: [0.3, 0.6, 0.3],
+              scale: [0.8, 1.2, 0.8],
+              opacity: [0.4, 0.7, 0.4],
             }}
             transition={{
-              duration: 12,
+              duration: 20,
               ease: "easeInOut",
               repeat: Infinity,
               delay: node.id * 0.05,
