@@ -15,6 +15,7 @@ import { getTemplate, type TemplateType } from '@/lib/templates';
 import { toast } from 'sonner';
 import * as d3 from 'd3';
 import { Badge } from '@/components/ui/badge';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
@@ -608,6 +609,8 @@ const Editor = () => {
       {/* Top navigation */}
       <div className="h-16 border-b border-border/50 flex items-center justify-between px-6 bg-card/50 backdrop-blur-lg">
         <div className="flex items-center gap-4">
+          <SidebarTrigger />
+          <div className="h-6 w-px bg-border" />
           <Button
             variant="ghost"
             size="sm"

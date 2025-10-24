@@ -15,11 +15,11 @@ const queryClient = new QueryClient();
 
 function AppContent() {
   const location = useLocation();
-  const isExplorer = location.pathname === '/explorer';
+  const isExplorerOrEditor = location.pathname === '/explorer' || location.pathname === '/editor';
   
   return (
     <>
-      {!isExplorer && (
+      {!isExplorerOrEditor && (
         <header className="h-12 flex items-center border-b border-border/50 bg-background/80 backdrop-blur-lg sticky top-0 z-40 px-4">
           <SidebarTrigger />
         </header>
