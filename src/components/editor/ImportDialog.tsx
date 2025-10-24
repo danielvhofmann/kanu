@@ -8,9 +8,20 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload, FileSpreadsheet, Link2, X } from 'lucide-react';
+import { Upload, FileSpreadsheet, Link2, X, Check, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Node, Edge } from 'reactflow';
+import ReactFlow, { Background, Controls } from 'reactflow';
+import 'reactflow/dist/style.css';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ImportDialogProps {
   open: boolean;
@@ -21,6 +32,10 @@ interface ImportDialogProps {
 export const ImportDialog = ({ open, onOpenChange, onImport }: ImportDialogProps) => {
   const { toast } = useToast();
   const [isDragging, setIsDragging] = useState(false);
+  const [previewMode, setPreviewMode] = useState(false);
+  const [previewNodes, setPreviewNodes] = useState<Node[]>([]);
+  const [previewEdges, setPreviewEdges] = useState<Edge[]>([]);
+  const [tableData, setTableData] = useState<Array<Record<string, string>>>([]);
 
   const handleFileUpload = (file: File) => {
     const reader = new FileReader();
@@ -35,16 +50,24 @@ export const ImportDialog = ({ open, onOpenChange, onImport }: ImportDialogProps
 
         // Parse CSV/Excel - expect format: source,target,label (for edges) or id,label,type (for nodes)
         const header = lines[0].toLowerCase();
+        const headerParts = lines[0].split(',').map(s => s.trim());
         
         if (header.includes('source') && header.includes('target')) {
           // Edge list format
           const newNodes = new Map<string, Node>();
           const newEdges: Edge[] = [];
+          const rawData: Array<Record<string, string>> = [];
           
           for (let i = 1; i < lines.length; i++) {
             const [source, target, label] = lines[i].split(',').map(s => s.trim());
             
             if (!source || !target) continue;
+            
+            rawData.push({
+              source,
+              target,
+              label: label || '',
+            });
             
             const colors = [
               { bg: 'hsl(195, 45%, 52%)', border: 'hsl(195, 50%, 68%)' },
@@ -126,15 +149,14 @@ export const ImportDialog = ({ open, onOpenChange, onImport }: ImportDialogProps
             });
           }
           
-          onImport(Array.from(newNodes.values()), newEdges);
-          toast({
-            title: 'Import successful',
-            description: `Imported ${newNodes.size} nodes and ${newEdges.length} connections`,
-          });
-          onOpenChange(false);
+          setPreviewNodes(Array.from(newNodes.values()));
+          setPreviewEdges(newEdges);
+          setTableData(rawData);
+          setPreviewMode(true);
         } else {
           // Node list format
           const newNodes: Node[] = [];
+          const rawData: Array<Record<string, string>> = [];
           
           const colors = [
             { bg: 'hsl(195, 45%, 52%)', border: 'hsl(195, 50%, 68%)' },
@@ -148,6 +170,12 @@ export const ImportDialog = ({ open, onOpenChange, onImport }: ImportDialogProps
             const [id, label, type] = lines[i].split(',').map(s => s.trim());
             
             if (!id) continue;
+            
+            rawData.push({
+              id,
+              label: label || id,
+              type: type || '',
+            });
             
             const color = colors[i % colors.length];
             
@@ -178,12 +206,10 @@ export const ImportDialog = ({ open, onOpenChange, onImport }: ImportDialogProps
             });
           }
           
-          onImport(newNodes, []);
-          toast({
-            title: 'Import successful',
-            description: `Imported ${newNodes.length} nodes`,
-          });
-          onOpenChange(false);
+          setPreviewNodes(newNodes);
+          setPreviewEdges([]);
+          setTableData(rawData);
+          setPreviewMode(true);
         }
       } catch (error) {
         toast({
@@ -219,99 +245,195 @@ export const ImportDialog = ({ open, onOpenChange, onImport }: ImportDialogProps
     }
   };
 
+  const handleConfirmImport = () => {
+    onImport(previewNodes, previewEdges);
+    toast({
+      title: 'Import successful',
+      description: `Imported ${previewNodes.length} nodes${previewEdges.length > 0 ? ` and ${previewEdges.length} connections` : ''}`,
+    });
+    setPreviewMode(false);
+    setPreviewNodes([]);
+    setPreviewEdges([]);
+    setTableData([]);
+    onOpenChange(false);
+  };
+
+  const handleBackToUpload = () => {
+    setPreviewMode(false);
+    setPreviewNodes([]);
+    setPreviewEdges([]);
+    setTableData([]);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-light">Import Your Data</DialogTitle>
-          <DialogDescription>
-            Start by importing data from a file or connecting to Google Sheets
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-6xl max-h-[90vh]">
+        {!previewMode ? (
+          <>
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-light">Import Your Data</DialogTitle>
+              <DialogDescription>
+                Start by importing data from a file or connecting to Google Sheets
+              </DialogDescription>
+            </DialogHeader>
 
-        <Tabs defaultValue="upload" className="mt-4">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="upload">
-              <Upload className="w-4 h-4 mr-2" />
-              Upload File
-            </TabsTrigger>
-            <TabsTrigger value="sheets">
-              <Link2 className="w-4 h-4 mr-2" />
-              Google Sheets
-            </TabsTrigger>
-          </TabsList>
+            <Tabs defaultValue="upload" className="mt-4">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="upload">
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload File
+                </TabsTrigger>
+                <TabsTrigger value="sheets">
+                  <Link2 className="w-4 h-4 mr-2" />
+                  Google Sheets
+                </TabsTrigger>
+              </TabsList>
 
-          <TabsContent value="upload" className="space-y-4 mt-6">
-            <div
-              className={`border-2 border-dashed rounded-xl p-12 text-center transition-colors ${
-                isDragging
-                  ? 'border-primary bg-primary/5'
-                  : 'border-border hover:border-primary/50'
-              }`}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setIsDragging(true);
-              }}
-              onDragLeave={() => setIsDragging(false)}
-              onDrop={handleDrop}
-            >
-              <FileSpreadsheet className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-light mb-2">Drop your file here</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                CSV or XLSX files accepted
-              </p>
-              <Button asChild variant="outline">
-                <label className="cursor-pointer">
-                  Browse Files
-                  <input
-                    type="file"
-                    accept=".csv,.xlsx"
-                    className="hidden"
-                    onChange={handleFileInput}
-                  />
-                </label>
+              <TabsContent value="upload" className="space-y-4 mt-6">
+                <div
+                  className={`border-2 border-dashed rounded-xl p-12 text-center transition-colors ${
+                    isDragging
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDragging(true);
+                  }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={handleDrop}
+                >
+                  <FileSpreadsheet className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-lg font-light mb-2">Drop your file here</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    CSV or XLSX files accepted
+                  </p>
+                  <Button asChild variant="outline">
+                    <label className="cursor-pointer">
+                      Browse Files
+                      <input
+                        type="file"
+                        accept=".csv,.xlsx"
+                        className="hidden"
+                        onChange={handleFileInput}
+                      />
+                    </label>
+                  </Button>
+                </div>
+
+                <div className="bg-muted/50 rounded-lg p-4 text-sm">
+                  <p className="font-medium mb-2">Expected Format:</p>
+                  <div className="space-y-2 text-muted-foreground">
+                    <p><strong>Edge list:</strong> source,target,label</p>
+                    <p><strong>Node list:</strong> id,label,type</p>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="sheets" className="space-y-4 mt-6">
+                <div className="border rounded-xl p-8 text-center">
+                  <Link2 className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-lg font-light mb-2">Connect Google Sheets</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Live sync your data from Google Sheets
+                  </p>
+                  <Button variant="outline" disabled>
+                    Connect Google Sheets
+                    <span className="ml-2 text-xs text-muted-foreground">(Coming Soon)</span>
+                  </Button>
+                </div>
+
+                <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground">
+                  <p>
+                    Google Sheets integration will allow you to keep your map in sync
+                    with a live spreadsheet, perfect for collaborative data collection.
+                  </p>
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            <div className="flex justify-between items-center pt-4 border-t">
+              <Button variant="ghost" onClick={() => onOpenChange(false)}>
+                Skip for now
               </Button>
+              <p className="text-xs text-muted-foreground">
+                You can import data later from the toolbar
+              </p>
             </div>
+          </>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-light">Preview Import</DialogTitle>
+              <DialogDescription>
+                Review your data before importing
+              </DialogDescription>
+            </DialogHeader>
 
-            <div className="bg-muted/50 rounded-lg p-4 text-sm">
-              <p className="font-medium mb-2">Expected Format:</p>
-              <div className="space-y-2 text-muted-foreground">
-                <p><strong>Edge list:</strong> source,target,label</p>
-                <p><strong>Node list:</strong> id,label,type</p>
+            <div className="grid grid-cols-2 gap-4 mt-4" style={{ height: '60vh' }}>
+              {/* Table Preview - Left */}
+              <div className="border rounded-lg overflow-hidden flex flex-col">
+                <div className="bg-muted px-4 py-2 border-b">
+                  <h3 className="font-medium text-sm">Data Table</h3>
+                </div>
+                <ScrollArea className="flex-1">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        {tableData.length > 0 && Object.keys(tableData[0]).map((key) => (
+                          <TableHead key={key} className="capitalize">{key}</TableHead>
+                        ))}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {tableData.map((row, index) => (
+                        <TableRow key={index}>
+                          {Object.values(row).map((value, i) => (
+                            <TableCell key={i}>{value}</TableCell>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+              </div>
+
+              {/* Network Preview - Right */}
+              <div className="border rounded-lg overflow-hidden flex flex-col">
+                <div className="bg-muted px-4 py-2 border-b">
+                  <h3 className="font-medium text-sm">Network Preview</h3>
+                </div>
+                <div className="flex-1 bg-background">
+                  <ReactFlow
+                    nodes={previewNodes}
+                    edges={previewEdges}
+                    fitView
+                    attributionPosition="bottom-left"
+                  >
+                    <Background />
+                    <Controls />
+                  </ReactFlow>
+                </div>
               </div>
             </div>
-          </TabsContent>
 
-          <TabsContent value="sheets" className="space-y-4 mt-6">
-            <div className="border rounded-xl p-8 text-center">
-              <Link2 className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-light mb-2">Connect Google Sheets</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Live sync your data from Google Sheets
-              </p>
-              <Button variant="outline" disabled>
-                Connect Google Sheets
-                <span className="ml-2 text-xs text-muted-foreground">(Coming Soon)</span>
+            <div className="flex justify-between items-center pt-4 border-t">
+              <Button variant="ghost" onClick={handleBackToUpload}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back
               </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => onOpenChange(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleConfirmImport}>
+                  <Check className="w-4 h-4 mr-2" />
+                  Confirm Import
+                </Button>
+              </div>
             </div>
-
-            <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground">
-              <p>
-                Google Sheets integration will allow you to keep your map in sync
-                with a live spreadsheet, perfect for collaborative data collection.
-              </p>
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        <div className="flex justify-between items-center pt-4 border-t">
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Skip for now
-          </Button>
-          <p className="text-xs text-muted-foreground">
-            You can import data later from the toolbar
-          </p>
-        </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
