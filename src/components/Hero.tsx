@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { BackgroundNetworks } from "@/components/ui/background-networks";
+import { motion } from "framer-motion";
 
 export const Hero = () => {
   const navigate = useNavigate();
@@ -10,12 +12,53 @@ export const Hero = () => {
       {/* Large circular gradient background */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140vh] h-[140vh] rounded-full bg-gradient-to-br from-orange-200/40 via-white to-rose-100/40 blur-3xl" />
       
+      {/* Animated network background */}
+      <BackgroundNetworks />
+      
       <div className="container mx-auto px-6 relative z-10">
-        <div className="text-center max-w-5xl mx-auto space-y-12 animate-fade-in">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1.5 }}
+          className="text-center max-w-5xl mx-auto space-y-12"
+        >
           {/* Main headline */}
           <h1 className="text-7xl lg:text-8xl xl:text-9xl font-light leading-[0.95] text-balance">
-            Turn complexity into{" "}
-            <span className="font-light italic">clarity</span>.
+            {"Turn complexity into ".split("").map((letter, i) => (
+              <motion.span
+                key={i}
+                initial={{ y: 50, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{
+                  delay: i * 0.02,
+                  type: "spring",
+                  stiffness: 150,
+                  damping: 25,
+                }}
+                className="inline-block"
+              >
+                {letter}
+              </motion.span>
+            ))}
+            <span className="font-light italic">
+              {"clarity".split("").map((letter, i) => (
+                <motion.span
+                  key={i + 100}
+                  initial={{ y: 50, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{
+                    delay: (i + 20) * 0.02,
+                    type: "spring",
+                    stiffness: 150,
+                    damping: 25,
+                  }}
+                  className="inline-block"
+                >
+                  {letter}
+                </motion.span>
+              ))}
+            </span>
+            .
           </h1>
           
           {/* Subheadline with inline badges */}
@@ -54,7 +97,7 @@ export const Hero = () => {
               <span>Free forever plan</span>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
