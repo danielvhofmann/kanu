@@ -385,7 +385,7 @@ export const KnowledgeGraph = ({
   };
 
   return (
-    <div className="w-full h-full flex flex-col overflow-hidden bg-background">
+    <div className="w-full h-screen flex flex-col overflow-hidden bg-background">
       {/* Header */}
       <ExplorerHeader 
         currentPersonName={personName}
