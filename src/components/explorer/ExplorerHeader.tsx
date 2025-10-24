@@ -114,14 +114,14 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
           )}
         </div>
 
-        {/* Import Button and User Icon - Right */}
-        <div className="absolute right-6 flex items-center gap-2">
+        {/* Import Button and User Icon - Top Right */}
+        <div className="absolute right-2 top-1 flex items-center gap-1">
           {onImportToBuilder && (
             <Button 
               variant="hero" 
               size="sm"
               onClick={onImportToBuilder}
-              className="gap-2"
+              className="gap-2 h-8"
             >
               <Upload className="w-4 h-4" />
               Import to Builder
