@@ -1,54 +1,107 @@
 import { useState, useCallback } from 'react';
-import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from 'react-simple-maps';
-import { Node } from 'reactflow';
+import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps';
 import { Button } from '@/components/ui/button';
-import { X, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { X, ZoomIn, ZoomOut, RotateCcw, Check } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
 
-const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
+const mapSources = {
+  world: {
+    url: "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json",
+    name: "World Map"
+  },
+  worldDetailed: {
+    url: "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json",
+    name: "World (Detailed)"
+  },
+  usStates: {
+    url: "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json",
+    name: "USA States"
+  }
+};
 
 interface MapOverlayProps {
-  nodes: Node[];
-  onUpdateNode: (nodeId: string, coordinates: [number, number]) => void;
+  onSelectBackground: (mapData: any) => void;
   onClose: () => void;
 }
 
-export const MapOverlay = ({ nodes, onUpdateNode, onClose }: MapOverlayProps) => {
+export const MapOverlay = ({ onSelectBackground, onClose }: MapOverlayProps) => {
   const [zoom, setZoom] = useState(1);
   const [center, setCenter] = useState<[number, number]>([0, 0]);
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [selectedRegion, setSelectedRegion] = useState<any>(null);
+  const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
+  const [mapSource, setMapSource] = useState<keyof typeof mapSources>('world');
 
-  const handleMapClick = useCallback((event: any) => {
-    if (!selectedNodeId) return;
-    
-    const coords = event.coordinates as [number, number];
-    onUpdateNode(selectedNodeId, coords);
-    setSelectedNodeId(null);
-  }, [selectedNodeId, onUpdateNode]);
+  const handleRegionClick = useCallback((geo: any) => {
+    setSelectedRegion(geo);
+    const regionName = geo.properties.name || geo.properties.NAME || 'Selected Region';
+    toast.success(`Selected: ${regionName}`);
+  }, []);
 
   const handleZoomIn = () => setZoom(prev => Math.min(prev * 1.5, 8));
   const handleZoomOut = () => setZoom(prev => Math.max(prev / 1.5, 1));
   const handleReset = () => {
     setZoom(1);
     setCenter([0, 0]);
+    setSelectedRegion(null);
   };
 
-  const nodesWithCoords = nodes.filter(n => n.data.coordinates);
+  const handleUseAsBackground = useCallback(() => {
+    if (selectedRegion) {
+      onSelectBackground({
+        geography: selectedRegion,
+        mapSource: mapSources[mapSource].url,
+        zoom,
+        center,
+      });
+      const regionName = selectedRegion.properties.name || selectedRegion.properties.NAME || 'Region';
+      toast.success(`Applied ${regionName} as network background`);
+      onClose();
+    }
+  }, [selectedRegion, mapSource, zoom, center, onSelectBackground, onClose]);
+
+  const getRegionName = (geo: any) => {
+    return geo.properties.name || geo.properties.NAME || geo.properties.NAME_LONG || 'Unknown';
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm">
       <div className="h-full flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <div>
-            <h2 className="text-xl font-semibold">Geographic Layout Mode</h2>
+        <div className="flex items-center justify-between p-4 border-b border-border bg-card/50 backdrop-blur-lg">
+          <div className="flex-1">
+            <h2 className="text-xl font-semibold">Select Geographic Region</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              {selectedNodeId 
-                ? "Click on the map to place the selected node" 
-                : "Select a node from the list to position it on the map"}
+              {selectedRegion 
+                ? `Selected: ${getRegionName(selectedRegion)}` 
+                : "Click on a region to select it as your network background"}
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <Select value={mapSource} onValueChange={(value) => setMapSource(value as keyof typeof mapSources)}>
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(mapSources).map(([key, source]) => (
+                  <SelectItem key={key} value={key}>
+                    {source.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="w-px h-6 bg-border" />
+            <Button 
+              variant="default" 
+              size="sm"
+              onClick={handleUseAsBackground}
+              disabled={!selectedRegion}
+              className="gap-2"
+            >
+              <Check className="w-4 h-4" />
+              Use as Background
+            </Button>
+            <div className="w-px h-6 bg-border" />
             <Button variant="ghost" size="icon" onClick={handleZoomIn}>
               <ZoomIn className="w-4 h-4" />
             </Button>
@@ -64,108 +117,58 @@ export const MapOverlay = ({ nodes, onUpdateNode, onClose }: MapOverlayProps) =>
           </div>
         </div>
 
-        <div className="flex-1 flex">
-          {/* Sidebar with node list */}
-          <Card className="w-64 m-4 p-4 overflow-auto">
-            <h3 className="font-semibold mb-3">Nodes</h3>
-            <div className="space-y-2">
-              {nodes.map((node) => (
-                <Button
-                  key={node.id}
-                  variant={selectedNodeId === node.id ? "default" : "outline"}
-                  size="sm"
-                  className="w-full justify-start"
-                  onClick={() => setSelectedNodeId(node.id)}
-                >
-                  <div className="flex items-center gap-2 w-full">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: node.style?.background as string }}
-                    />
-                    <span className="truncate">{node.data.label}</span>
-                    {node.data.coordinates && (
-                      <span className="ml-auto text-xs text-muted-foreground">✓</span>
-                    )}
-                  </div>
-                </Button>
-              ))}
-            </div>
-          </Card>
-
-          {/* Map */}
-          <div className="flex-1 m-4 rounded-lg overflow-hidden bg-card border border-border">
+        <div className="flex-1 flex p-4">
+          {/* Map - Full Width */}
+          <div className="flex-1 rounded-lg overflow-hidden bg-card border border-border shadow-lg">
             <ComposableMap 
               projection="geoMercator"
               style={{ width: '100%', height: '100%' }}
             >
               <ZoomableGroup zoom={zoom} center={center} onMoveEnd={setCenter}>
-                <Geographies geography={geoUrl}>
+                <Geographies geography={mapSources[mapSource].url}>
                   {({ geographies }) =>
-                    geographies.map((geo) => (
-                      <Geography
-                        key={geo.rsmKey}
-                        geography={geo}
-                        onClick={handleMapClick}
-                        style={{
-                          default: {
-                            fill: 'hsl(var(--muted))',
-                            stroke: 'hsl(var(--border))',
-                            strokeWidth: 0.5,
-                            outline: 'none',
-                          },
-                          hover: {
-                            fill: 'hsl(var(--accent))',
-                            stroke: 'hsl(var(--border))',
-                            strokeWidth: 0.5,
-                            outline: 'none',
-                            cursor: selectedNodeId ? 'crosshair' : 'default',
-                          },
-                          pressed: {
-                            fill: 'hsl(var(--primary))',
-                            stroke: 'hsl(var(--border))',
-                            strokeWidth: 0.5,
-                            outline: 'none',
-                          },
-                        }}
-                      />
-                    ))
+                    geographies.map((geo) => {
+                      const isSelected = selectedRegion?.rsmKey === geo.rsmKey;
+                      const isHovered = hoveredRegion === geo.rsmKey;
+                      
+                      return (
+                        <Geography
+                          key={geo.rsmKey}
+                          geography={geo}
+                          onClick={() => handleRegionClick(geo)}
+                          onMouseEnter={() => setHoveredRegion(geo.rsmKey)}
+                          onMouseLeave={() => setHoveredRegion(null)}
+                          style={{
+                            default: {
+                              fill: isSelected 
+                                ? 'hsl(var(--primary))' 
+                                : 'hsl(var(--muted))',
+                              stroke: 'hsl(var(--border))',
+                              strokeWidth: isSelected ? 1.5 : 0.5,
+                              outline: 'none',
+                              transition: 'all 0.2s',
+                            },
+                            hover: {
+                              fill: isSelected 
+                                ? 'hsl(var(--primary))' 
+                                : 'hsl(var(--accent))',
+                              stroke: 'hsl(var(--primary))',
+                              strokeWidth: 1,
+                              outline: 'none',
+                              cursor: 'pointer',
+                            },
+                            pressed: {
+                              fill: 'hsl(var(--primary))',
+                              stroke: 'hsl(var(--primary))',
+                              strokeWidth: 1.5,
+                              outline: 'none',
+                            },
+                          }}
+                        />
+                      );
+                    })
                   }
                 </Geographies>
-                
-                {/* Render markers for nodes with coordinates */}
-                {nodesWithCoords.map((node) => (
-                  <Marker 
-                    key={node.id} 
-                    coordinates={node.data.coordinates as [number, number]}
-                  >
-                    <g
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedNodeId(node.id);
-                      }}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <circle
-                        r={6 / zoom}
-                        fill={node.style?.background as string || 'hsl(var(--primary))'}
-                        stroke="white"
-                        strokeWidth={2 / zoom}
-                      />
-                      <text
-                        textAnchor="middle"
-                        y={-12 / zoom}
-                        style={{
-                          fill: 'hsl(var(--foreground))',
-                          fontSize: `${12 / zoom}px`,
-                          fontWeight: 500,
-                          pointerEvents: 'none',
-                        }}
-                      >
-                        {node.data.label}
-                      </text>
-                    </g>
-                  </Marker>
-                ))}
               </ZoomableGroup>
             </ComposableMap>
           </div>

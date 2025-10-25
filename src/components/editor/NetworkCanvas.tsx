@@ -13,6 +13,7 @@ interface NetworkCanvasProps {
   onEdgeClick: (edge: Edge) => void;
   isSketchMode: boolean;
   backgroundColor?: string;
+  mapBackground?: any;
 }
 
 export const NetworkCanvas = ({
@@ -26,6 +27,7 @@ export const NetworkCanvas = ({
   onEdgeClick,
   isSketchMode,
   backgroundColor = 'hsl(var(--background))',
+  mapBackground,
 }: NetworkCanvasProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const simulationRef = useRef<d3.Simulation<any, any> | null>(null);
@@ -96,7 +98,8 @@ export const NetworkCanvas = ({
       .attr('fill', 'currentColor')
       .style('color', 'inherit');
 
-    // Create groups for edges and nodes
+    // Create groups for map background, edges, and nodes (in order)
+    g.append('g').attr('class', 'map-background-group');
     g.append('g').attr('class', 'edges-group');
     g.append('g').attr('class', 'nodes-group');
 
@@ -442,6 +445,38 @@ export const NetworkCanvas = ({
       nodeMerge.attr('transform', (d: any) => `translate(${d.x},${d.y})`);
     });
   }, [nodes, edges, selectedNodeId, selectedEdgeId, isSketchMode, onNodeClick, onEdgeClick, onNodesChange, onEdgesChange]);
+
+  // Render map background when provided
+  useEffect(() => {
+    if (!svgRef.current || !mapBackground) return;
+
+    const svg = d3.select(svgRef.current);
+    const g = svg.select<SVGGElement>('g.canvas-group');
+    const mapGroup = g.select<SVGGElement>('g.map-background-group');
+
+    // Clear existing map
+    mapGroup.selectAll('*').remove();
+
+    // Get the geography object
+    const geo = mapBackground.geography;
+    
+    // Create a geoPath generator
+    const projection = d3.geoMercator().fitSize([800, 600], geo);
+    const pathGenerator = d3.geoPath().projection(projection);
+
+    // Render the selected region
+    mapGroup
+      .append('path')
+      .datum(geo)
+      .attr('d', pathGenerator)
+      .attr('fill', 'hsl(var(--primary))')
+      .attr('fill-opacity', 0.1)
+      .attr('stroke', 'hsl(var(--primary))')
+      .attr('stroke-width', 2)
+      .attr('stroke-opacity', 0.3)
+      .style('pointer-events', 'none');
+
+  }, [mapBackground]);
 
   return (
     <svg

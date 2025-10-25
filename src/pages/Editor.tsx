@@ -51,6 +51,7 @@ const Editor = () => {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [showTimeline, setShowTimeline] = useState(false);
   const [showMap, setShowMap] = useState(false);
+  const [mapBackground, setMapBackground] = useState<any>(null);
   const templateType = searchParams.get('template') as TemplateType;
   
   // Handle imported data from Explorer Mode
@@ -658,21 +659,9 @@ const Editor = () => {
     setShowTimeline(true);
   }, []);
   
-  const handleUpdateNodeCoordinates = useCallback((nodeId: string, coordinates: [number, number]) => {
-    setNodes((nds) =>
-      nds.map((node) =>
-        node.id === nodeId
-          ? {
-              ...node,
-              data: {
-                ...node.data,
-                coordinates,
-              },
-            }
-          : node
-      )
-    );
-    toast.success('Node positioned on map');
+  const handleSelectMapBackground = useCallback((mapData: any) => {
+    setMapBackground(mapData);
+    toast.success('Map background applied to network');
   }, []);
 
   const handleExport = useCallback((format: 'png' | 'svg' | 'pdf') => {
@@ -847,6 +836,7 @@ const Editor = () => {
             onEdgeClick={onEdgeClick}
             isSketchMode={isSketchMode}
             backgroundColor={backgroundColor}
+            mapBackground={mapBackground}
           />
           
           {/* Node Editor Overlay - Show when AI chat is open AND element is selected */}
@@ -919,8 +909,7 @@ const Editor = () => {
       {/* Map Overlay */}
       {showMap && (
         <MapOverlay
-          nodes={nodes}
-          onUpdateNode={handleUpdateNodeCoordinates}
+          onSelectBackground={handleSelectMapBackground}
           onClose={() => setShowMap(false)}
         />
       )}
