@@ -114,8 +114,8 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
           )}
         </div>
 
-        {/* Import Button and User Icon - Right */}
-        <div className="flex-shrink-0 flex items-center gap-2">
+        {/* Import Button - Right */}
+        <div className="flex-shrink-0">
           {onImportToBuilder && (
             <Button 
               variant="hero" 
@@ -127,10 +127,12 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
               <span className="hidden sm:inline">Import this to Builder Mode</span>
             </Button>
           )}
-          <button className="ml-auto p-2 hover:bg-accent rounded-full transition-colors">
-            <User className="w-4 h-4" />
-          </button>
         </div>
+        
+        {/* User Icon - Far Right */}
+        <button className="ml-auto p-2 hover:bg-accent rounded-full transition-colors">
+          <User className="w-4 h-4" />
+        </button>
       </div>
     </header>
   );
