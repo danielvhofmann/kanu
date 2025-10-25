@@ -82,46 +82,48 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
           <SidebarTrigger />
         </div>
         
-        {/* Search Bar - Flexible with max-width */}
-        <div ref={wrapperRef} className="flex-1 min-w-0 max-w-md relative">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="pl-9 pr-9 h-9 bg-white border-border focus:border-border focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none w-full"
-            />
-            {isLoading && (
-              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground animate-spin" />
+        {/* Left Spacer */}
+        <div className="flex-1" />
+        
+        {/* Center Group: Search + Import Button */}
+        <div className="flex items-center gap-3">
+          <div ref={wrapperRef} className="relative w-80">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="pl-9 pr-9 h-9 bg-white border-border focus:border-border focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none w-full"
+              />
+              {isLoading && (
+                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground animate-spin" />
+              )}
+            </div>
+
+            {isOpen && results.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-lg max-h-80 overflow-y-auto z-50">
+                {results.map((result) => (
+                  <button
+                    key={result.id}
+                    onClick={() => handleSelect(result)}
+                    className="w-full px-4 py-3 text-left hover:bg-accent transition-colors border-b border-border last:border-b-0 first:rounded-t-lg last:rounded-b-lg"
+                  >
+                    <div className="font-medium text-sm">{result.label}</div>
+                    <div className="text-xs text-muted-foreground mt-1">{result.description}</div>
+                  </button>
+                ))}
+              </div>
             )}
           </div>
 
-          {isOpen && results.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-lg max-h-80 overflow-y-auto z-50">
-              {results.map((result) => (
-                <button
-                  key={result.id}
-                  onClick={() => handleSelect(result)}
-                  className="w-full px-4 py-3 text-left hover:bg-accent transition-colors border-b border-border last:border-b-0 first:rounded-t-lg last:rounded-b-lg"
-                >
-                  <div className="font-medium text-sm">{result.label}</div>
-                  <div className="text-xs text-muted-foreground mt-1">{result.description}</div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Import Button - Right */}
-        <div className="flex-shrink-0">
           {onImportToBuilder && (
             <Button 
               variant="hero" 
               size="sm"
               onClick={onImportToBuilder}
-              className="gap-1.5 h-9 text-sm px-3"
+              className="gap-1.5 h-9 text-sm px-3 whitespace-nowrap"
             >
               <Upload className="w-4 h-4" />
               <span className="hidden sm:inline">Import this to Builder Mode</span>
@@ -129,8 +131,11 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
           )}
         </div>
         
+        {/* Right Spacer */}
+        <div className="flex-1" />
+        
         {/* User Icon - Far Right */}
-        <button className="ml-auto p-2 hover:bg-accent rounded-full transition-colors">
+        <button className="flex-shrink-0 p-2 hover:bg-accent rounded-full transition-colors">
           <User className="w-4 h-4" />
         </button>
       </div>
