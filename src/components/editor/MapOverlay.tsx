@@ -1,24 +1,13 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps';
 import { Button } from '@/components/ui/button';
-import { X, ZoomIn, ZoomOut, RotateCcw, Check } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { X, Search, MapPin, Globe, Check } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
-
-const mapSources = {
-  world: {
-    url: "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json",
-    name: "World Map"
-  },
-  worldDetailed: {
-    url: "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json",
-    name: "World (Detailed)"
-  },
-  usStates: {
-    url: "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json",
-    name: "USA States"
-  }
-};
+import { searchMaps, getPopularMaps } from '@/lib/mapSearch';
+import { MapCatalogEntry } from '@/lib/mapCatalog';
 
 interface MapOverlayProps {
   onSelectBackground: (mapData: any) => void;
@@ -26,156 +15,216 @@ interface MapOverlayProps {
 }
 
 export const MapOverlay = ({ onSelectBackground, onClose }: MapOverlayProps) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<MapCatalogEntry[]>([]);
+  const [selectedMap, setSelectedMap] = useState<MapCatalogEntry | null>(null);
   const [zoom, setZoom] = useState(1);
   const [center, setCenter] = useState<[number, number]>([0, 0]);
-  const [selectedRegion, setSelectedRegion] = useState<any>(null);
-  const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
-  const [mapSource, setMapSource] = useState<keyof typeof mapSources>('world');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleRegionClick = useCallback((geo: any) => {
-    setSelectedRegion(geo);
-    const regionName = geo.properties.name || geo.properties.NAME || 'Selected Region';
-    toast.success(`Selected: ${regionName}`);
+  // Initialize with popular maps
+  useEffect(() => {
+    setSearchResults(getPopularMaps());
   }, []);
 
-  const handleZoomIn = () => setZoom(prev => Math.min(prev * 1.5, 8));
-  const handleZoomOut = () => setZoom(prev => Math.max(prev / 1.5, 1));
-  const handleReset = () => {
-    setZoom(1);
-    setCenter([0, 0]);
-    setSelectedRegion(null);
-  };
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const results = searchMaps(searchQuery);
+      setSearchResults(results);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const handleMapSelect = useCallback((map: MapCatalogEntry) => {
+    setSelectedMap(map);
+    setIsLoading(true);
+    
+    // Auto-zoom to map bounds if available
+    if (map.center) {
+      setCenter(map.center);
+      setZoom(map.type === 'city' ? 8 : map.type === 'state' ? 4 : map.type === 'country' ? 2 : 1);
+    } else {
+      setZoom(1);
+      setCenter([0, 0]);
+    }
+    
+    setTimeout(() => setIsLoading(false), 500);
+  }, []);
 
   const handleMoveEnd = useCallback((position: { coordinates: [number, number], zoom: number }) => {
     setCenter(position.coordinates);
     setZoom(position.zoom);
   }, []);
 
-  const handleUseAsBackground = useCallback(() => {
-    if (selectedRegion) {
+  const handleImportMap = useCallback(() => {
+    if (selectedMap) {
       onSelectBackground({
-        geography: selectedRegion,
-        mapSource: mapSources[mapSource].url,
+        mapData: selectedMap,
         zoom,
         center,
       });
-      const regionName = selectedRegion.properties.name || selectedRegion.properties.NAME || 'Region';
-      toast.success(`Applied ${regionName} as network background`);
+      toast.success(`Imported ${selectedMap.name} as network background`);
       onClose();
     }
-  }, [selectedRegion, mapSource, zoom, center, onSelectBackground, onClose]);
+  }, [selectedMap, zoom, center, onSelectBackground, onClose]);
 
-  const getRegionName = (geo: any) => {
-    return geo.properties.name || geo.properties.NAME || geo.properties.NAME_LONG || 'Unknown';
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'continent': return 'bg-purple-500/10 text-purple-700 dark:text-purple-300';
+      case 'country': return 'bg-blue-500/10 text-blue-700 dark:text-blue-300';
+      case 'state': return 'bg-green-500/10 text-green-700 dark:text-green-300';
+      case 'city': return 'bg-orange-500/10 text-orange-700 dark:text-orange-300';
+      default: return 'bg-gray-500/10 text-gray-700 dark:text-gray-300';
+    }
   };
 
   return (
     <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm">
       <div className="h-full flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border bg-card/50 backdrop-blur-lg">
-          <div className="flex-1">
-            <h2 className="text-xl font-semibold">Select Geographic Region</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              {selectedRegion 
-                ? `Selected: ${getRegionName(selectedRegion)}` 
-                : "Click on a region to select it as your network background"}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Select value={mapSource} onValueChange={(value) => setMapSource(value as keyof typeof mapSources)}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(mapSources).map(([key, source]) => (
-                  <SelectItem key={key} value={key}>
-                    {source.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <div className="w-px h-6 bg-border" />
-            <Button 
-              variant="default" 
-              size="sm"
-              onClick={handleUseAsBackground}
-              disabled={!selectedRegion}
-              className="gap-2"
-            >
-              <Check className="w-4 h-4" />
-              Use as Background
-            </Button>
-            <div className="w-px h-6 bg-border" />
-            <Button variant="ghost" size="icon" onClick={handleZoomIn}>
-              <ZoomIn className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={handleZoomOut}>
-              <ZoomOut className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={handleReset}>
-              <RotateCcw className="w-4 h-4" />
-            </Button>
+        {/* Header with Search */}
+        <div className="flex flex-col gap-4 p-4 border-b border-border bg-card/50 backdrop-blur-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <Globe className="w-5 h-5" />
+                Import Map Background
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Search for a city, region, state, or country to use as your network background
+              </p>
+            </div>
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="w-4 h-4" />
             </Button>
           </div>
+
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search for maps... (e.g., 'Paris', 'California', 'Japan')"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 h-12 text-base"
+              autoFocus
+            />
+          </div>
         </div>
 
-        <div className="flex-1 flex p-4">
-          {/* Map - Full Width */}
-          <div className="flex-1 rounded-lg overflow-hidden bg-card border border-border shadow-lg">
-            <ComposableMap 
-              projection="geoMercator"
-              style={{ width: '100%', height: '100%' }}
-            >
-              <ZoomableGroup zoom={zoom} center={center} onMoveEnd={handleMoveEnd}>
-                <Geographies geography={mapSources[mapSource].url}>
-                  {({ geographies }) =>
-                    geographies.map((geo) => {
-                      const isSelected = selectedRegion?.rsmKey === geo.rsmKey;
-                      const isHovered = hoveredRegion === geo.rsmKey;
-                      
-                      return (
-                        <Geography
-                          key={geo.rsmKey}
-                          geography={geo}
-                          onClick={() => handleRegionClick(geo)}
-                          onMouseEnter={() => setHoveredRegion(geo.rsmKey)}
-                          onMouseLeave={() => setHoveredRegion(null)}
-                          style={{
-                            default: {
-                              fill: isSelected 
-                                ? 'hsl(var(--primary))' 
-                                : 'hsl(var(--muted))',
-                              stroke: 'hsl(var(--border))',
-                              strokeWidth: isSelected ? 1.5 : 0.5,
-                              outline: 'none',
-                              transition: 'all 0.2s',
-                            },
-                            hover: {
-                              fill: isSelected 
-                                ? 'hsl(var(--primary))' 
-                                : 'hsl(var(--accent))',
-                              stroke: 'hsl(var(--primary))',
-                              strokeWidth: 1,
-                              outline: 'none',
-                              cursor: 'pointer',
-                            },
-                            pressed: {
-                              fill: 'hsl(var(--primary))',
-                              stroke: 'hsl(var(--primary))',
-                              strokeWidth: 1.5,
-                              outline: 'none',
-                            },
-                          }}
-                        />
-                      );
-                    })
-                  }
-                </Geographies>
-              </ZoomableGroup>
-            </ComposableMap>
+        <div className="flex-1 flex gap-4 p-4 overflow-hidden">
+          {/* Search Results Sidebar */}
+          <div className="w-80 flex flex-col gap-3">
+            <div className="text-sm font-medium text-muted-foreground">
+              {searchQuery ? `Search Results (${searchResults.length})` : 'Popular Maps'}
+            </div>
+            <ScrollArea className="flex-1 border border-border rounded-lg bg-card">
+              <div className="p-2 space-y-1">
+                {searchResults.length === 0 ? (
+                  <div className="p-8 text-center text-muted-foreground">
+                    <MapPin className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p>No maps found</p>
+                    <p className="text-xs mt-1">Try searching for a country, state, or city</p>
+                  </div>
+                ) : (
+                  searchResults.map((map) => (
+                    <button
+                      key={map.id}
+                      onClick={() => handleMapSelect(map)}
+                      className={`w-full text-left p-3 rounded-md transition-colors ${
+                        selectedMap?.id === map.id
+                          ? 'bg-primary/10 border-2 border-primary'
+                          : 'hover:bg-accent border-2 border-transparent'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">{map.name}</div>
+                          {map.description && (
+                            <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                              {map.description}
+                            </div>
+                          )}
+                        </div>
+                        <Badge variant="secondary" className={`shrink-0 text-xs ${getTypeColor(map.type)}`}>
+                          {map.type}
+                        </Badge>
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
+          </div>
+
+          {/* Map Preview Area */}
+          <div className="flex-1 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-medium text-muted-foreground">
+                {selectedMap ? `Preview: ${selectedMap.name}` : 'Select a map to preview'}
+              </div>
+              {selectedMap && (
+                <Button onClick={handleImportMap} className="gap-2">
+                  <Check className="w-4 h-4" />
+                  Import Map
+                </Button>
+              )}
+            </div>
+
+            <div className="flex-1 rounded-lg overflow-hidden bg-card border border-border shadow-lg relative">
+              {isLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-10">
+                  <div className="text-sm text-muted-foreground">Loading map...</div>
+                </div>
+              )}
+              
+              {selectedMap ? (
+                <ComposableMap 
+                  projection="geoMercator"
+                  style={{ width: '100%', height: '100%' }}
+                  projectionConfig={{
+                    center: selectedMap.center || [0, 0],
+                    scale: 147
+                  }}
+                >
+                  <ZoomableGroup zoom={zoom} center={center} onMoveEnd={handleMoveEnd}>
+                    <Geographies geography={selectedMap.url}>
+                      {({ geographies }) =>
+                        geographies.map((geo) => (
+                          <Geography
+                            key={geo.rsmKey}
+                            geography={geo}
+                            style={{
+                              default: {
+                                fill: 'hsl(var(--primary))',
+                                stroke: 'hsl(var(--border))',
+                                strokeWidth: 0.5,
+                                outline: 'none',
+                              },
+                              hover: {
+                                fill: 'hsl(var(--primary))',
+                                stroke: 'hsl(var(--border))',
+                                strokeWidth: 0.5,
+                                outline: 'none',
+                              },
+                            }}
+                          />
+                        ))
+                      }
+                    </Geographies>
+                  </ZoomableGroup>
+                </ComposableMap>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-8">
+                  <Globe className="w-24 h-24 mb-4 opacity-20" />
+                  <p className="text-lg font-medium">Select a map to preview</p>
+                  <p className="text-sm mt-2 text-center max-w-md">
+                    Choose from popular maps or search for specific regions, countries, states, or cities
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
