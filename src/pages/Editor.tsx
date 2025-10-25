@@ -9,6 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { AIChat } from '@/components/editor/AIChat';
 import { NodeEditorOverlay } from '@/components/editor/NodeEditorOverlay';
 import { BottomToolbar } from '@/components/editor/BottomToolbar';
+import { MapOverlay } from '@/components/editor/MapOverlay';
+import { TimelineOverlay } from '@/components/editor/TimelineOverlay';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, Badge as BadgeIcon, Save, Check, Loader2 } from 'lucide-react';
@@ -48,7 +50,7 @@ const Editor = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [showTimeline, setShowTimeline] = useState(false);
-  const [timelinePosition, setTimelinePosition] = useState({ x: 100, y: 100 });
+  const [showMap, setShowMap] = useState(false);
   const templateType = searchParams.get('template') as TemplateType;
   
   // Handle imported data from Explorer Mode
@@ -649,11 +651,28 @@ const Editor = () => {
   }, [historyState]);
 
   const handleAddMap = useCallback(() => {
-    toast.info('Add Map functionality coming soon');
+    setShowMap(true);
   }, []);
 
   const handleAddTimeline = useCallback(() => {
     setShowTimeline(true);
+  }, []);
+  
+  const handleUpdateNodeCoordinates = useCallback((nodeId: string, coordinates: [number, number]) => {
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === nodeId
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                coordinates,
+              },
+            }
+          : node
+      )
+    );
+    toast.success('Node positioned on map');
   }, []);
 
   const handleExport = useCallback((format: 'png' | 'svg' | 'pdf') => {
@@ -896,6 +915,24 @@ const Editor = () => {
         onOpenChange={setShowImportDialog}
         onImport={handleImport}
       />
+      
+      {/* Map Overlay */}
+      {showMap && (
+        <MapOverlay
+          nodes={nodes}
+          onUpdateNode={handleUpdateNodeCoordinates}
+          onClose={() => setShowMap(false)}
+        />
+      )}
+      
+      {/* Timeline Overlay */}
+      {showTimeline && (
+        <TimelineOverlay
+          nodes={nodes}
+          edges={edges}
+          onClose={() => setShowTimeline(false)}
+        />
+      )}
     </div>
   );
 };
