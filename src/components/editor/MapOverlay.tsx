@@ -46,6 +46,11 @@ export const MapOverlay = ({ onSelectBackground, onClose }: MapOverlayProps) => 
     setSelectedRegion(null);
   };
 
+  const handleMoveEnd = useCallback((position: { coordinates: [number, number], zoom: number }) => {
+    setCenter(position.coordinates);
+    setZoom(position.zoom);
+  }, []);
+
   const handleUseAsBackground = useCallback(() => {
     if (selectedRegion) {
       onSelectBackground({
@@ -124,7 +129,7 @@ export const MapOverlay = ({ onSelectBackground, onClose }: MapOverlayProps) => 
               projection="geoMercator"
               style={{ width: '100%', height: '100%' }}
             >
-              <ZoomableGroup zoom={zoom} center={center} onMoveEnd={setCenter}>
+              <ZoomableGroup zoom={zoom} center={center} onMoveEnd={handleMoveEnd}>
                 <Geographies geography={mapSources[mapSource].url}>
                   {({ geographies }) =>
                     geographies.map((geo) => {
