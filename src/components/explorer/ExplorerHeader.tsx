@@ -124,7 +124,7 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
               className="gap-1.5 h-9 text-sm px-3"
             >
               <Upload className="w-4 h-4" />
-              <span className="hidden sm:inline">Import</span>
+              <span className="hidden sm:inline">Import this to Builder Mode</span>
             </Button>
           )}
           <button className="p-2 hover:bg-accent rounded-full transition-colors">
