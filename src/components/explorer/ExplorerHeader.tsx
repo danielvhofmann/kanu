@@ -127,7 +127,7 @@ export const ExplorerHeader = ({ currentPersonName, onSearch, onBack, onImportTo
               <span className="hidden sm:inline">Import this to Builder Mode</span>
             </Button>
           )}
-          <button className="p-2 hover:bg-accent rounded-full transition-colors">
+          <button className="ml-auto p-2 hover:bg-accent rounded-full transition-colors">
             <User className="w-4 h-4" />
           </button>
         </div>
