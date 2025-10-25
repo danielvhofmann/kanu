@@ -1,18 +1,17 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Node, Edge, Connection, MarkerType } from 'reactflow';
-import { EditorToolbar } from '@/components/editor/EditorToolbar';
 import { EditorSidebar } from '@/components/editor/EditorSidebar';
 import { TemplateSelector } from '@/components/editor/TemplateSelector';
 import { ImportDialog } from '@/components/editor/ImportDialog';
 import { ProjectSelector } from '@/components/editor/ProjectSelector';
 import { NetworkCanvas } from '@/components/editor/NetworkCanvas';
 import { supabase } from '@/integrations/supabase/client';
-import { ColorControls } from '@/components/editor/ColorControls';
 import { AIChat } from '@/components/editor/AIChat';
 import { NodeEditorOverlay } from '@/components/editor/NodeEditorOverlay';
+import { BottomToolbar } from '@/components/editor/BottomToolbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Pencil, Undo, Redo, MessageSquare, Badge as BadgeIcon, Save, Check, Loader2 } from 'lucide-react';
+import { ArrowLeft, Badge as BadgeIcon, Save, Check, Loader2 } from 'lucide-react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { getTemplate, type TemplateType } from '@/lib/templates';
 import { toast } from 'sonner';
@@ -48,6 +47,8 @@ const Editor = () => {
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [showTimeline, setShowTimeline] = useState(false);
+  const [timelinePosition, setTimelinePosition] = useState({ x: 100, y: 100 });
   const templateType = searchParams.get('template') as TemplateType;
   
   // Handle imported data from Explorer Mode
@@ -647,56 +648,66 @@ const Editor = () => {
     }
   }, [historyState]);
 
-  const handleExport = useCallback((format: 'png' | 'svg' | 'pdf') => {
-    const svgElement = canvasRef.current?.querySelector('svg');
-    if (!svgElement) {
-      toast.error('Canvas not found');
-      return;
-    }
+  const handleAddMap = useCallback(() => {
+    toast.info('Add Map functionality coming soon');
+  }, []);
 
+  const handleAddTimeline = useCallback(() => {
+    setShowTimeline(true);
+  }, []);
+
+  const handleExport = useCallback((format: 'png' | 'svg' | 'pdf') => {
     if (format === 'svg') {
-      const svgData = new XMLSerializer().serializeToString(svgElement);
-      const blob = new Blob([svgData], { type: 'image/svg+xml' });
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      
+      const svg = canvas.querySelector('svg');
+      if (!svg) return;
+      
+      const serializer = new XMLSerializer();
+      const svgString = serializer.serializeToString(svg);
+      const blob = new Blob([svgString], { type: 'image/svg+xml' });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${mapTitle}.svg`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${mapTitle || 'map'}.svg`;
+      a.click();
       URL.revokeObjectURL(url);
-      toast.success('SVG exported');
+      toast.success('SVG exported successfully');
     } else if (format === 'png') {
-      const svgData = new XMLSerializer().serializeToString(svgElement);
-      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-      const url = URL.createObjectURL(svgBlob);
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      
+      const svg = canvas.querySelector('svg');
+      if (!svg) return;
+      
+      const serializer = new XMLSerializer();
+      const svgString = serializer.serializeToString(svg);
+      const blob = new Blob([svgString], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
       
       const img = new Image();
       img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const rect = svgElement.getBoundingClientRect();
-        canvas.width = rect.width * 2;
-        canvas.height = rect.height * 2;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.scale(2, 2);
-          ctx.fillStyle = backgroundColor;
-          ctx.fillRect(0, 0, rect.width, rect.height);
-          ctx.drawImage(img, 0, 0, rect.width, rect.height);
-          canvas.toBlob((blob) => {
-            if (blob) {
-              const pngUrl = URL.createObjectURL(blob);
-              const link = document.createElement('a');
-              link.href = pngUrl;
-              link.download = `${mapTitle}.png`;
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-              URL.revokeObjectURL(pngUrl);
-              toast.success('PNG exported');
-            }
-          }, 'image/png');
-        }
+        const pngCanvas = document.createElement('canvas');
+        pngCanvas.width = img.width;
+        pngCanvas.height = img.height;
+        const ctx = pngCanvas.getContext('2d');
+        if (!ctx) return;
+        
+        ctx.fillStyle = backgroundColor;
+        ctx.fillRect(0, 0, pngCanvas.width, pngCanvas.height);
+        ctx.drawImage(img, 0, 0);
+        
+        pngCanvas.toBlob((blob) => {
+          if (!blob) return;
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${mapTitle || 'map'}.png`;
+          a.click();
+          URL.revokeObjectURL(url);
+          toast.success('PNG exported successfully');
+        });
         URL.revokeObjectURL(url);
       };
       img.onerror = () => {
@@ -785,65 +796,6 @@ const Editor = () => {
                 : `${Math.floor((new Date().getTime() - lastSaved.getTime()) / 60000)}m ago`}
             </span>
           )}
-          
-          <div className="h-6 w-px bg-border" />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleUndo}
-            disabled={historyState.index <= 0}
-            className="gap-2"
-          >
-            <Undo className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleRedo}
-            disabled={historyState.index >= historyState.history.length - 1}
-            className="gap-2"
-          >
-            <Redo className="w-4 h-4" />
-          </Button>
-          <div className="h-6 w-px bg-border" />
-          <Button
-            variant={isSketchMode ? "default" : "ghost"}
-            size="sm"
-            onClick={toggleSketchMode}
-            className="gap-2"
-          >
-            <Pencil className="w-4 h-4" />
-            Sketch Mode
-          </Button>
-          <ColorControls
-            backgroundColor={backgroundColor}
-            onBackgroundColorChange={setBackgroundColor}
-            selectedPalette={selectedPalette}
-            onPaletteChange={applyPalette}
-          />
-          <EditorToolbar 
-            onAddNode={addNode} 
-            onImport={() => setShowTemplateSelector(true)}
-            onExport={handleExport}
-            nodeShape={defaultNodeShape}
-            onNodeShapeChange={applyNodeShapeToAll}
-            edgeType={defaultEdgeType}
-            onEdgeTypeChange={applyEdgeTypeToAll}
-            onUndo={handleUndo}
-            onRedo={handleRedo}
-            canUndo={historyState.index > 0}
-            canRedo={historyState.index < historyState.history.length - 1}
-          />
-          <div className="h-6 w-px bg-border mx-2" />
-          <Button
-            variant={showAIChat ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setShowAIChat(!showAIChat)}
-            className="gap-2"
-          >
-            <MessageSquare className="w-4 h-4" />
-            AI Assistant
-          </Button>
         </div>
       </div>
 
@@ -904,6 +856,31 @@ const Editor = () => {
           />
         )}
       </div>
+
+      {/* Bottom Toolbar */}
+      <BottomToolbar
+        isSketchMode={isSketchMode}
+        onToggleSketchMode={toggleSketchMode}
+        backgroundColor={backgroundColor}
+        onBackgroundColorChange={setBackgroundColor}
+        selectedPalette={selectedPalette}
+        onPaletteChange={applyPalette}
+        onAddNode={addNode}
+        onImport={() => setShowTemplateSelector(true)}
+        onExport={handleExport}
+        nodeShape={defaultNodeShape}
+        onNodeShapeChange={applyNodeShapeToAll}
+        edgeType={defaultEdgeType}
+        onEdgeTypeChange={applyEdgeTypeToAll}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        canUndo={historyState.index > 0}
+        canRedo={historyState.index < historyState.history.length - 1}
+        showAIChat={showAIChat}
+        onToggleAIChat={() => setShowAIChat(!showAIChat)}
+        onAddMap={handleAddMap}
+        onAddTimeline={handleAddTimeline}
+      />
 
       {/* Template Selector Dialog */}
       <TemplateSelector
