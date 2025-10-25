@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { searchMaps, getPopularMaps } from '@/lib/mapSearch';
 import { MapCatalogEntry } from '@/lib/mapCatalog';
+import * as topojson from 'topojson-client';
 
 interface MapOverlayProps {
   onSelectBackground: (mapData: any) => void;
@@ -20,6 +21,7 @@ export const MapOverlay = ({ onSelectBackground, onClose }: MapOverlayProps) => 
   const [selectedMap, setSelectedMap] = useState<MapCatalogEntry | null>(null);
   const [zoom, setZoom] = useState(1);
   const [center, setCenter] = useState<[number, number]>([0, 0]);
+  const [isImporting, setIsImporting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // Initialize with popular maps
@@ -58,15 +60,36 @@ export const MapOverlay = ({ onSelectBackground, onClose }: MapOverlayProps) => 
     setZoom(position.zoom);
   }, []);
 
-  const handleImportMap = useCallback(() => {
-    if (selectedMap) {
+  const handleImportMap = useCallback(async () => {
+    if (!selectedMap) return;
+    
+    setIsImporting(true);
+    
+    try {
+      // Fetch the TopoJSON data
+      const response = await fetch(selectedMap.url);
+      if (!response.ok) throw new Error('Failed to fetch map data');
+      
+      const topoData = await response.json();
+      
+      // Extract the first feature collection from the TopoJSON
+      const objectKey = Object.keys(topoData.objects)[0];
+      const geoJson = topojson.feature(topoData, topoData.objects[objectKey]);
+      
       onSelectBackground({
         mapData: selectedMap,
+        geography: geoJson,
         zoom,
         center,
       });
+      
       toast.success(`Imported ${selectedMap.name} as network background`);
       onClose();
+    } catch (error) {
+      console.error('Error importing map:', error);
+      toast.error('Failed to import map. Please try again.');
+    } finally {
+      setIsImporting(false);
     }
   }, [selectedMap, zoom, center, onSelectBackground, onClose]);
 
@@ -165,9 +188,18 @@ export const MapOverlay = ({ onSelectBackground, onClose }: MapOverlayProps) => 
                 {selectedMap ? `Preview: ${selectedMap.name}` : 'Select a map to preview'}
               </div>
               {selectedMap && (
-                <Button onClick={handleImportMap} className="gap-2">
-                  <Check className="w-4 h-4" />
-                  Import Map
+                <Button onClick={handleImportMap} disabled={isImporting} className="gap-2">
+                  {isImporting ? (
+                    <>
+                      <div className="w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Import Map
+                    </>
+                  )}
                 </Button>
               )}
             </div>
