@@ -1,73 +1,54 @@
-# Welcome to your Lovable project
+# kanu
 
-## Project info
+Kanu is a web app for building and exploring network graphs of people, made for students, researchers, and the curious who want to see how people connect.
 
-**URL**: https://lovable.dev/projects/b8ef745e-5e39-4879-9db3-8e8b1fb03afc
+## What it does
 
-## How can I edit this code?
+Kanu has two modes.
 
-There are several ways of editing your application.
+**Explorer mode.** Search a historical figure and see their relationship web pulled from Wikidata, drawn as an interactive node and edge graph with a timeline. An AI helper writes short biography summaries and explains how two people are connected.
 
-**Use Lovable**
+**Builder mode.** Draw your own graph on a canvas and edit it by talking to an AI chat assistant. In plain language you can ask it to add, remove, recolor, and relink nodes and edges, with optional web and image search.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/b8ef745e-5e39-4879-9db3-8e8b1fb03afc) and start prompting.
+Signed in users can save their projects.
 
-Changes made via Lovable will be committed automatically to this repo.
+## Who it is for
 
-**Use your preferred IDE**
+Kanu is for students, researchers, writers, and anyone curious about how people relate to each other. You do not need to know graph theory or write any code. You explore and build by searching and by talking to the AI in plain language.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Stack
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+* Vite
+* React
+* TypeScript
+* Tailwind CSS
+* shadcn-ui
+* ReactFlow
+* Supabase for Postgres, Auth, and Deno edge functions
+* The Wikidata public API
+* An AI gateway running Gemini 2.5 Flash
 
-Follow these steps:
+It was generated with Lovable.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## Run it locally
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+You need Node and npm installed.
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+git clone https://github.com/danielvhofmann/kanu.git
+cd kanu
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The app runs a local dev server. Open the URL that the terminal prints.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Explorer mode and public browsing work out of the box. Sign in, saving projects, and the AI features need Supabase and AI gateway credentials, which are read from environment variables. Do not commit secrets. Keep your keys in a local env file that is ignored by git.
 
-**Use GitHub Codespaces**
+## Status
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+This is an early hackathon build. Expect rough edges, missing features, and breaking changes. It is shared to explore the idea, not as a finished product.
 
-## What technologies are used for this project?
+## License
 
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/b8ef745e-5e39-4879-9db3-8e8b1fb03afc) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+MIT.
