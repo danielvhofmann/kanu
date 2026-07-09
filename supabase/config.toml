@@ -7,10 +7,10 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.explain-connection]
-verify_jwt = false
+verify_jwt = true
 
 [functions.generate-bio-summary]
-verify_jwt = false
+verify_jwt = true
 
 [functions.calculate-correlation-matrix]
-verify_jwt = false
+verify_jwt = true
