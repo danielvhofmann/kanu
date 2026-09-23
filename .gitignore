@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment files (keep keys out of the repo; see .env.example)
+.env
+.env.*
+!.env.example
